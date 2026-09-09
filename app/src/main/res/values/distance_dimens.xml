@@ -1,0 +1,4 @@
+<resources>
+    <dimen name="distance_reading_size">20sp</dimen>
+    <dimen name="distance_hint_size">13sp</dimen>
+</resources>

@@ -2,10 +2,12 @@ package com.example.cameraoption;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.media.Image;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -21,32 +23,33 @@ import androidx.core.content.ContextCompat;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Config;
 import com.google.ar.core.Coordinates2d;
-import com.google.ar.core.DepthPoint;
+import com.google.ar.core.CameraIntrinsics;
 import com.google.ar.core.Frame;
-import com.google.ar.core.HitResult;
-import com.google.ar.core.Plane;
-import com.google.ar.core.Point;
 import com.google.ar.core.Session;
-import com.google.ar.core.Trackable;
 import com.google.ar.core.TrackingState;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.core.exceptions.FatalException;
+import com.google.ar.core.exceptions.NotYetAvailableException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Locale;
+import java.util.Arrays;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 public class DistanceCameraActivity extends AppCompatActivity implements GLSurfaceView.Renderer {
 
-    private Float smoothedDistanceMeter = null;
+    private final DistanceEstimator distanceEstimator = new DistanceEstimator();
+    private boolean depthSupported;
+    private long lastDepthTimestamp;
+    private long lastFreshDepthTime;
+    private long lastDiagnosticTime;
+    private String lastDistanceText = "";
+    private boolean lastWasGuidance;
 
     private static final String TAG = "DistanceCameraActivity";
     private static final int REQUEST_CAMERA_PERMISSION = 1001;
@@ -59,7 +62,7 @@ public class DistanceCameraActivity extends AppCompatActivity implements GLSurfa
     private GLSurfaceView glSurfaceView;
     private Session arSession;
     private boolean installRequested = false;
-    private boolean arSessionResumed = false;
+    private volatile boolean arSessionResumed = false;
 
     private int viewportWidth = 0;
     private int viewportHeight = 0;
@@ -73,7 +76,6 @@ public class DistanceCameraActivity extends AppCompatActivity implements GLSurfa
     private FloatBuffer screenVertexBuffer;
     private FloatBuffer cameraTexCoordBuffer;
 
-    private long lastUiUpdateTime = 0;
     private long lastDistanceSampleNanos = 0;
 
     private final float[] screenVertices = {
@@ -90,7 +92,7 @@ public class DistanceCameraActivity extends AppCompatActivity implements GLSurfa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_distance_camera);
 
-        SystemBarInsets.applyTopAndBottomMargin(
+        SystemBarInsets.apply(
                 this,
                 findViewById(R.id.topDistanceBar),
                 findViewById(R.id.distanceHudLayout)
@@ -101,7 +103,7 @@ public class DistanceCameraActivity extends AppCompatActivity implements GLSurfa
         tvCurrentDistanceValue = findViewById(R.id.tvCurrentDistanceValue);
 
         btnDistanceBack.setOnClickListener(view -> finish());
-        tvCurrentDistanceValue.setText("-- m");
+        showGuidance(R.string.distance_move_sideways);
 
         glSurfaceView = new GLSurfaceView(this);
         glSurfaceView.setEGLContextClientVersion(2);
@@ -170,7 +172,9 @@ public class DistanceCameraActivity extends AppCompatActivity implements GLSurfa
             arSessionResumed = false;
         }
         lastDistanceSampleNanos = 0L;
-        smoothedDistanceMeter = null;
+        distanceEstimator.reset();
+        lastDepthTimestamp = 0L;
+        lastFreshDepthTime = 0L;
     }
 
     @Override
@@ -190,7 +194,7 @@ public class DistanceCameraActivity extends AppCompatActivity implements GLSurfa
 
             if (installStatus == ArCoreApk.InstallStatus.INSTALL_REQUESTED) {
                 installRequested = true;
-                updateDistanceTextOnUi("설치 필요");
+                showGuidance(R.string.distance_install_ar);
                 return false;
             }
 
@@ -198,49 +202,43 @@ public class DistanceCameraActivity extends AppCompatActivity implements GLSurfa
 
             Config config = arSession.getConfig();
 
-            /*
-                사진 속 거리계 앱에 가까운 방식입니다.
-
-                DepthImage를 직접 읽지 않고,
-                ARCore가 인식한 평면, 특징점, 깊이 지점에 대해
-                화면 중앙 hitTest를 수행합니다.
-
-                HORIZONTAL_AND_VERTICAL:
-                바닥뿐 아니라 벽도 인식하게 합니다.
-
-                DepthMode:
-                지원되면 DepthPoint hitTest도 사용하고,
-                미지원이어도 Plane / Point hitTest는 계속 사용할 수 있게 합니다.
-            */
-            config.setPlaneFindingMode(Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL);
+            // Read the center depth directly; detected background planes are not a rangefinder.
+            config.setPlaneFindingMode(Config.PlaneFindingMode.DISABLED);
+            config.setLightEstimationMode(Config.LightEstimationMode.DISABLED);
             config.setFocusMode(Config.FocusMode.AUTO);
             config.setUpdateMode(Config.UpdateMode.LATEST_CAMERA_IMAGE);
 
-            if (arSession.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
+            depthSupported = arSession.isDepthModeSupported(Config.DepthMode.AUTOMATIC);
+            if (depthSupported) {
                 config.setDepthMode(Config.DepthMode.AUTOMATIC);
             } else {
                 config.setDepthMode(Config.DepthMode.DISABLED);
             }
 
             arSession.configure(config);
+            Log.i(TAG, "Distance depth support=" + depthSupported);
             return true;
 
         } catch (UnavailableUserDeclinedInstallationException e) {
             Log.e(TAG, "User declined ARCore installation", e);
-            updateDistanceTextOnUi("설치 필요");
+            showGuidance(R.string.distance_install_ar);
             showToast("Google Play Services for AR 설치가 필요합니다.");
             return false;
 
         } catch (Exception e) {
             Log.e(TAG, "createArSession failed", e);
-            updateDistanceTextOnUi("미지원");
+            if (arSession != null) {
+                arSession.close();
+                arSession = null;
+            }
+            showGuidance(R.string.distance_unsupported);
             showToast("ARCore를 시작할 수 없습니다.");
             return false;
         }
     }
 
     private void handleArStartFailed(String message) {
-        updateDistanceTextOnUi("미지원");
+        showGuidance(R.string.distance_reopen);
         showToast(message);
 
         if (arSession != null) {
@@ -297,12 +295,16 @@ public class DistanceCameraActivity extends AppCompatActivity implements GLSurfa
 
     @Override
     public void onDrawFrame(GL10 gl) {
-        if (arSession == null || cameraTextureId == -1) {
+        if (!arSessionResumed || arSession == null || cameraTextureId == -1
+                || viewportWidth == 0 || viewportHeight == 0) {
             return;
         }
 
         try {
             arSession.setCameraTextureName(cameraTextureId);
+            // Also apply geometry when the surface existed before permission/session creation.
+            arSession.setDisplayGeometry(getWindowManager().getDefaultDisplay().getRotation(),
+                    viewportWidth, viewportHeight);
 
             Frame frame = arSession.update();
 
@@ -321,125 +323,108 @@ public class DistanceCameraActivity extends AppCompatActivity implements GLSurfa
 
             drawCameraBackground();
 
-            long frameTimestamp = frame.getTimestamp();
+            long frameTimestamp = SystemClock.elapsedRealtimeNanos();
             if (lastDistanceSampleNanos == 0L
                     || frameTimestamp - lastDistanceSampleNanos
                     >= DISTANCE_SAMPLE_INTERVAL_NANOS) {
                 lastDistanceSampleNanos = frameTimestamp;
-                updateDistanceByHitTest(frame);
+                updateDistanceFromDepth(frame);
             }
 
-        } catch (Throwable e) {
+        } catch (Exception e) {
             Log.e(TAG, "onDrawFrame failed", e);
-            updateDistanceTextOnUi("-- m");
+            distanceEstimator.reset();
+            showGuidance(R.string.distance_reopen);
         }
     }
 
-    private void updateDistanceByHitTest(Frame frame) {
-        if (viewportWidth == 0 || viewportHeight == 0) {
+    private void updateDistanceFromDepth(Frame frame) {
+        if (!depthSupported) {
+            showGuidance(R.string.distance_unsupported);
             return;
         }
-
         if (frame.getCamera().getTrackingState() != TrackingState.TRACKING) {
-            updateDistanceTextOnUi("인식 중");
-            return;
-        }
-
-        float centerX = viewportWidth / 2.0f;
-        float centerY = viewportHeight / 2.0f;
-
-        float offset = getResources().getDisplayMetrics().density * 12.0f;
-
-        // The center plus four nearby points is enough for a stable median while
-        // avoiding nine AR hit tests on every sampled frame.
-        float[][] samplePoints = {
-                {centerX, centerY},
-                {centerX - offset, centerY},
-                {centerX + offset, centerY},
-                {centerX, centerY - offset},
-                {centerX, centerY + offset}
-        };
-
-        ArrayList<Float> distances = new ArrayList<>();
-
-        for (float[] point : samplePoints) {
-            HitResult hit = findBestHit(frame.hitTest(point[0], point[1]));
-
-            if (hit != null) {
-                float distance = hit.getDistance();
-
-                if (distance > 0.15f && distance < 10.0f) {
-                    distances.add(distance);
-                }
+            logMeasurement("tracking=" + frame.getCamera().getTrackingState()
+                    + " reason=" + frame.getCamera().getTrackingFailureReason());
+            distanceEstimator.reset();
+            lastDepthTimestamp = 0L;
+            int hint;
+            switch (frame.getCamera().getTrackingFailureReason()) {
+                case INSUFFICIENT_LIGHT:
+                    hint = R.string.distance_more_light;
+                    break;
+                case EXCESSIVE_MOTION:
+                    hint = R.string.distance_slow_down;
+                    break;
+                case INSUFFICIENT_FEATURES:
+                    hint = R.string.distance_more_features;
+                    break;
+                default:
+                    hint = R.string.distance_move_sideways;
             }
-        }
-
-        if (distances.isEmpty()) {
-            updateDistanceTextOnUi("인식 중");
+            showGuidance(hint);
             return;
         }
+        try (Image depth = frame.acquireDepthImage16Bits()) {
+            long timestamp = depth.getTimestamp();
+            long now = SystemClock.elapsedRealtimeNanos();
+            if (timestamp <= 0 || frame.getTimestamp() - timestamp > 300_000_000L
+                    || (timestamp == lastDepthTimestamp
+                    && now - lastFreshDepthTime > 300_000_000L)) {
+                distanceEstimator.reset();
+                logMeasurement("stale depth frame=" + frame.getTimestamp()
+                        + " depth=" + timestamp);
+                showGuidance(R.string.distance_move_sideways);
+                return;
+            }
+            if (timestamp == lastDepthTimestamp) return;
+            lastDepthTimestamp = timestamp;
+            lastFreshDepthTime = now;
 
-        Collections.sort(distances);
-
-        float measuredDistance = distances.get(distances.size() / 2);
-
-        if (smoothedDistanceMeter == null) {
-            smoothedDistanceMeter = measuredDistance;
-        } else {
-            float difference = Math.abs(measuredDistance - smoothedDistanceMeter);
-
-            if (difference > 1.5f) {
-                smoothedDistanceMeter = measuredDistance;
+            float[] uv = new float[2];
+            frame.transformCoordinates2d(Coordinates2d.VIEW,
+                    new float[]{viewportWidth / 2f, viewportHeight / 2f},
+                    Coordinates2d.IMAGE_NORMALIZED, uv);
+            int x = (int) Math.floor(uv[0] * depth.getWidth());
+            int y = (int) Math.floor(uv[1] * depth.getHeight());
+            Image.Plane plane = depth.getPlanes()[0];
+            ByteBuffer buffer = plane.getBuffer();
+            int[][] offsets = {{0, 0}, {-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+            float[] samples = new float[5];
+            for (int i = 0; i < offsets.length; i++) {
+                samples[i] = DistanceEstimator.readDepthMeters(buffer,
+                        depth.getWidth(), depth.getHeight(), plane.getRowStride(),
+                        plane.getPixelStride(), x + offsets[i][0], y + offsets[i][1]);
+            }
+            float measured = DistanceEstimator.centralMedian(samples);
+            // Depth gives optical-axis Z, not ray length. Use CPU image intrinsics.
+            CameraIntrinsics intrinsics = frame.getCamera().getImageIntrinsics();
+            float[] focal = intrinsics.getFocalLength();
+            float[] principal = intrinsics.getPrincipalPoint();
+            int[] dimensions = intrinsics.getImageDimensions();
+            float nx = (uv[0] * dimensions[0] - principal[0]) / focal[0];
+            float ny = (uv[1] * dimensions[1] - principal[1]) / focal[1];
+            measured *= (float) Math.sqrt(1f + nx * nx + ny * ny);
+            float result = distanceEstimator.update(measured, timestamp);
+            logMeasurement("depth=" + timestamp + " ageMs="
+                    + (frame.getTimestamp() - timestamp) / 1_000_000L
+                    + " size=" + depth.getWidth() + "x" + depth.getHeight()
+                    + " uv=" + Arrays.toString(uv) + " samples=" + Arrays.toString(samples)
+                    + " measured=" + measured + " result=" + result);
+            if (!DistanceEstimator.valid(measured)) {
+                showGuidance(R.string.distance_aim_surface);
+            } else if (Float.isNaN(result)) {
+                showGuidance(R.string.distance_hold_target);
+            } else if (result > DistanceEstimator.MAX_METERS) {
+                showReadout(getString(R.string.distance_out_of_range), false);
             } else {
-                smoothedDistanceMeter = (smoothedDistanceMeter * 0.7f) + (measuredDistance * 0.3f);
+                showReadout(getString(R.string.distance_reading, formatDistance(result)), false);
             }
+        } catch (NotYetAvailableException e) {
+            logMeasurement("depth not available; tracking=" + frame.getCamera().getTrackingState());
+            distanceEstimator.reset();
+            showGuidance(R.string.distance_move_sideways);
         }
-
-        updateDistanceTextOnUi(formatDistance(smoothedDistanceMeter));
-    }
-
-    private HitResult findBestHit(List<HitResult> hitResults) {
-        HitResult planeHit = null;
-        HitResult pointHit = null;
-
-        for (HitResult hit : hitResults) {
-            Trackable trackable = hit.getTrackable();
-
-            if (trackable instanceof DepthPoint) {
-                DepthPoint depthPoint = (DepthPoint) trackable;
-
-                if (depthPoint.getTrackingState() == TrackingState.TRACKING) {
-                    return hit;
-                }
-            }
-
-            if (trackable instanceof Plane) {
-                Plane plane = (Plane) trackable;
-
-                if (plane.getTrackingState() == TrackingState.TRACKING &&
-                        plane.isPoseInPolygon(hit.getHitPose())) {
-                    if (planeHit == null) {
-                        planeHit = hit;
-                    }
-                }
-            }
-
-            if (trackable instanceof Point) {
-                Point point = (Point) trackable;
-
-                if (point.getTrackingState() == TrackingState.TRACKING) {
-                    if (pointHit == null) {
-                        pointHit = hit;
-                    }
-                }
-            }
-        }
-
-        if (planeHit != null) {
-            return planeHit;
-        }
-
-        return pointHit;
     }
 
     private String formatDistance(float distanceMeter) {
@@ -451,16 +436,28 @@ public class DistanceCameraActivity extends AppCompatActivity implements GLSurfa
         return String.format(Locale.US, "%.1f m", distanceMeter);
     }
 
-    private void updateDistanceTextOnUi(String text) {
-        long now = System.currentTimeMillis();
+    private void showGuidance(int messageResource) {
+        showReadout(getString(messageResource), true);
+    }
 
-        if (now - lastUiUpdateTime < 120) {
-            return;
-        }
+    private void logMeasurement(String message) {
+        if ((getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) == 0) return;
+        long now = SystemClock.elapsedRealtime();
+        if (now - lastDiagnosticTime < 1000) return;
+        lastDiagnosticTime = now;
+        Log.d(TAG, message);
+    }
 
-        lastUiUpdateTime = now;
-
-        runOnUiThread(() -> tvCurrentDistanceValue.setText(text));
+    private void showReadout(String text, boolean guidance) {
+        runOnUiThread(() -> {
+            if (text.equals(lastDistanceText) && guidance == lastWasGuidance) return;
+            lastDistanceText = text;
+            lastWasGuidance = guidance;
+            tvCurrentDistanceValue.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX,
+                    getResources().getDimension(guidance ? R.dimen.distance_hint_size
+                            : R.dimen.distance_reading_size));
+            tvCurrentDistanceValue.setText(text);
+        });
     }
 
     private void drawCameraBackground() {
@@ -596,6 +593,7 @@ public class DistanceCameraActivity extends AppCompatActivity implements GLSurfa
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 startDistanceSessionIfReady();
             } else {
+                showGuidance(R.string.distance_permission);
                 showToast("거리계 사용에는 카메라 권한이 필요합니다.");
             }
         }

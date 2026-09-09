@@ -1,6 +1,19 @@
 <resources>
     <string name="app_name">Camera Option</string>
     <string name="film_selector_prompt">필름 선택</string>
+    <string name="distance_back">뒤로가기</string>
+    <string name="distance_reading">대상까지 %1$s</string>
+    <string name="distance_move_sideways">좌우로 움직여주세요</string>
+    <string name="distance_more_light">밝은 곳을 비춰주세요</string>
+    <string name="distance_slow_down">천천히 움직여주세요</string>
+    <string name="distance_more_features">무늬 있는 부분을 비춰주세요</string>
+    <string name="distance_aim_surface">대상의 넓은 면을 맞춰주세요</string>
+    <string name="distance_hold_target">같은 대상을 비춰주세요</string>
+    <string name="distance_reopen">거리계를 다시 열어주세요</string>
+    <string name="distance_unsupported">거리 측정 미지원 기기입니다</string>
+    <string name="distance_install_ar">Google Play Services for AR 설치가 필요합니다</string>
+    <string name="distance_permission">카메라 권한을 허용해주세요</string>
+    <string name="distance_out_of_range">6m 밖</string>
 
     <string-array name="film_test_presets">
         <item>선택 없음</item>
