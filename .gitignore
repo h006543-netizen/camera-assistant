@@ -1,0 +1,27 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Local IDE settings and generated outputs
+.idea/
+**/build/
+
+# Local signing credentials and environment secrets
+*.keystore
+*.jks
+key.properties
+.env
+.env.*
+!.env.example

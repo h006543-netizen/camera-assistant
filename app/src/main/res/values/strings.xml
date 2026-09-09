@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Camera Option</string>
+    <string name="film_selector_prompt">필름 선택</string>
+
+    <string-array name="film_test_presets">
+        <item>선택 없음</item>
+        <item>Kodak Gold 200</item>
+        <item>Kodak Portra 400</item>
+        <item>CineStill 800T</item>
+        <item>Kodak Vision3 250D</item>
+    </string-array>
+</resources>

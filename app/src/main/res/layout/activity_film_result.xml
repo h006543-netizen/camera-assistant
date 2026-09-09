@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/filmResultRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <!-- 촬영 원본과 선택한 필름 보정 결과를 표시한다. -->
+    <ImageView
+        android:id="@+id/ivFilmResult"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="촬영 결과"
+        android:scaleType="fitCenter" />
+
+    <!-- 이미지 처리 중에만 표시한다. -->
+    <ProgressBar
+        android:id="@+id/progressFilmProcessing"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="center"
+        android:indeterminateTint="#FFFFFF"
+        android:visibility="gone" />
+
+    <!-- 이미지 로드 또는 보정 실패 시에만 표시한다. -->
+    <TextView
+        android:id="@+id/tvFilmResultStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:background="@drawable/bg_exposure_control"
+        android:gravity="center"
+        android:maxWidth="320dp"
+        android:paddingStart="18dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="18dp"
+        android:paddingBottom="12dp"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        android:visibility="gone" />
+
+    <!-- 상단에는 뒤로가기와 현재 화면 제목만 표시한다. -->
+    <FrameLayout
+        android:id="@+id/filmResultTopControls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:background="@drawable/bg_exposure_top_scrim"
+        android:minHeight="88dp"
+        android:paddingStart="16dp"
+        android:paddingTop="18dp"
+        android:paddingEnd="16dp">
+
+        <TextView
+            android:id="@+id/btnFilmResultBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="start"
+            android:background="@drawable/bg_exposure_control"
+            android:clickable="true"
+            android:contentDescription="노출계로 돌아가기"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="‹"
+            android:textColor="#FFFFFF"
+            android:textSize="38sp" />
+
+        <TextView
+            android:id="@+id/tvFilmResultTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="필름 예상 결과"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/btnFilmResultSave"
+            android:layout_width="56dp"
+            android:layout_height="48dp"
+            android:layout_gravity="end"
+            android:background="@drawable/bg_exposure_control"
+            android:clickable="true"
+            android:contentDescription="현재 필름 결과를 갤러리에 저장"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="저장"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+    </FrameLayout>
+
+    <!-- 별도 적용 버튼 없이 이 목록의 선택 상태가 현재 보정을 결정한다. -->
+    <LinearLayout
+        android:id="@+id/filmResultBottomControls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@drawable/bg_exposure_bottom_scrim"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="38dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="24dp">
+
+        <TextView
+            android:id="@+id/tvFilmSelectorLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:text="필름"
+            android:textColor="#CCFFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <androidx.appcompat.widget.AppCompatSpinner
+            android:id="@+id/spinnerFilmPreset"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_film_selector"
+            android:entries="@array/film_test_presets"
+            android:gravity="center_vertical"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"
+            android:popupBackground="#F5F5F5"
+            android:prompt="@string/film_selector_prompt"
+            android:spinnerMode="dropdown" />
+
+    </LinearLayout>
+
+</FrameLayout>
