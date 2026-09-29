@@ -4,6 +4,11 @@ package com.example.cameraoption;
 public final class ExposureBrightness {
     private ExposureBrightness() { }
 
+    /** Two percent dimmer encoded RGB, applied before the shared gamma transform. */
+    public static double adjustForDisplay(double multiplier) {
+        return multiplier * Math.pow(0.98, 2.2);
+    }
+
     public static double encodedScale(double multiplier) {
         if (!Double.isFinite(multiplier) || multiplier <= 0.0) {
             throw new IllegalArgumentException("Brightness multiplier must be finite and positive");

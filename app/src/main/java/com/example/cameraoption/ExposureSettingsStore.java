@@ -26,8 +26,8 @@ public final class ExposureSettingsStore {
     private static final String KEY_FIELD_OF_VIEW = "field_of_view";
 
     private static final String[] ISO_VALUES = {
-            "50", "64", "80", "100", "125", "160", "200", "250", "320",
-            "400", "500", "640", "800", "1000", "1250", "1600", "3200"
+            "50", "100", "125", "160", "200", "250",
+            "400", "500", "800", "1600", "3200"
     };
 
     private static final String[] APERTURE_VALUES = {

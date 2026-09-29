@@ -1,0 +1,26 @@
+:root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", sans-serif; color: #18212f; background: #f4f6f9; }
+* { box-sizing: border-box; }
+body { margin: 0; line-height: 1.8; font-size: 1rem; overflow-wrap: anywhere; }
+a { color: #194da8; text-underline-offset: .2em; }
+a:hover { color: #102f66; }
+a:focus-visible { outline: 3px solid #2964ce; outline-offset: 4px; border-radius: 2px; }
+.masthead { background: #15191f; color: white; border-bottom: 4px solid #285ab8; }
+.masthead > div { max-width: 54rem; margin: auto; padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1.2rem; flex-wrap: wrap; }
+.brand { font-size: 1.2rem; letter-spacing: .035em; font-weight: 700; }
+nav { display: flex; gap: .35rem; flex-wrap: wrap; }
+nav a { min-height: 44px; display: inline-flex; align-items: center; padding: .3rem .7rem; font-size: .875rem; color: #dbe5f7; border-radius: 6px; text-decoration: none; }
+nav a:hover { color: white; background: #293443; }
+nav a[aria-current="page"] { color: white; background: #285ab8; }
+main { max-width: 50rem; margin: 2.5rem auto; padding: 2.5rem 3rem; background: white; border: 1px solid #dce2ea; border-radius: 12px; }
+h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); line-height: 1.35; letter-spacing: -.025em; margin: 0 0 .5rem; }
+.date { color: #536071; font-size: .875rem; margin: 0 0 2rem; }
+.intro { border-left: 3px solid #285ab8; padding-left: 1.2rem; }
+h2 { font-size: 1.15rem; line-height: 1.5; margin-top: 2.2rem; padding-top: 1.5rem; border-top: 1px solid #e2e7ef; }
+p { margin: .75rem 0; }
+ul { padding-left: 1.4rem; }
+li { margin: .45rem 0; }
+.contact { border-radius: 8px; background: #eef3fc; padding: 1rem 1.2rem; }
+.draft { border: 2px solid #9b4c00; padding: 1rem; background: #fff7ed; }
+footer { max-width: 50rem; margin: 1.5rem auto 2.5rem; padding: 0 1.5rem; font-size: .875rem; color: #536071; }
+@media (max-width: 600px) { .masthead > div { padding: 1rem 1.2rem; } main { margin: 1rem; padding: 1.5rem 1.25rem; border-radius: 8px; } nav a { padding: .3rem .6rem; } }
+@media print { body { background: white; } .masthead { background: white; color: black; } nav { display: none; } main { border: 0; margin: 0; max-width: none; } }

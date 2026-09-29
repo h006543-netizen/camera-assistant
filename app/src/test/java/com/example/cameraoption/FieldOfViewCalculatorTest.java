@@ -7,14 +7,14 @@ import org.junit.Test;
 public class FieldOfViewCalculatorTest {
 
     @Test
-    public void equivalentFocalLength_usesFullFrameAndSensorDiagonals() {
+    public void equivalentFocalLength_usesThreeByTwoCropOfFourByThreeSensor() {
         double equivalent = FieldOfViewCalculator.calculateEquivalentFocalLength(
                 5.0,
                 7.2,
                 5.4
         );
 
-        assertEquals(24.04, equivalent, 0.01);
+        assertEquals(25.0, equivalent, 0.01);
     }
 
     @Test
@@ -25,7 +25,29 @@ public class FieldOfViewCalculatorTest {
                 5.4
         );
 
-        assertEquals(24.04, equivalent, 0.01);
+        assertEquals(25.0, equivalent, 0.01);
+    }
+
+    @Test
+    public void equivalentFocalLength_handlesWideAndRotatedSensors() {
+        assertEquals(30.0, FieldOfViewCalculator.calculateEquivalentFocalLength(
+                5.0, 8.0, 4.0), 0.0001);
+        assertEquals(25.0, FieldOfViewCalculator.calculateEquivalentFocalLength(
+                5.0, 5.4, 7.2), 0.0001);
+        assertEquals(40.0, FieldOfViewCalculator.calculateEquivalentFocalLength(
+                40.0, 36.0, 24.0), 0.0001);
+    }
+
+    @Test
+    public void zoomRatio_matchesFilmWidthAndHeightFor40And50mm() {
+        double base = FieldOfViewCalculator.calculateEquivalentFocalLength(5.0, 7.2, 5.4);
+        for (String target : new String[]{"40mm", "50mm"}) {
+            double focal = target.equals("40mm") ? 40.0 : 50.0;
+            double zoom = FieldOfViewCalculator.calculateZoomRatio(target, base);
+            // Scene width/distance and height/distance must equal the film camera.
+            assertEquals(36.0 / focal, 7.2 / zoom / 5.0, 0.0001);
+            assertEquals(24.0 / focal, 4.8 / zoom / 5.0, 0.0001);
+        }
     }
 
     @Test

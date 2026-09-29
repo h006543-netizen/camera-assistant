@@ -9,6 +9,8 @@ import android.widget.Button;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.os.LocaleListCompat;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -69,7 +71,15 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         CameraSessionCache.clearExpired(this);
         setContentView(R.layout.activity_main);
+        SystemBarInsets.applyMainScreen(
+                this,
+                findViewById(R.id.mainStatusBarSpace),
+                findViewById(R.id.mainNavigationBarSpace)
+        );
         exposureSettingsStore = new ExposureSettingsStore(this);
+        findViewById(R.id.btnLanguage).setOnClickListener(view -> showLanguageDialog());
+        findViewById(R.id.btnPrivacyPolicy).setOnClickListener(view -> PrivacyUi.openPolicy(this));
+        findViewById(R.id.btnArPrivacy).setOnClickListener(view -> PrivacyUi.showArNotice(this, null));
 
         /*
             XML에 있는 View들을 Java 변수와 연결합니다.
@@ -157,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, DistanceCameraActivity.class);
-                startActivity(intent);
+                PrivacyUi.beforeRangefinder(MainActivity.this, () -> startActivity(intent));
             }
         });
     }
@@ -168,9 +178,26 @@ public class MainActivity extends AppCompatActivity {
         setItems()를 사용하면 목록 형태의 다이얼로그가 뜹니다.
         ISO 값이 많아지면 자동으로 스크롤됩니다.
     */
+    private void showLanguageDialog() {
+        String[] tags = {"", "ko", "en", "fr", "ja"};
+        String[] labels = {getString(R.string.language_system), "한국어", "English", "Français", "日本語"};
+        LocaleListCompat locales = AppCompatDelegate.getApplicationLocales();
+        String language = locales.isEmpty() ? "" : locales.get(0).getLanguage();
+        int selected = Math.max(0, java.util.Arrays.asList(tags).indexOf(language));
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.language_title)
+                .setSingleChoiceItems(labels, selected, (dialog, which) -> {
+                    dialog.dismiss();
+                    AppCompatDelegate.setApplicationLocales(
+                            LocaleListCompat.forLanguageTags(tags[which]));
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
     private void showIsoDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("ISO 선택");
+        builder.setTitle(getString(R.string.choose_iso));
 
         builder.setItems(isoValues, (dialogInterface, position) -> {
             selectedIso = isoValues[position];
@@ -186,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
     */
     private void showApertureDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("조리개 선택");
+        builder.setTitle(getString(R.string.choose_aperture));
 
         builder.setItems(apertureValues, (dialogInterface, position) -> {
             selectedAperture = apertureValues[position];
@@ -202,7 +229,7 @@ public class MainActivity extends AppCompatActivity {
     */
     private void showShutterDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("셔터속도 선택");
+        builder.setTitle(getString(R.string.choose_shutter));
 
         builder.setItems(shutterValues, (dialogInterface, position) -> {
             selectedShutter = shutterValues[position];
