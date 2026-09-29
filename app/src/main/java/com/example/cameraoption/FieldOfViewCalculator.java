@@ -33,8 +33,14 @@ public final class FieldOfViewCalculator {
             return Double.NaN;
         }
 
-        double sensorDiagonalMm = Math.hypot(sensorWidthMm, sensorHeightMm);
-        return actualFocalLengthMm * FULL_FRAME_DIAGONAL_MM / sensorDiagonalMm;
+        // Only the central 3:2 region reaches the shared preview/capture ViewPort.
+        // Normalize orientation so portrait sensor metadata gives the same result.
+        double longSideMm = Math.max(sensorWidthMm, sensorHeightMm);
+        double shortSideMm = Math.min(sensorWidthMm, sensorHeightMm);
+        double cropWidthMm = Math.min(longSideMm, shortSideMm * 1.5);
+        double cropHeightMm = cropWidthMm / 1.5;
+        return actualFocalLengthMm * FULL_FRAME_DIAGONAL_MM
+                / Math.hypot(cropWidthMm, cropHeightMm);
     }
 
     static double chooseBaseEquivalentFocalLength(

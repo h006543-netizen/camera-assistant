@@ -27,7 +27,9 @@ import androidx.camera.camera2.interop.Camera2CameraInfo;
 import androidx.camera.camera2.interop.CaptureRequestOptions;
 import androidx.camera.camera2.interop.ExperimentalCamera2Interop;
 import androidx.camera.core.Camera;
+import androidx.camera.core.AspectRatio;
 import androidx.camera.core.CameraSelector;
+import androidx.camera.core.CameraState;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.Preview;
@@ -68,7 +70,6 @@ public class ExposureCameraActivity extends AppCompatActivity {
 
     private ImageCapture imageCapture;
     private Camera camera;
-    private ZoomState zoomState;
     private Camera2CameraControl camera2Control;
     private Range<Integer> sensorIsoRange;
     private Range<Long> sensorExposureRange;
@@ -77,7 +78,6 @@ public class ExposureCameraActivity extends AppCompatActivity {
     private double baseEquivalentFocalLengthMm =
             FieldOfViewCalculator.DEFAULT_PHONE_EQUIVALENT_MM;
     private boolean manualSensorSupported;
-    private boolean initialFieldOfViewApplied;
     private ListenableFuture<Void> fieldOfViewApplyFuture;
     private boolean captureInProgress;
     private double lastResidualBrightnessMultiplier = 1.0;
@@ -89,7 +89,7 @@ public class ExposureCameraActivity extends AppCompatActivity {
                         if (granted) {
                             startCamera();
                         } else {
-                            showPersistentStatus("카메라 권한이 필요합니다.");
+                            showPersistentStatus(getString(R.string.camera_permission));
                         }
                     }
             );
@@ -101,8 +101,9 @@ public class ExposureCameraActivity extends AppCompatActivity {
         setContentView(R.layout.activity_exposure_camera);
         exposureSettingsStore = new ExposureSettingsStore(this);
 
-        SystemBarInsets.apply(
+        SystemBarInsets.applyWithSeparateStatusBar(
                 this,
+                findViewById(R.id.exposureStatusBarSpace),
                 findViewById(R.id.exposureTopControls),
                 findViewById(R.id.exposureBottomControls)
         );
@@ -159,25 +160,25 @@ public class ExposureCameraActivity extends AppCompatActivity {
         LinearLayout fieldOfViewButton = findViewById(R.id.btnExposureFieldOfView);
 
         isoButton.setOnClickListener(view -> showValueDialog(
-                "ISO 선택",
+                getString(R.string.choose_iso),
                 ISO_VALUES,
                 selectedIso,
                 value -> selectedIso = value
         ));
         apertureButton.setOnClickListener(view -> showValueDialog(
-                "조리개 선택",
+                getString(R.string.choose_aperture),
                 APERTURE_VALUES,
                 selectedAperture,
                 value -> selectedAperture = value
         ));
         shutterButton.setOnClickListener(view -> showValueDialog(
-                "셔터속도 선택",
+                getString(R.string.choose_shutter),
                 SHUTTER_VALUES,
                 selectedShutter,
                 value -> selectedShutter = value
         ));
         fieldOfViewButton.setOnClickListener(view -> showValueDialog(
-                "35mm 환산 화각 선택",
+                getString(R.string.choose_fov),
                 FIELD_OF_VIEW_VALUES,
                 selectedFieldOfView,
                 value -> selectedFieldOfView = value
@@ -194,9 +195,15 @@ public class ExposureCameraActivity extends AppCompatActivity {
     ) {
         int selectedIndex = Math.max(0, Arrays.asList(values).indexOf(selectedValue));
 
+        String[] labels = values.clone();
+        for (int i = 0; i < labels.length; i++) {
+            if (ExposureSettingsStore.FIELD_OF_VIEW_DEFAULT.equals(labels[i])) {
+                labels[i] = getString(R.string.fov_default);
+            }
+        }
         new AlertDialog.Builder(this)
                 .setTitle(title)
-                .setSingleChoiceItems(values, selectedIndex, (dialog, which) -> {
+                .setSingleChoiceItems(labels, selectedIndex, (dialog, which) -> {
                     listener.onSelected(values[which]);
                     saveExposureSettings();
                     updateDisplayedValues();
@@ -204,7 +211,7 @@ public class ExposureCameraActivity extends AppCompatActivity {
                     applyFieldOfView();
                     dialog.dismiss();
                 })
-                .setNegativeButton("취소", null)
+                .setNegativeButton(getString(R.string.cancel), null)
                 .show();
     }
 
@@ -212,7 +219,9 @@ public class ExposureCameraActivity extends AppCompatActivity {
         isoValueView.setText(selectedIso);
         apertureValueView.setText(selectedAperture);
         shutterValueView.setText(selectedShutter);
-        fieldOfViewValueView.setText(selectedFieldOfView);
+        fieldOfViewValueView.setText(
+                ExposureSettingsStore.FIELD_OF_VIEW_DEFAULT.equals(selectedFieldOfView)
+                        ? getString(R.string.fov_default) : selectedFieldOfView);
     }
 
     private void saveExposureSettings() {
@@ -240,7 +249,7 @@ public class ExposureCameraActivity extends AppCompatActivity {
 
                 previewView.post(() -> bindCameraUseCases(provider));
             } catch (Exception error) {
-                showPersistentStatus("카메라를 시작할 수 없습니다.");
+                showPersistentStatus(getString(R.string.camera_start_error));
             }
         }, mainExecutor);
     }
@@ -249,14 +258,19 @@ public class ExposureCameraActivity extends AppCompatActivity {
         try {
             ViewPort viewPort = previewView.getViewPort();
             if (viewPort == null) {
-                showPersistentStatus("촬영 화각을 준비할 수 없습니다.");
+                showPersistentStatus(getString(R.string.fov_prepare_error));
                 return;
             }
 
-            Preview preview = new Preview.Builder().build();
+            // Prefer full-height 4:3 streams; the common 2:3 ViewPort crops both.
+            // A wide screen-sized stream would discard the vertical field first.
+            Preview preview = new Preview.Builder()
+                    .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+                    .build();
             preview.setSurfaceProvider(previewView.getSurfaceProvider());
 
             imageCapture = new ImageCapture.Builder()
+                    .setTargetAspectRatio(AspectRatio.RATIO_4_3)
                     .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                     .build();
 
@@ -276,7 +290,7 @@ public class ExposureCameraActivity extends AppCompatActivity {
             configureManualSensor(camera);
             configureFieldOfView(camera);
         } catch (Exception error) {
-            showPersistentStatus("카메라를 시작할 수 없습니다.");
+            showPersistentStatus(getString(R.string.camera_start_error));
         }
     }
 
@@ -321,7 +335,7 @@ public class ExposureCameraActivity extends AppCompatActivity {
             applyExposure();
         } else {
             showPersistentStatus(
-                    "이 카메라는 완전 수동 노출을 지원하지 않아 밝기 변화만 미리 보여줍니다."
+                    getString(R.string.manual_unsupported)
             );
             applyFallbackPreview();
         }
@@ -348,18 +362,21 @@ public class ExposureCameraActivity extends AppCompatActivity {
                     FieldOfViewCalculator.DEFAULT_PHONE_EQUIVALENT_MM;
         }
 
-        initialFieldOfViewApplied = false;
-        camera.getCameraInfo().getZoomState().observe(this, currentZoomState -> {
-            zoomState = currentZoomState;
-            if (!initialFieldOfViewApplied && currentZoomState != null) {
-                initialFieldOfViewApplied = true;
+        // CameraX resets zoom when the lifecycle stops (e.g. on the result screen).
+        // Restore the selection after every open, when camera controls are active.
+        camera.getCameraInfo().getCameraState().observe(this, cameraState -> {
+            if (cameraState.getType() == CameraState.Type.OPEN) {
                 applyFieldOfView();
             }
         });
     }
 
     private void applyFieldOfView() {
-        if (camera == null || zoomState == null) {
+        if (camera == null) {
+            return;
+        }
+        ZoomState zoomState = camera.getCameraInfo().getZoomState().getValue();
+        if (zoomState == null) {
             return;
         }
 
@@ -378,7 +395,7 @@ public class ExposureCameraActivity extends AppCompatActivity {
         if (Math.abs(appliedZoomRatio - requestedZoomRatio) > 0.01f) {
             Toast.makeText(
                     this,
-                    "기기 줌 범위에 맞춰 가장 가까운 화각으로 표시합니다.",
+                    getString(R.string.zoom_limit),
                     Toast.LENGTH_SHORT
             ).show();
         }
@@ -455,12 +472,12 @@ public class ExposureCameraActivity extends AppCompatActivity {
             applyResidualBrightness(result.getResidualBrightnessMultiplier());
 
             if (result.isHardwareRangeLimited()) {
-                showTransientStatus("기기 노출 범위에 맞춰 가장 가까운 밝기로 표시합니다.");
+                showTransientStatus(getString(R.string.exposure_limit));
             } else {
                 hideStatus();
             }
         } catch (RuntimeException error) {
-            showPersistentStatus("선택한 노출값을 적용할 수 없습니다.");
+            showPersistentStatus(getString(R.string.exposure_error));
         }
     }
 
@@ -477,6 +494,7 @@ public class ExposureCameraActivity extends AppCompatActivity {
     }
 
     private void applyResidualBrightness(double multiplier) {
+        multiplier = ExposureBrightness.adjustForDisplay(multiplier);
         lastResidualBrightnessMultiplier = multiplier;
 
         if (multiplier == 1.0) {
@@ -501,12 +519,12 @@ public class ExposureCameraActivity extends AppCompatActivity {
         }
 
         if (imageCapture == null) {
-            Toast.makeText(this, "카메라를 준비하고 있습니다.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.camera_preparing), Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (fieldOfViewApplyFuture == null) {
-            Toast.makeText(this, "화각을 준비하고 있습니다.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.fov_preparing), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -516,7 +534,7 @@ public class ExposureCameraActivity extends AppCompatActivity {
 
     private void waitForFieldOfViewAndCapture(ListenableFuture<Void> applyFuture) {
         if (!applyFuture.isDone()) {
-            showTransientStatus("선택한 화각을 적용하고 있습니다.");
+            showTransientStatus(getString(R.string.fov_applying));
             applyFuture.addListener(
                     () -> waitForFieldOfViewAndCapture(applyFuture),
                     ContextCompat.getMainExecutor(this)
@@ -535,7 +553,7 @@ public class ExposureCameraActivity extends AppCompatActivity {
             captureInProgress = false;
             Toast.makeText(
                     this,
-                    "선택한 화각을 적용하지 못했습니다. 다시 시도해 주세요.",
+                    getString(R.string.fov_error),
                     Toast.LENGTH_SHORT
             ).show();
             return;
@@ -553,7 +571,7 @@ public class ExposureCameraActivity extends AppCompatActivity {
             captureInProgress = false;
             Toast.makeText(
                     this,
-                    "촬영 임시 파일을 만들 수 없습니다.",
+                    getString(R.string.temp_file_error),
                     Toast.LENGTH_SHORT
             ).show();
             return;
@@ -574,7 +592,7 @@ public class ExposureCameraActivity extends AppCompatActivity {
                         if (!outputFile.isFile() || outputFile.length() <= 0L) {
                             Toast.makeText(
                                     ExposureCameraActivity.this,
-                                    "촬영 파일을 생성하지 못했습니다.",
+                                    getString(R.string.capture_file_error),
                                     Toast.LENGTH_SHORT
                             ).show();
                             return;
@@ -613,7 +631,7 @@ public class ExposureCameraActivity extends AppCompatActivity {
                         captureInProgress = false;
                         Toast.makeText(
                                 ExposureCameraActivity.this,
-                                "사진을 촬영하지 못했습니다.",
+                                getString(R.string.capture_error),
                                 Toast.LENGTH_SHORT
                         ).show();
                     }

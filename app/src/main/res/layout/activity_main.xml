@@ -7,6 +7,13 @@
     android:orientation="vertical"
     android:background="#F7F7F7">
 
+    <View
+        android:id="@+id/mainStatusBarSpace"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="#151515"
+        android:importantForAccessibility="no" />
+
     <!-- 상단 앱바: 고정 영역 -->
     <LinearLayout
         android:id="@+id/topBar"
@@ -19,35 +26,37 @@
         android:background="#151515">
 
         <TextView
-            android:id="@+id/tvCameraIcon"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:gravity="center"
-            android:text="▣"
-            android:textColor="#FFFFFF"
-            android:textSize="23sp"
-            android:includeFontPadding="false" />
-
-        <TextView
             android:id="@+id/tvTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="18dp"
-            android:text="필름카메라 보조"
+            android:text="@string/main_title"
+            android:maxLines="1"
+            android:ellipsize="end"
+            app:autoSizeTextType="uniform"
+            app:autoSizeMinTextSize="14sp"
+            app:autoSizeMaxTextSize="22sp"
+            app:autoSizeStepGranularity="1sp"
             android:textColor="#FFFFFF"
             android:textSize="22sp"
             android:textStyle="bold"
             android:includeFontPadding="false" />
 
         <TextView
-            android:id="@+id/btnMore"
-            android:layout_width="32dp"
-            android:layout_height="40dp"
+            android:id="@+id/btnLanguage"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:minWidth="48dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
             android:gravity="center"
-            android:text="⋮"
+            android:text="@string/language_button"
+            android:contentDescription="@string/language_description"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
             android:textColor="#FFFFFF"
-            android:textSize="30sp"
+            android:textSize="12sp"
             android:includeFontPadding="false" />
 
     </LinearLayout>
@@ -59,8 +68,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:fillViewport="true"
-        android:scrollbars="vertical"
-        android:fadeScrollbars="false"
+        android:scrollbars="none"
         android:overScrollMode="ifContentScrolls">
 
         <LinearLayout
@@ -69,22 +77,24 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingStart="20dp"
-            android:paddingTop="18dp"
+            android:paddingTop="10dp"
             android:paddingEnd="20dp"
-            android:paddingBottom="18dp">
+            android:paddingBottom="10dp">
 
             <!-- 노출 설정 카드 -->
             <LinearLayout
                 android:id="@+id/cardExposure"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="2"
+                android:minHeight="344dp"
                 android:background="@drawable/bg_card"
                 android:elevation="4dp"
                 android:orientation="vertical"
                 android:paddingStart="26dp"
-                android:paddingTop="26dp"
+                android:paddingTop="18dp"
                 android:paddingEnd="26dp"
-                android:paddingBottom="22dp">
+                android:paddingBottom="16dp">
 
                 <!-- 제목 영역 -->
                 <LinearLayout
@@ -110,7 +120,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="14dp"
                         android:includeFontPadding="false"
-                        android:text="노출 설정"
+                        android:text="@string/exposure_title"
                         android:textColor="#111111"
                         android:textSize="23sp"
                         android:textStyle="bold" />
@@ -121,19 +131,24 @@
                     android:id="@+id/tvExposureDescription"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
+                    android:layout_marginTop="14dp"
                     android:includeFontPadding="false"
-                    android:maxLines="1"
-                    android:text="필름 촬영을 위한 기본 노출 값을 설정하세요."
+                    android:text="@string/exposure_description"
                     android:textColor="#777777"
                     android:textSize="15sp" />
+
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="0.25" />
 
                 <!-- ISO / 조리개 / 셔터속도 -->
                 <LinearLayout
                     android:id="@+id/exposureValueLayout"
                     android:layout_width="match_parent"
-                    android:layout_height="142dp"
-                    android:layout_marginTop="28dp"
+                    android:layout_height="124dp"
+                    android:layout_weight="1"
+                    android:layout_marginTop="16dp"
                     android:orientation="horizontal">
 
                     <!-- ISO -->
@@ -151,10 +166,16 @@
 
                         <TextView
                             android:id="@+id/tvIsoLabel"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:includeFontPadding="false"
-                            android:text="ISO"
+                            android:maxLines="1"
+                            android:gravity="center"
+                            app:autoSizeTextType="uniform"
+                            app:autoSizeMinTextSize="10sp"
+                            app:autoSizeMaxTextSize="17sp"
+                            app:autoSizeStepGranularity="1sp"
+                            android:text="@string/iso_label"
                             android:textColor="#222222"
                             android:textSize="17sp"
                             android:textStyle="bold" />
@@ -163,7 +184,7 @@
                             android:id="@+id/tvIsoValue"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="24dp"
+                            android:layout_marginTop="14dp"
                             android:gravity="center"
                             android:includeFontPadding="false"
                             android:maxLines="1"
@@ -182,7 +203,7 @@
                             android:id="@+id/tvIsoArrow"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="24dp"
+                            android:layout_marginTop="14dp"
                             android:includeFontPadding="false"
                             android:text="∨"
                             android:textColor="#111111"
@@ -207,10 +228,16 @@
 
                         <TextView
                             android:id="@+id/tvApertureLabel"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:includeFontPadding="false"
-                            android:text="조리개"
+                            android:maxLines="1"
+                            android:gravity="center"
+                            app:autoSizeTextType="uniform"
+                            app:autoSizeMinTextSize="10sp"
+                            app:autoSizeMaxTextSize="17sp"
+                            app:autoSizeStepGranularity="1sp"
+                            android:text="@string/aperture_label"
                             android:textColor="#222222"
                             android:textSize="17sp"
                             android:textStyle="bold" />
@@ -219,7 +246,7 @@
                             android:id="@+id/tvApertureValue"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="24dp"
+                            android:layout_marginTop="14dp"
                             android:gravity="center"
                             android:includeFontPadding="false"
                             android:maxLines="1"
@@ -238,7 +265,7 @@
                             android:id="@+id/tvApertureArrow"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="24dp"
+                            android:layout_marginTop="14dp"
                             android:includeFontPadding="false"
                             android:text="∨"
                             android:textColor="#111111"
@@ -263,11 +290,16 @@
 
                         <TextView
                             android:id="@+id/tvShutterLabel"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:includeFontPadding="false"
                             android:maxLines="1"
-                            android:text="셔터속도"
+                            android:gravity="center"
+                            app:autoSizeTextType="uniform"
+                            app:autoSizeMinTextSize="10sp"
+                            app:autoSizeMaxTextSize="17sp"
+                            app:autoSizeStepGranularity="1sp"
+                            android:text="@string/shutter_label"
                             android:textColor="#222222"
                             android:textSize="17sp"
                             android:textStyle="bold" />
@@ -276,7 +308,7 @@
                             android:id="@+id/tvShutterValue"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="24dp"
+                            android:layout_marginTop="14dp"
                             android:gravity="center"
                             android:includeFontPadding="false"
                             android:maxLines="1"
@@ -295,7 +327,7 @@
                             android:id="@+id/tvShutterArrow"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="24dp"
+                            android:layout_marginTop="14dp"
                             android:includeFontPadding="false"
                             android:text="∨"
                             android:textColor="#111111"
@@ -311,7 +343,7 @@
                     android:id="@+id/infoLayout"
                     android:layout_width="match_parent"
                     android:layout_height="20dp"
-                    android:layout_marginTop="22dp"
+                    android:layout_marginTop="14dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -332,22 +364,27 @@
                         android:layout_marginStart="8dp"
                         android:includeFontPadding="false"
                         android:maxLines="1"
-                        android:text="값을 탭하여 변경할 수 있습니다."
+                        android:text="@string/change_hint"
                         android:textColor="#8A8A8A"
                         android:textSize="14sp" />
 
                 </LinearLayout>
 
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="0.25" />
+
                 <!-- 노출계 버튼 -->
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/btnExposureCamera"
                     android:layout_width="match_parent"
-                    android:layout_height="68dp"
-                    android:layout_marginTop="26dp"
+                    android:layout_height="64dp"
+                    android:layout_marginTop="16dp"
                     android:background="@drawable/bg_btn_dark"
                     android:maxLines="1"
                     android:stateListAnimator="@null"
-                    android:text="▣   노출계 카메라 실행"
+                    android:text="@string/open_exposure"
                     android:textAllCaps="false"
                     android:textColor="#FFFFFF"
                     android:textSize="19sp"
@@ -359,20 +396,22 @@
             <!-- 카드 간격 -->
             <Space
                 android:layout_width="match_parent"
-                android:layout_height="18dp" />
+                android:layout_height="12dp" />
 
             <!-- 거리 측정 카드 -->
             <LinearLayout
                 android:id="@+id/cardDistance"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:minHeight="190dp"
                 android:background="@drawable/bg_card"
                 android:elevation="4dp"
                 android:orientation="vertical"
                 android:paddingStart="26dp"
-                android:paddingTop="28dp"
+                android:paddingTop="18dp"
                 android:paddingEnd="26dp"
-                android:paddingBottom="22dp">
+                android:paddingBottom="16dp">
 
                 <!-- 거리 측정 제목 영역 -->
                 <LinearLayout
@@ -398,34 +437,43 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="14dp"
                         android:includeFontPadding="false"
-                        android:text="거리 측정"
+                        android:text="@string/distance_title"
                         android:textColor="#111111"
                         android:textSize="23sp"
                         android:textStyle="bold" />
 
                 </LinearLayout>
 
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
                 <TextView
                     android:id="@+id/tvDistanceDescription"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="22dp"
+                    android:layout_marginTop="14dp"
                     android:includeFontPadding="false"
-                    android:maxLines="1"
-                    android:text="거리계를 사용하여 피사체까지의 거리를 측정하세요."
+                    android:text="@string/distance_description"
                     android:textColor="#777777"
                     android:textSize="15sp" />
+
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
 
                 <!-- 거리계 버튼 -->
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/btnDistanceCamera"
                     android:layout_width="match_parent"
-                    android:layout_height="68dp"
-                    android:layout_marginTop="30dp"
+                    android:layout_height="54dp"
+                    android:layout_marginTop="16dp"
                     android:background="@drawable/bg_btn_blue"
                     android:maxLines="1"
                     android:stateListAnimator="@null"
-                    android:text="▣   거리계 카메라 실행"
+                    android:text="@string/open_distance"
                     android:textAllCaps="false"
                     android:textColor="#FFFFFF"
                     android:textSize="19sp"
@@ -437,5 +485,50 @@
         </LinearLayout>
 
     </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
+
+        <TextView
+            android:id="@+id/btnPrivacyPolicy"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.3"
+            android:minHeight="48dp"
+            android:padding="8dp"
+            android:gravity="center"
+            android:text="@string/privacy_policy"
+            android:textSize="12sp"
+            android:textColor="#194DA8"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:id="@+id/btnArPrivacy"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:minHeight="48dp"
+            android:padding="8dp"
+            android:gravity="center"
+            android:text="@string/ar_privacy_title"
+            android:textSize="12sp"
+            android:textColor="#194DA8"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/mainNavigationBarSpace"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="#000000"
+        android:importantForAccessibility="no" />
 
 </LinearLayout>

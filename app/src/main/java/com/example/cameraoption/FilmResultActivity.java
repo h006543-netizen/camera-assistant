@@ -15,20 +15,14 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
@@ -37,9 +31,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -71,7 +63,6 @@ public class FilmResultActivity extends AppCompatActivity {
     private ProgressBar progressView;
     private TextView statusView;
     private TextView saveButton;
-    private Spinner filmSpinner;
 
     private Bitmap originalBitmap;
     private Bitmap displayedBitmap;
@@ -81,7 +72,6 @@ public class FilmResultActivity extends AppCompatActivity {
     private String capturedShutter = ExposureSettingsStore.DEFAULT_SHUTTER;
     private String capturedFieldOfView = ExposureSettingsStore.FIELD_OF_VIEW_DEFAULT;
     private double exposureMultiplier = 1.0;
-    private FilmProcessor.Preset selectedPreset = FilmProcessor.Preset.NONE;
     private boolean isSaving;
     private boolean saveCompleted;
     private boolean previewProcessing;
@@ -97,7 +87,7 @@ public class FilmResultActivity extends AppCompatActivity {
                         } else {
                             Toast.makeText(
                                     this,
-                                    "갤러리에 저장하려면 저장소 권한이 필요합니다.",
+                                    getString(R.string.storage_permission),
                                     Toast.LENGTH_SHORT
                             ).show();
                         }
@@ -119,7 +109,6 @@ public class FilmResultActivity extends AppCompatActivity {
         progressView = findViewById(R.id.progressFilmProcessing);
         statusView = findViewById(R.id.tvFilmResultStatus);
         saveButton = findViewById(R.id.btnFilmResultSave);
-        filmSpinner = findViewById(R.id.spinnerFilmPreset);
 
         findViewById(R.id.btnFilmResultBack).setOnClickListener(view -> handleBack());
         saveButton.setOnClickListener(view -> requestSave());
@@ -133,85 +122,7 @@ public class FilmResultActivity extends AppCompatActivity {
                 }
         );
 
-        setupFilmSelector();
-        if (savedInstanceState != null) {
-            selectedPreset = FilmProcessor.Preset.fromDisplayName(savedInstanceState.getString("preset"));
-            filmSpinner.setSelection(selectedPreset.ordinal());
-        }
         loadCapturedImage();
-    }
-
-    private void setupFilmSelector() {
-        List<String> names = Arrays.asList(
-                FilmProcessor.Preset.NONE.getDisplayName(),
-                FilmProcessor.Preset.GOLD_200.getDisplayName(),
-                FilmProcessor.Preset.PORTRA_400.getDisplayName(),
-                FilmProcessor.Preset.CINESTILL_800T.getDisplayName(),
-                FilmProcessor.Preset.VISION3_250D.getDisplayName()
-        );
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-                this,
-                android.R.layout.simple_spinner_item,
-                names
-        ) {
-            @NonNull
-            @Override
-            public View getView(
-                    int position,
-                    @Nullable View convertView,
-                    @NonNull ViewGroup parent
-            ) {
-                TextView view = (TextView) super.getView(position, convertView, parent);
-                view.setTextColor(0xFFFFFFFF);
-                view.setTextSize(16f);
-                view.setPadding(0, 0, 0, 0);
-                return view;
-            }
-
-            @Override
-            public View getDropDownView(
-                    int position,
-                    @Nullable View convertView,
-                    @NonNull ViewGroup parent
-            ) {
-                TextView view = (TextView) super.getDropDownView(
-                        position,
-                        convertView,
-                        parent
-                );
-                view.setTextColor(0xFF111111);
-                view.setTextSize(16f);
-                view.setPadding(24, 20, 24, 20);
-                return view;
-            }
-        };
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        filmSpinner.setAdapter(adapter);
-        filmSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(
-                    AdapterView<?> parent,
-                    View view,
-                    int position,
-                    long id
-            ) {
-                selectedPreset =
-                        FilmProcessor.Preset.fromDisplayName(names.get(position));
-                saveCompleted = isCaptureSaved();
-                saveButton.setText("저장");
-                saveButton.setEnabled(originalBitmap != null);
-
-                if (originalBitmap != null) {
-                    applyFilmPreset(selectedPreset);
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // 선택 없음 항목이 항상 존재하므로 별도 처리가 필요 없다.
-            }
-        });
     }
 
     private void loadCapturedImage() {
@@ -234,13 +145,13 @@ public class FilmResultActivity extends AppCompatActivity {
         );
 
         if (imagePath == null || imagePath.trim().isEmpty()) {
-            showError("촬영한 사진 경로가 없습니다.");
+            showError(getString(R.string.photo_path_missing));
             return;
         }
 
         File imageFile = new File(imagePath);
         if (!imageFile.isFile() || imageFile.length() <= 0L) {
-            showError("촬영한 사진을 불러올 수 없습니다.");
+            showError(getString(R.string.photo_unavailable));
             return;
         }
 
@@ -276,7 +187,7 @@ public class FilmResultActivity extends AppCompatActivity {
                     }
                     originalBitmap = exposureAdjusted;
                     displayBitmap(originalBitmap);
-                    applyFilmPreset(selectedPreset);
+                    setProcessing(false);
                 });
                 working = null; // Ownership transferred to the main-thread callback.
             } catch (java.util.concurrent.CancellationException ignored) {
@@ -284,45 +195,10 @@ public class FilmResultActivity extends AppCompatActivity {
             } catch (Exception | OutOfMemoryError error) {
                 runOnUiThread(() -> {
                     if (!isDestroyed() && generation == processingGeneration.get())
-                        showError("촬영한 사진을 불러오지 못했습니다.");
+                        showError(getString(R.string.photo_load_error));
                 });
             } finally {
                 recycleIfNeeded(working);
-            }
-        });
-    }
-
-    private void applyFilmPreset(FilmProcessor.Preset preset) {
-        int generation = processingGeneration.incrementAndGet();
-
-        if (preset == FilmProcessor.Preset.NONE) {
-            displayBitmap(originalBitmap);
-            setProcessing(false);
-            return;
-        }
-
-        setProcessing(true);
-        Bitmap source = originalBitmap;
-        processingExecutor.execute(() -> {
-            try {
-            Bitmap processed = FilmProcessor.applyPreset(source, preset,
-                    () -> generation != processingGeneration.get());
-
-            runOnUiThread(() -> {
-                if (isFinishing() || generation != processingGeneration.get()) {
-                    processed.recycle();
-                    return;
-                }
-                displayBitmap(processed);
-                setProcessing(false);
-            });
-            } catch (java.util.concurrent.CancellationException ignored) {
-                // A newer selection or a stopped screen owns the next preview.
-            } catch (RuntimeException | OutOfMemoryError error) {
-                runOnUiThread(() -> {
-                    if (!isDestroyed() && generation == processingGeneration.get())
-                        showError("사진 처리에 실패했습니다. 다시 선택해 주세요.");
-                });
             }
         });
     }
@@ -431,7 +307,6 @@ public class FilmResultActivity extends AppCompatActivity {
     private void setProcessing(boolean processing) {
         previewProcessing = processing;
         progressView.setVisibility(processing ? View.VISIBLE : View.GONE);
-        filmSpinner.setEnabled(!processing && !isSaving);
         saveButton.setEnabled(!processing && !isSaving && originalBitmap != null && !saveCompleted);
         if (processing) {
             statusView.setVisibility(View.GONE);
@@ -468,16 +343,14 @@ public class FilmResultActivity extends AppCompatActivity {
 
         File sourceFile = new File(imagePath);
         if (!sourceFile.isFile() || sourceFile.length() <= 0L) {
-            showError("저장할 촬영 원본이 없습니다.");
+            showError(getString(R.string.save_source_missing));
             return;
         }
 
         isSaving = true;
-        filmSpinner.setEnabled(false);
         saveButton.setEnabled(false);
-        saveButton.setText("저장 중");
+        saveButton.setText(getString(R.string.saving));
 
-        FilmProcessor.Preset presetToSave = selectedPreset;
         double multiplierToSave = exposureMultiplier;
         SaveJob job = new SaveJob();
         if (SAVE_JOBS.putIfAbsent(imagePath, job) != null) {
@@ -497,17 +370,13 @@ public class FilmResultActivity extends AppCompatActivity {
                     decoded = null;
                 }
 
-                finalBitmap = FilmProcessor.applyExposureAndPreset(
-                        rotated,
-                        multiplierToSave,
-                        presetToSave
-                );
+                finalBitmap = FilmProcessor.applyExposure(rotated, multiplierToSave);
                 if (finalBitmap != rotated) {
                     rotated.recycle();
                 }
                 rotated = null;
 
-                Uri savedUri = writeToGallery(finalBitmap, presetToSave);
+                Uri savedUri = writeToGallery(finalBitmap);
                 if (savedUri == null) {
                     throw new IOException("갤러리 URI를 만들지 못했습니다.");
                 }
@@ -537,9 +406,8 @@ public class FilmResultActivity extends AppCompatActivity {
         SaveJob job = SAVE_JOBS.get(imagePath);
         if (job != null && !job.complete) {
             isSaving = true;
-            filmSpinner.setEnabled(false);
             saveButton.setEnabled(false);
-            saveButton.setText("저장 중");
+            saveButton.setText(getString(R.string.saving));
             uiHandler.postDelayed(this::observeSave, 250);
             return;
         }
@@ -547,17 +415,11 @@ public class FilmResultActivity extends AppCompatActivity {
         saveCompleted = isCaptureSaved() || (job != null && job.succeeded);
         if (job != null) {
             SAVE_JOBS.remove(imagePath, job);
-            Toast.makeText(this, saveCompleted ? "CameraOption 앨범에 저장했습니다."
-                    : "갤러리에 저장하지 못했습니다. 다시 시도해 주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, saveCompleted ? getString(R.string.save_success)
+                    : getString(R.string.save_error), Toast.LENGTH_SHORT).show();
         }
-        saveButton.setText(saveCompleted ? "저장됨" : "저장");
+        saveButton.setText(saveCompleted ? getString(R.string.saved) : getString(R.string.save));
         saveButton.setEnabled(!previewProcessing && originalBitmap != null && !saveCompleted);
-        filmSpinner.setEnabled(!previewProcessing);
-    }
-
-    @Override protected void onSaveInstanceState(@NonNull Bundle state) {
-        state.putString("preset", selectedPreset.getDisplayName());
-        super.onSaveInstanceState(state);
     }
 
     @Override protected void onStart() {
@@ -566,7 +428,7 @@ public class FilmResultActivity extends AppCompatActivity {
         screenStopped = false;
         if (resumePreview) {
             if (originalBitmap == null) loadCapturedImage();
-            else applyFilmPreset(selectedPreset);
+            else setProcessing(false);
         }
         observeSave();
     }
@@ -579,15 +441,13 @@ public class FilmResultActivity extends AppCompatActivity {
     }
 
     private Uri writeToGallery(
-            Bitmap bitmap,
-            FilmProcessor.Preset preset
+            Bitmap bitmap
     ) throws IOException {
         String fileName = GalleryFileNameBuilder.build(
                 capturedIso,
                 capturedAperture,
                 capturedShutter,
                 capturedFieldOfView,
-                preset.getDisplayName(),
                 new Date()
         );
 
@@ -687,7 +547,7 @@ public class FilmResultActivity extends AppCompatActivity {
         if (isSaving) {
             Toast.makeText(
                     this,
-                    "갤러리에 저장하고 있습니다.",
+                    getString(R.string.save_progress),
                     Toast.LENGTH_SHORT
             ).show();
             return;

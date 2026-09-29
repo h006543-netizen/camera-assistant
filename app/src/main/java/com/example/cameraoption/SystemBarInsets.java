@@ -1,8 +1,12 @@
 package com.example.cameraoption;
 
 import android.app.Activity;
+import android.graphics.Color;
+import android.os.Build;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -24,7 +28,30 @@ public final class SystemBarInsets {
             View bottomControls
     ) {
         WindowCompat.setDecorFitsSystemWindows(activity.getWindow(), false);
+        applyDarkNavigationBar(activity);
         applyTopPadding(topControls);
+        applyBottomPadding(bottomControls);
+    }
+
+    public static void applyWithSeparateStatusBar(
+            Activity activity,
+            View statusBarSpace,
+            View topControls,
+            View bottomControls
+    ) {
+        WindowCompat.setDecorFitsSystemWindows(activity.getWindow(), false);
+        activity.getWindow().setStatusBarColor(Color.rgb(21, 21, 21));
+        WindowCompat.getInsetsController(activity.getWindow(),
+                activity.getWindow().getDecorView()).setAppearanceLightStatusBars(false);
+        applyDarkNavigationBar(activity);
+        ViewCompat.setOnApplyWindowInsetsListener(statusBarSpace, (view, insets) -> {
+            Insets safe = insets.getInsets(WindowInsetsCompat.Type.statusBars()
+                    | WindowInsetsCompat.Type.displayCutout());
+            setHeight(view, safe.top);
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(statusBarSpace);
+        applyTopMargin(topControls);
         applyBottomPadding(bottomControls);
     }
 
@@ -34,8 +61,72 @@ public final class SystemBarInsets {
             View bottomControls
     ) {
         WindowCompat.setDecorFitsSystemWindows(activity.getWindow(), false);
+        applyDarkNavigationBar(activity);
         applyTopPadding(topControls);
         applyBottomMargin(bottomControls);
+    }
+
+    public static void applyMainScreen(
+            Activity activity,
+            View statusBarSpace,
+            View navigationBarSpace
+    ) {
+        WindowCompat.setDecorFitsSystemWindows(activity.getWindow(), false);
+        activity.getWindow().setStatusBarColor(Color.rgb(21, 21, 21));
+        WindowCompat.getInsetsController(activity.getWindow(),
+                activity.getWindow().getDecorView()).setAppearanceLightStatusBars(false);
+        configureDarkNavigationBar(activity);
+
+        ViewCompat.setOnApplyWindowInsetsListener(statusBarSpace, (view, insets) -> {
+            Insets safe = insets.getInsets(WindowInsetsCompat.Type.statusBars()
+                    | WindowInsetsCompat.Type.displayCutout());
+            setHeight(view, safe.top);
+            return insets;
+        });
+        ViewCompat.setOnApplyWindowInsetsListener(navigationBarSpace, (view, insets) -> {
+            Insets nav = insets.getInsets(WindowInsetsCompat.Type.navigationBars()
+                    | WindowInsetsCompat.Type.systemGestures());
+            setHeight(view, nav.bottom);
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(statusBarSpace);
+        ViewCompat.requestApplyInsets(navigationBarSpace);
+    }
+
+    private static void setHeight(View view, int height) {
+        ViewGroup.LayoutParams params = view.getLayoutParams();
+        if (params.height != height) {
+            params.height = height;
+            view.setLayoutParams(params);
+        }
+    }
+
+    private static void applyDarkNavigationBar(Activity activity) {
+        configureDarkNavigationBar(activity);
+
+        // Android 15+ can draw the app behind the system bar. Cover only that inset,
+        // leaving the camera preview and its transparent controls untouched.
+        FrameLayout content = activity.findViewById(android.R.id.content);
+        View blackInset = new View(activity);
+        blackInset.setBackgroundColor(Color.BLACK);
+        blackInset.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        content.addView(blackInset, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, 0, Gravity.BOTTOM));
+        ViewCompat.setOnApplyWindowInsetsListener(blackInset, (view, insets) -> {
+            int bottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
+            setHeight(view, bottom);
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(blackInset);
+    }
+
+    private static void configureDarkNavigationBar(Activity activity) {
+        activity.getWindow().setNavigationBarColor(Color.BLACK);
+        WindowCompat.getInsetsController(activity.getWindow(),
+                activity.getWindow().getDecorView()).setAppearanceLightNavigationBars(false);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            activity.getWindow().setNavigationBarContrastEnforced(false);
+        }
     }
 
     private static void applyTopPadding(View topControls) {
@@ -56,6 +147,25 @@ public final class SystemBarInsets {
                     return windowInsets;
                 }
         );
+        ViewCompat.requestApplyInsets(topControls);
+    }
+
+    private static void applyTopMargin(View topControls) {
+        ViewGroup.MarginLayoutParams params =
+                (ViewGroup.MarginLayoutParams) topControls.getLayoutParams();
+        int initialTopMargin = params.topMargin;
+        ViewCompat.setOnApplyWindowInsetsListener(topControls, (view, insets) -> {
+            Insets safe = insets.getInsets(WindowInsetsCompat.Type.statusBars()
+                    | WindowInsetsCompat.Type.displayCutout());
+            ViewGroup.MarginLayoutParams updated =
+                    (ViewGroup.MarginLayoutParams) view.getLayoutParams();
+            int desired = initialTopMargin + safe.top;
+            if (updated.topMargin != desired) {
+                updated.topMargin = desired;
+                view.setLayoutParams(updated);
+            }
+            return insets;
+        });
         ViewCompat.requestApplyInsets(topControls);
     }
 

@@ -34,11 +34,11 @@ public class DistanceEstimatorTest {
         assertEquals(4, filter.update(4, FRAME * 4), .001f);
     }
 
-    @Test public void isolatedNineMeterSpikeIsNeverDisplayed() {
+    @Test public void isolatedOutOfRangeSpikeIsNeverDisplayed() {
         DistanceEstimator filter = new DistanceEstimator();
         filter.update(1, FRAME);
         filter.update(1, FRAME * 2);
-        assertTrue(Float.isNaN(filter.update(9, FRAME * 3)));
+        assertTrue(Float.isNaN(filter.update(12, FRAME * 3)));
         assertEquals(1, filter.update(1, FRAME * 4), .001f);
     }
 
@@ -59,14 +59,14 @@ public class DistanceEstimatorTest {
         assertTrue(Float.isNaN(filter.update(2, FRAME * 10)));
     }
 
-    @Test public void sixMeterBoundaryDoesNotBlendWithOutOfRange() {
+    @Test public void tenMeterBoundaryDoesNotBlendWithOutOfRange() {
         DistanceEstimator filter = new DistanceEstimator();
-        filter.update(6, FRAME);
-        assertEquals(6, filter.update(6, FRAME * 2), .001f);
-        assertTrue(Float.isNaN(filter.update(9, FRAME * 3)));
-        assertTrue(filter.update(9, FRAME * 4) > 6);
-        assertTrue(Float.isNaN(filter.update(5.9f, FRAME * 5)));
-        assertEquals(5.9f, filter.update(5.9f, FRAME * 6), .001f);
+        filter.update(10, FRAME);
+        assertEquals(10, filter.update(10, FRAME * 2), .001f);
+        assertTrue(Float.isNaN(filter.update(12, FRAME * 3)));
+        assertTrue(filter.update(12, FRAME * 4) > 10);
+        assertTrue(Float.isNaN(filter.update(9.9f, FRAME * 5)));
+        assertEquals(9.9f, filter.update(9.9f, FRAME * 6), .001f);
     }
 
     @Test public void depthReaderHandlesStrideUnsigned16BitsAndEdges() {
