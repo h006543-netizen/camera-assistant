@@ -4,7 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-/** 촬영 설정과 필름 정보를 갤러리에서 확인할 수 있는 JPEG 파일명으로 만든다. */
+/** 촬영 설정과 시각을 갤러리에서 확인할 수 있는 JPEG 파일명으로 만든다. */
 final class GalleryFileNameBuilder {
 
     private GalleryFileNameBuilder() {
@@ -15,7 +15,6 @@ final class GalleryFileNameBuilder {
             String aperture,
             String shutter,
             String fieldOfView,
-            String filmDisplayName,
             Date capturedAt
     ) {
         String timestamp = new SimpleDateFormat(
@@ -27,7 +26,6 @@ final class GalleryFileNameBuilder {
                 aperture,
                 shutter,
                 fieldOfView,
-                filmDisplayName,
                 timestamp
         );
     }
@@ -37,14 +35,12 @@ final class GalleryFileNameBuilder {
             String aperture,
             String shutter,
             String fieldOfView,
-            String filmDisplayName,
             String timestamp
     ) {
         return "ISO" + compactToken(iso, "Unknown")
                 + "_" + apertureToken(aperture)
                 + "_" + shutterToken(shutter)
                 + "_" + fieldOfViewToken(fieldOfView)
-                + "_" + filmToken(filmDisplayName)
                 + "_" + compactToken(timestamp, "UnknownTime")
                 + ".jpg";
     }
@@ -70,20 +66,6 @@ final class GalleryFileNameBuilder {
             return "Default";
         }
         return compactToken(fieldOfView, "Default");
-    }
-
-    private static String filmToken(String filmDisplayName) {
-        if (filmDisplayName == null
-                || filmDisplayName.trim().isEmpty()
-                || FilmProcessor.Preset.NONE.getDisplayName().equals(filmDisplayName)) {
-            return "NoFilm";
-        }
-
-        String value = filmDisplayName.trim();
-        if (value.startsWith("Kodak ")) {
-            value = value.substring("Kodak ".length());
-        }
-        return compactToken(value, "NoFilm");
     }
 
     private static String compactToken(String value, String fallback) {

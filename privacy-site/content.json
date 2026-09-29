@@ -1,0 +1,66 @@
+{
+  "ko": {
+    "title": "개인정보처리방침", "date_label": "문서 기준일", "language_label": "언어 선택",
+    "draft": "초안 — 운영자와 문의처 확인 후 공개합니다.",
+    "intro": "이 방침은 필름 촬영 보조 앱 ShutterNote의 카메라, 사진, 설정 및 거리 측정 관련 데이터 처리 방식을 설명합니다.",
+    "sections": [
+      ["1. 카메라와 센서 사용", ["카메라는 수동 노출 프리뷰, 사진 촬영, 중앙 피사체 거리 측정에 사용됩니다. 거리계는 Google Play Services for AR(ARCore)을 통해 카메라와 움직임 센서 정보를 사용합니다. 권한을 거부하면 관련 기능을 사용할 수 없으며, 기기 설정에서 카메라 권한을 변경할 수 있습니다."]],
+      ["2. 사진 처리와 저장", ["앱의 노출 보정은 기기에서 처리되며, 앱 자체는 촬영 사진을 개발자 서버에 업로드하지 않습니다. 저장 버튼을 누르면 결과가 기기의 CameraOption 앨범에 저장됩니다. 파일명에는 촬영 설정, 촬영 시각이 포함됩니다.", "앱은 촬영 결과 복구를 위해 기기 내 앱 캐시에 임시 사진을 저장합니다. 생성 후 24시간이 지난 파일은 다음 메인 화면 또는 노출계 진입 시 정리됩니다. 사용자가 앱을 다시 열지 않으면 정리 시점이 늦어질 수 있고, 운영체제가 캐시를 먼저 지울 수도 있습니다. 갤러리에 저장한 사진은 이 임시 파일 정리 대상이 아닙니다."]],
+      ["3. 설정과 백업", ["앱은 노출값, 화각, 언어, ARCore 안내 확인 여부와 중복 저장 방지를 위한 저장 상태를 기기에 보관합니다. 현재 앱은 Android 백업을 허용하므로 기기 설정과 백업 서비스에 따라 설정 및 저장 상태가 백업·복원될 수 있습니다. 앱 캐시의 임시 사진은 Android 자동 백업 대상에서 제외됩니다.", "앱 자체에는 회원가입, 광고 SDK 또는 별도의 사용자 행동 분석 서비스가 없습니다."]],
+      ["4. Google Play Services for AR", ["거리 측정 기능은 Google이 제공하는 ARCore를 사용하며 해당 서비스에는 Google 개인정보처리방침이 적용됩니다. Google의 ARCore 문서는 계정 또는 기기 식별자, 성능·진단 정보, API 사용 및 앱 활동 정보를 분석과 서비스 개선 목적으로 수집·처리한다고 설명합니다. Google에 대한 데이터 전송은 HTTPS로 암호화됩니다.", "이 앱은 ARCore Cloud Anchors 및 Geospatial API를 사용하지 않습니다. 거리계 기능을 사용하지 않아도 노출계와 사진 저장 기능을 사용할 수 있습니다. ARCore의 데이터 처리 및 보관에 대한 자세한 사항은 아래 Google 문서를 참고하세요."]],
+      ["5. 삭제와 관리", ["기기의 앱 설정에서 앱 데이터를 삭제하거나 앱을 제거하면 앱 내부에 보관한 설정과 데이터가 삭제됩니다. 갤러리에 저장한 사진은 갤러리에서 직접 삭제해야 합니다. 기기 또는 사진 백업 서비스에 저장된 사본은 해당 서비스에서 별도로 관리해야 합니다. Google이 처리하는 ARCore 데이터는 Google의 방침과 계정 관리 기능을 따릅니다."]],
+      ["6. 이 웹페이지", ["이 페이지에는 별도의 광고나 방문 분석 스크립트를 넣지 않습니다. 페이지 제공 과정에서 호스팅 서비스가 IP 주소 등 접속·보안 정보를 처리할 수 있습니다. 외부 링크를 열면 해당 서비스의 개인정보처리방침이 적용됩니다."]],
+      ["7. 변경 안내", ["기능이나 데이터 처리 방식이 바뀌면 이 방침과 문서 기준일을 갱신합니다. 필요한 경우 앱에서도 변경 내용을 안내합니다."]]
+    ],
+    "google_label": "Google 개인정보처리방침", "ar_label": "ARCore 데이터 처리 안내",
+    "contact_title": "8. 문의", "operator_label": "운영자", "email_label": "개인정보 문의", "contact_pending": "운영자 이름과 문의 이메일 확인이 필요합니다. 이 초안은 Play 등록용 최종 방침이 아닙니다."
+  },
+  "en": {
+    "title": "Privacy Policy", "date_label": "Document date", "language_label": "Choose language",
+    "draft": "Draft — publication is pending confirmation of the operator and contact details.",
+    "intro": "This policy explains how ShutterNote, a film photography companion app, handles camera, photo, settings and distance measurement data.",
+    "sections": [
+      ["1. Camera and sensors", ["The camera is used for manual exposure previews, photography and measuring distance to the central subject. The rangefinder uses camera and motion sensor information through Google Play Services for AR (ARCore). Denying camera permission disables the relevant features. You can change this permission in device settings."]],
+      ["2. Photo processing and storage", ["Exposure adjustments are processed on your device. The app itself does not upload captured photos to a developer server. Tapping Save stores the result in the CameraOption album on your device. Filenames include capture settings and the capture time.", "Temporary photos are kept in the app cache to restore captured results. Files older than 24 hours are cleaned up the next time you open the main screen or exposure camera. Cleanup may be delayed if you do not reopen the app, and the operating system may clear the cache sooner. Saved gallery photos are not included in this cleanup."]],
+      ["3. Settings and backups", ["The app stores exposure values, field of view, language, ARCore notice acknowledgement and save status to prevent duplicate saves on your device. Android backup is currently enabled, so settings and save status may be backed up and restored depending on your device and backup service. Temporary photos in the app cache are excluded from Android Auto Backup.", "The app itself has no account registration, advertising SDK or separate user analytics service."]],
+      ["4. Google Play Services for AR", ["Distance measurement uses ARCore, provided by Google and governed by the Google Privacy Policy. Google states that ARCore collects and processes account or device identifiers, performance and diagnostic information, API usage and app activity for analytics and service improvements. Data sent to Google is encrypted using HTTPS.", "This app does not use ARCore Cloud Anchors or the Geospatial API. You can use the exposure camera and photo saving without using the rangefinder. See the Google documents below for details about ARCore data processing and retention."]],
+      ["5. Deletion and control", ["Clearing app data in device settings or uninstalling the app removes its internally stored settings and data. Delete saved photos separately in your gallery. Manage any copies held by device or photo backup services through those services. ARCore data processed by Google is subject to Google policies and account controls."]],
+      ["6. This website", ["This page contains no added advertising or visitor analytics scripts. The hosting service may process access and security information, such as IP addresses, to deliver the page. External links are subject to the privacy policies of those services."]],
+      ["7. Changes", ["We update this policy and its document date when features or data practices change. We also provide in-app notice when needed."]]
+    ],
+    "google_label": "Google Privacy Policy", "ar_label": "ARCore data practices",
+    "contact_title": "8. Contact", "operator_label": "Operator", "email_label": "Privacy enquiries", "contact_pending": "The operator name and contact email still need confirmation. This draft is not a final policy for Play submission."
+  },
+  "fr": {
+    "title": "Politique de confidentialité", "date_label": "Date du document", "language_label": "Choisir la langue",
+    "draft": "Brouillon — publication après confirmation du responsable et des coordonnées.",
+    "intro": "Cette politique explique comment ShutterNote, une application d’aide à la photographie argentique, traite les données liées à la caméra, aux photos, aux réglages et à la mesure de distance.",
+    "sections": [
+      ["1. Caméra et capteurs", ["La caméra sert à prévisualiser l’exposition manuelle, à prendre des photos et à mesurer la distance au sujet central. Le télémètre utilise les informations de la caméra et des capteurs de mouvement via Google Play Services for AR (ARCore). Le refus de l’autorisation de la caméra désactive les fonctions concernées. Cette autorisation peut être modifiée dans les paramètres de l’appareil."]],
+      ["2. Traitement et stockage des photos", ["Les corrections d’exposition sont effectuées sur votre appareil. L’application elle-même ne téléverse pas les photos vers un serveur du développeur. Le bouton Enregistrer sauvegarde le résultat dans l’album CameraOption de l’appareil. Le nom du fichier comprend les réglages et la date et l’heure de prise de vue.", "Des photos temporaires sont conservées dans le cache pour restaurer les résultats. Les fichiers de plus de 24 heures sont supprimés lors de la prochaine ouverture de l’écran principal ou du posemètre. Cette suppression peut être retardée si vous ne rouvrez pas l’application ; le système peut aussi vider le cache plus tôt. Les photos enregistrées dans la galerie ne sont pas concernées."]],
+      ["3. Réglages et sauvegardes", ["L’application conserve sur l’appareil les valeurs d’exposition, le champ choisi, la langue, la prise de connaissance de l’avis ARCore et l’état des enregistrements pour éviter les doublons. La sauvegarde Android est actuellement activée : les réglages et l’état des enregistrements peuvent être sauvegardés et restaurés selon votre appareil et votre service de sauvegarde. Les photos temporaires du cache sont exclues de la sauvegarde automatique Android.", "L’application elle-même ne propose pas de création de compte et ne contient ni SDK publicitaire ni service distinct d’analyse du comportement des utilisateurs."]],
+      ["4. Google Play Services for AR", ["La mesure de distance utilise ARCore, fourni par Google et régi par sa politique de confidentialité. Selon Google, ARCore collecte et traite des identifiants de compte ou d’appareil, des informations de performance et de diagnostic, ainsi que l’utilisation des API et l’activité de l’application, à des fins d’analyse et d’amélioration. Les transferts vers Google sont chiffrés via HTTPS.", "Cette application n’utilise ni ARCore Cloud Anchors ni l’API Geospatial. Le posemètre et la sauvegarde des photos restent utilisables sans le télémètre. Consultez les documents Google ci-dessous pour connaître le traitement et la conservation des données ARCore."]],
+      ["5. Suppression et gestion", ["Effacer les données dans les paramètres de l’appareil ou désinstaller l’application supprime ses réglages et données internes. Les photos de la galerie doivent être supprimées séparément. Gérez les copies conservées par les services de sauvegarde auprès de ces services. Les données ARCore traitées par Google relèvent des règles et des outils de gestion de compte de Google."]],
+      ["6. Ce site", ["Cette page ne contient aucun script ajouté de publicité ou d’analyse des visiteurs. L’hébergeur peut traiter des informations d’accès et de sécurité, telles que l’adresse IP, pour fournir la page. Les liens externes relèvent des politiques de confidentialité des services concernés."]],
+      ["7. Modifications", ["Nous mettons à jour cette politique et sa date lorsque les fonctions ou les pratiques de traitement changent. Si nécessaire, les modifications sont également signalées dans l’application."]]
+    ],
+    "google_label": "Politique de confidentialité de Google", "ar_label": "Traitement des données ARCore",
+    "contact_title": "8. Contact", "operator_label": "Responsable", "email_label": "Questions de confidentialité", "contact_pending": "Le nom du responsable et son adresse e-mail restent à confirmer. Ce brouillon ne constitue pas la politique définitive pour Google Play."
+  },
+  "ja": {
+    "title": "プライバシーポリシー", "date_label": "文書基準日", "language_label": "言語を選択",
+    "draft": "草案 — 運営者と連絡先の確認後に公開します。",
+    "intro": "このポリシーは、フィルム撮影を補助するアプリShutterNoteにおけるカメラ、写真、設定、距離測定に関するデータの取り扱いを説明します。",
+    "sections": [
+      ["1. カメラとセンサー", ["カメラはマニュアル露出のプレビュー、写真撮影、中央の被写体までの距離測定に使用します。距離計はGoogle Play Services for AR（ARCore）を通じてカメラとモーションセンサーの情報を使用します。カメラの権限を拒否すると関連機能を利用できません。権限は端末の設定から変更できます。"]],
+      ["2. 写真の処理と保存", ["露出補正は端末内で処理されます。アプリ自体が撮影写真を開発者のサーバーにアップロードすることはありません。保存ボタンを押すと端末のCameraOptionアルバムに保存されます。ファイル名には撮影設定、撮影日時が含まれます。", "撮影結果を復元するため、アプリのキャッシュに一時的な写真を保存します。作成から24時間を過ぎたファイルは、次にメイン画面または露出計を開いたときに削除されます。アプリを再度開かない場合は削除が遅れ、OSが先にキャッシュを削除する場合もあります。ギャラリーに保存した写真はこの削除の対象ではありません。"]],
+      ["3. 設定とバックアップ", ["アプリは露出値、画角、言語、ARCoreの案内を確認した状態、重複保存を防ぐための保存状態を端末内に保存します。現在Androidのバックアップを許可しているため、端末やバックアップサービスの設定によって設定と保存状態がバックアップ・復元される場合があります。キャッシュ内の一時写真はAndroidの自動バックアップ対象外です。", "アプリ自体には会員登録、広告SDK、独自のユーザー行動分析サービスはありません。"]],
+      ["4. Google Play Services for AR", ["距離測定にはGoogleが提供するARCoreを使用し、Googleのプライバシーポリシーが適用されます。Googleの説明によると、ARCoreはアカウントまたは端末の識別情報、パフォーマンスと診断情報、APIの利用情報やアプリのアクティビティを、分析とサービス改善のために収集・処理します。Googleへの通信はHTTPSで暗号化されます。", "このアプリはARCore Cloud AnchorsおよびGeospatial APIを使用しません。距離計を使用しなくても露出計と写真保存を利用できます。ARCoreのデータ処理と保管については、以下のGoogleの文書をご確認ください。"]],
+      ["5. 削除と管理", ["端末の設定でアプリのデータを消去するか、アプリをアンインストールすると、アプリ内部の設定とデータが削除されます。ギャラリーの写真は別途ギャラリーから削除してください。端末や写真のバックアップサービスに保存されたコピーは、そのサービスで管理してください。Googleが処理するARCoreデータにはGoogleの方針とアカウント管理機能が適用されます。"]],
+      ["6. このウェブページ", ["このページには独自の広告やアクセス解析スクリプトを追加していません。ページを提供する際に、ホスティングサービスがIPアドレスなどのアクセス・セキュリティ情報を処理する場合があります。外部リンクにはリンク先のプライバシーポリシーが適用されます。"]],
+      ["7. 変更", ["機能やデータの取り扱いが変わった場合、このポリシーと文書基準日を更新します。必要に応じてアプリ内でもお知らせします。"]]
+    ],
+    "google_label": "Googleプライバシーポリシー", "ar_label": "ARCoreのデータの取り扱い",
+    "contact_title": "8. お問い合わせ", "operator_label": "運営者", "email_label": "プライバシーに関するお問い合わせ", "contact_pending": "運営者名とメールアドレスの確認が必要です。この草案はPlay提出用の最終版ではありません。"
+  }
+}

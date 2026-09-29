@@ -147,15 +147,15 @@ public class DistanceCameraActivity extends AppCompatActivity implements GLSurfa
 
         } catch (CameraNotAvailableException e) {
             Log.e(TAG, "CameraNotAvailableException", e);
-            handleArStartFailed("카메라를 사용할 수 없습니다.");
+            handleArStartFailed(getString(R.string.camera_unavailable));
 
         } catch (FatalException e) {
             Log.e(TAG, "ARCore FatalException", e);
-            handleArStartFailed("ARCore 거리 측정을 시작할 수 없습니다.");
+            handleArStartFailed(getString(R.string.ar_start_error));
 
         } catch (Exception e) {
             Log.e(TAG, "ARCore start failed", e);
-            handleArStartFailed("거리계를 실행할 수 없습니다.");
+            handleArStartFailed(getString(R.string.distance_start_error));
         }
     }
 
@@ -222,7 +222,7 @@ public class DistanceCameraActivity extends AppCompatActivity implements GLSurfa
         } catch (UnavailableUserDeclinedInstallationException e) {
             Log.e(TAG, "User declined ARCore installation", e);
             showGuidance(R.string.distance_install_ar);
-            showToast("Google Play Services for AR 설치가 필요합니다.");
+            showToast(getString(R.string.ar_install_message));
             return false;
 
         } catch (Exception e) {
@@ -232,7 +232,7 @@ public class DistanceCameraActivity extends AppCompatActivity implements GLSurfa
                 arSession = null;
             }
             showGuidance(R.string.distance_unsupported);
-            showToast("ARCore를 시작할 수 없습니다.");
+            showToast(getString(R.string.ar_error));
             return false;
         }
     }
@@ -594,7 +594,7 @@ public class DistanceCameraActivity extends AppCompatActivity implements GLSurfa
                 startDistanceSessionIfReady();
             } else {
                 showGuidance(R.string.distance_permission);
-                showToast("거리계 사용에는 카메라 권한이 필요합니다.");
+                showToast(getString(R.string.distance_camera_permission));
             }
         }
     }

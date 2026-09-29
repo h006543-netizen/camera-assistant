@@ -5,8 +5,8 @@ import java.util.Arrays;
 
 /** Pure measurement policy, independent of ARCore and the Android UI. */
 final class DistanceEstimator {
-    static final float MAX_METERS = 6f;
-    private static final float OUT_OF_RANGE = 6.01f;
+    static final float MAX_METERS = 10f;
+    private static final float OUT_OF_RANGE = 10.01f;
     private float stable = Float.NaN;
     private float pending = Float.NaN;
     private long lastTimestamp;
