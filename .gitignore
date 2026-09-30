@@ -25,3 +25,7 @@ key.properties
 .env
 .env.*
 !.env.example
+
+# Local copies prepared for manual privacy-site upload
+/privacy-site/github-pages/
+/privacy-site/shutternote-privacy-github-pages.zip

@@ -62,7 +62,7 @@
     <string name="photo_load_error">撮影した写真を読み込めませんでした。</string>
     <string name="photo_processing_error">写真の処理に失敗しました。もう一度選択してください。</string>
     <string name="save_source_missing">保存する元の写真がありません。</string>
-    <string name="save_success">CameraOptionアルバムに保存しました。</string>
+    <string name="save_success">ギャラリーに保存しました。</string>
     <string name="save_error">ギャラリーに保存できませんでした。もう一度お試しください。</string>
     <string name="save_progress">ギャラリーに保存しています。</string>
     <string name="camera_unavailable">カメラを使用できません。</string>

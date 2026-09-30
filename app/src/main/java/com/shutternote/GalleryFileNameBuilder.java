@@ -18,7 +18,7 @@ final class GalleryFileNameBuilder {
             Date capturedAt
     ) {
         String timestamp = new SimpleDateFormat(
-                "yyyyMMdd_HHmmss",
+                "yyMMdd_HHmm",
                 Locale.US
         ).format(capturedAt);
         return buildWithTimestamp(
@@ -43,6 +43,17 @@ final class GalleryFileNameBuilder {
                 + "_" + fieldOfViewToken(fieldOfView)
                 + "_" + compactToken(timestamp, "UnknownTime")
                 + ".jpg";
+    }
+
+    static String numberedName(String fileName, int number) {
+        if (number == 0) return fileName;
+        return fileName.substring(0, fileName.length() - 4) + "(" + number + ").jpg";
+    }
+
+    static String availableName(String fileName, java.util.Set<String> existing) {
+        int number = 0;
+        while (existing.contains(numberedName(fileName, number))) number++;
+        return numberedName(fileName, number);
     }
 
     private static String apertureToken(String aperture) {

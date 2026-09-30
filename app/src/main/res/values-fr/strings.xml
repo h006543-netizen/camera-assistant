@@ -62,7 +62,7 @@
     <string name="photo_load_error">Impossible de charger la photo prise.</string>
     <string name="photo_processing_error">Le traitement a échoué. Sélectionnez à nouveau.</string>
     <string name="save_source_missing">La photo originale à enregistrer est indisponible.</string>
-    <string name="save_success">Photo enregistrée dans l’album CameraOption.</string>
+    <string name="save_success">Photo enregistrée dans la galerie.</string>
     <string name="save_error">Impossible d’enregistrer dans la galerie. Réessayez.</string>
     <string name="save_progress">Enregistrement dans la galerie.</string>
     <string name="camera_unavailable">Caméra indisponible.</string>

@@ -10,9 +10,9 @@ from urllib.parse import quote
 ROOT = Path(__file__).resolve().parent
 CONFIG = json.loads((ROOT / 'policy-config.json').read_text(encoding='utf-8'))
 CONTENT = json.loads((ROOT / 'content.json').read_text(encoding='utf-8'))
-READY = bool(CONFIG['operator_name'] and CONFIG['contact_email'])
+READY = bool(CONFIG['contact_email'])
 if CONFIG['published'] and not READY:
-    raise ValueError('Operator name and contact email are required before publication.')
+    raise ValueError('Contact email is required before publication.')
 
 links = {
     'google': 'https://policies.google.com/privacy',
@@ -25,8 +25,6 @@ for lang, data in CONTENT.items():
     brand = 'ShutterNote'
     body = f'<h1>{escape(data["title"])}</h1>'
     body += f'<p class="date">{escape(data["date_label"])}: {escape(CONFIG["effective_date"])}</p>'
-    if not READY:
-        body += f'<p class="draft"><strong>{escape(data["draft"])}</strong></p>'
     body += f'<p class="intro">{escape(data["intro"])}</p>'
     for heading, paragraphs in data['sections']:
         body += f'<section><h2>{escape(heading)}</h2>'
@@ -34,11 +32,9 @@ for lang, data in CONTENT.items():
         body += '</section>'
     body += '<p>' + ' · '.join(f'<a href="{links[key]}">{escape(data[key + "_label"])}</a>' for key in links) + '</p>'
     body += f'<section><h2>{escape(data["contact_title"])}</h2><div class="contact">'
-    if READY:
-        name, email = escape(CONFIG['operator_name']), escape(CONFIG['contact_email'])
-        body += f'<p>{escape(data["operator_label"])}: {name}</p><p>{escape(data["email_label"])}: <a href="mailto:{quote(CONFIG["contact_email"], safe="@.+")}">{email}</a></p>'
-    else:
-        body += f'<p>{escape(data["contact_pending"])}</p>'
+    if CONFIG['contact_email']:
+        email = escape(CONFIG['contact_email'])
+        body += f'<p>{escape(data["email_label"])}: <a href="mailto:{quote(CONFIG["contact_email"], safe="@.+")}">{email}</a></p>'
     body += '</div></section>'
     nav = ''.join(f'<a href="{("../" if lang != "ko" else "") + ("index.html" if code == "ko" else code + "/index.html")}" lang="{code}" hreflang="{code}"' + (' aria-current="page"' if lang == code else '') + f'>{label}</a>' for code, label in [('ko','한국어'),('en','English'),('fr','Français'),('ja','日本語')])
     css_path = 'styles.css' if lang == 'ko' else '../styles.css'

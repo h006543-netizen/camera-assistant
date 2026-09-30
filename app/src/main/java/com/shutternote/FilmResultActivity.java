@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -32,6 +33,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -53,7 +56,7 @@ public class FilmResultActivity extends AppCompatActivity {
         volatile boolean complete;
         volatile boolean succeeded;
     }
-    private static final String GALLERY_DIRECTORY = "CameraOption";
+    private static final String GALLERY_DIRECTORY = "Camera";
 
     private final ExecutorService processingExecutor =
             Executors.newSingleThreadExecutor();
@@ -448,7 +451,7 @@ public class FilmResultActivity extends AppCompatActivity {
                 capturedAperture,
                 capturedShutter,
                 capturedFieldOfView,
-                new Date()
+                new Date(new File(imagePath).lastModified())
         );
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -464,11 +467,21 @@ public class FilmResultActivity extends AppCompatActivity {
     ) throws IOException {
         ContentResolver resolver = getContentResolver();
         ContentValues values = new ContentValues();
-        values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName);
+        String relativePath = Environment.DIRECTORY_DCIM + "/" + GALLERY_DIRECTORY + "/";
+        Set<String> existingNames = new HashSet<>();
+        try (Cursor cursor = resolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                new String[]{MediaStore.Images.Media.DISPLAY_NAME},
+                MediaStore.Images.Media.RELATIVE_PATH + " = ?",
+                new String[]{relativePath}, null)) {
+            if (cursor == null) throw new IOException("저장 파일명을 확인하지 못했습니다.");
+            while (cursor.moveToNext()) existingNames.add(cursor.getString(0));
+        }
+        values.put(MediaStore.Images.Media.DISPLAY_NAME,
+                GalleryFileNameBuilder.availableName(fileName, existingNames));
         values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
         values.put(
                 MediaStore.Images.Media.RELATIVE_PATH,
-                Environment.DIRECTORY_PICTURES + "/" + GALLERY_DIRECTORY
+                relativePath
         );
         values.put(MediaStore.Images.Media.IS_PENDING, 1);
 
@@ -506,10 +519,10 @@ public class FilmResultActivity extends AppCompatActivity {
             Bitmap bitmap,
             String fileName
     ) throws IOException {
-        File pictures = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES
+        File dcim = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DCIM
         );
-        File outputDirectory = new File(pictures, GALLERY_DIRECTORY);
+        File outputDirectory = new File(dcim, GALLERY_DIRECTORY);
         if (!outputDirectory.exists() && !outputDirectory.mkdirs()) {
             throw new IOException("갤러리 폴더를 만들 수 없습니다.");
         }
@@ -518,7 +531,7 @@ public class FilmResultActivity extends AppCompatActivity {
         int suffix = 1;
         while (!outputFile.createNewFile()) {
             outputFile = new File(outputDirectory,
-                    fileName.substring(0, fileName.length() - 4) + "_" + suffix++ + ".jpg");
+                    GalleryFileNameBuilder.numberedName(fileName, suffix++));
         }
         try (OutputStream stream = new BufferedOutputStream(
                 new FileOutputStream(outputFile),

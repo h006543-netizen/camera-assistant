@@ -1,8 +1,11 @@
 package com.shutternote;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 촬영 결과를 확인하는 동안에만 사용하는 이미지 전용 캐시를 관리한다.
@@ -45,16 +48,37 @@ public final class CameraSessionCache {
                 deleteQuietly(file);
             }
         }
+        clearMissingSaveRecords(context);
     }
 
     /** Keep recent captures available for activity/process restoration. */
     public static void clearExpired(Context context) {
         File[] files = getDirectory(context).listFiles();
-        if (files == null) return;
         long cutoff = System.currentTimeMillis() - 24L * 60 * 60 * 1000;
-        for (File file : files) {
-            if (file.isFile() && file.lastModified() < cutoff) deleteQuietly(file);
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile() && file.lastModified() < cutoff) deleteQuietly(file);
+            }
         }
+        clearMissingSaveRecords(context);
+    }
+
+    private static void clearMissingSaveRecords(Context context) {
+        SharedPreferences preferences = context.getSharedPreferences("capture_saves", Context.MODE_PRIVATE);
+        List<String> missing = missingCapturePaths(preferences.getAll().keySet());
+        if (missing.isEmpty()) return;
+        SharedPreferences.Editor editor = preferences.edit();
+        for (String path : missing) editor.remove(path);
+        editor.apply();
+    }
+
+    /** Keep records for files that still exist, including captures whose deletion failed. */
+    static List<String> missingCapturePaths(Iterable<String> paths) {
+        List<String> missing = new ArrayList<>();
+        for (String path : paths) {
+            if (!new File(path).isFile()) missing.add(path);
+        }
+        return missing;
     }
 
     private static File getDirectory(Context context) {

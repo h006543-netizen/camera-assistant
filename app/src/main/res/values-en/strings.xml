@@ -62,7 +62,7 @@
     <string name="photo_load_error">Unable to load the captured photo.</string>
     <string name="photo_processing_error">Unable to process the photo. Please select again.</string>
     <string name="save_source_missing">The original photo is unavailable for saving.</string>
-    <string name="save_success">Saved to the CameraOption album.</string>
+    <string name="save_success">Saved to the gallery.</string>
     <string name="save_error">Unable to save to the gallery. Please try again.</string>
     <string name="save_progress">Saving to the gallery.</string>
     <string name="camera_unavailable">Camera unavailable.</string>

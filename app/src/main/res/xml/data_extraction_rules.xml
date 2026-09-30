@@ -1,19 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
--->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Only user settings migrate; ARCore acknowledgement and capture saves stay local. -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <include domain="sharedpref" path="exposure_settings.xml" />
+        <include domain="file" path="androidx.appcompat.app.AppCompatDelegate.application_locales_record_file" />
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <include domain="sharedpref" path="exposure_settings.xml" />
+        <include domain="file" path="androidx.appcompat.app.AppCompatDelegate.application_locales_record_file" />
     </device-transfer>
-    -->
 </data-extraction-rules>

@@ -36,8 +36,7 @@ final class PrivacyUi {
             String suffix = "ko".equals(language) ? "/" : "/" + language + "/";
             openUrl(context, context.getString(R.string.privacy_policy_base_url) + suffix);
         } else {
-            // The registered Site is not a public policy until contact details and deployment
-            // are complete. Keep the current draft readable instead of opening a dead URL.
+            // Use the bundled policy until the public Site has been deployed.
             showLocalPolicy(context, language);
         }
     }

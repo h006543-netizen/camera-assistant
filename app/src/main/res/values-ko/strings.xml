@@ -63,7 +63,7 @@
     <string name="photo_load_error">촬영한 사진을 불러오지 못했습니다.</string>
     <string name="photo_processing_error">사진 처리에 실패했습니다. 다시 선택해 주세요.</string>
     <string name="save_source_missing">저장할 촬영 원본이 없습니다.</string>
-    <string name="save_success">CameraOption 앨범에 저장했습니다.</string>
+    <string name="save_success">갤러리에 저장했습니다.</string>
     <string name="save_error">갤러리에 저장하지 못했습니다. 다시 시도해 주세요.</string>
     <string name="save_progress">갤러리에 저장하고 있습니다.</string>
     <string name="camera_unavailable">카메라를 사용할 수 없습니다.</string>

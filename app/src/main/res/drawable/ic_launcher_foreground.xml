@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Keep lens and orange index inside adaptive icon safe area. -->
-<inset xmlns:android="http://schemas.android.com/apk/res/android" android:inset="25%">
-    <bitmap android:src="@drawable/shutternote_lens" android:gravity="fill" android:filter="true" />
-</inset>
+<!-- Opaque camera artwork includes the adaptive icon overscan area. -->
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@drawable/shutternote_lens" android:gravity="fill" android:filter="true" />
