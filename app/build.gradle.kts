@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.cameraoption"
+    namespace = "com.shutternote"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -11,7 +11,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.cameraoption"
+        applicationId = "com.shutternote"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
