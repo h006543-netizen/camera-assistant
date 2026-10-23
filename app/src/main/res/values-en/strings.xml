@@ -83,4 +83,19 @@
     <string name="privacy_close">Close</string>
     <string name="privacy_load_error">Unable to load the privacy policy.</string>
     <string name="privacy_no_browser">No app is available to open this link.</string>
+    <string name="main_tab_assist">Shooting tools</string>
+    <string name="main_tab_notes">Film notes</string>
+    <string name="film_notes_subtitle">Keep your shooting memories, one roll at a time.</string>
+    <string name="film_notes_empty_title">No film rolls yet</string>
+    <string name="film_notes_empty_description">Keep the shooting notes for your film\ntogether in one place.</string>
+    <string name="film_notes_add_roll">＋ New film roll</string>
+    <string name="main_categories_open">Open ShutterNote categories</string>
+    <string name="main_categories_close">Close ShutterNote categories</string>
+    <string name="main_categories_title">Categories</string>
+    <string name="main_categories_dismiss">Close</string>
+    <string name="main_category_assist_description">Exposure · Distance</string>
+    <string name="main_category_notes_description">Shooting notes by roll</string>
+    <string name="roll_frequent_remove">Remove from frequently used</string>
+    <string name="roll_frequent_removed">Removed from frequently used</string>
+    <string name="roll_frequent_remove_error">Could not remove this item. Please try again.</string>
 </resources>

@@ -84,4 +84,19 @@
     <string name="privacy_close">닫기</string>
     <string name="privacy_load_error">개인정보처리방침을 불러오지 못했습니다.</string>
     <string name="privacy_no_browser">링크를 열 수 있는 앱이 없습니다.</string>
+    <string name="main_tab_assist">촬영 보조</string>
+    <string name="main_tab_notes">필름 노트</string>
+    <string name="film_notes_subtitle">한 롤씩, 촬영의 순간을 기록하세요.</string>
+    <string name="film_notes_empty_title">아직 기록한 필름이 없습니다</string>
+    <string name="film_notes_empty_description">사용 중인 필름의 촬영 기록을\n한곳에서 모아볼 수 있습니다.</string>
+    <string name="film_notes_add_roll">＋ 새 필름 롤</string>
+    <string name="main_categories_open">ShutterNote 카테고리 열기</string>
+    <string name="main_categories_close">ShutterNote 카테고리 닫기</string>
+    <string name="main_categories_title">카테고리</string>
+    <string name="main_categories_dismiss">닫기</string>
+    <string name="main_category_assist_description">노출계 · 거리계</string>
+    <string name="main_category_notes_description">필름별 촬영 노트</string>
+    <string name="roll_frequent_remove">Remove from frequently used</string>
+    <string name="roll_frequent_removed">Removed from frequently used</string>
+    <string name="roll_frequent_remove_error">Could not remove this item. Please try again.</string>
 </resources>

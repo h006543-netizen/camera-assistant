@@ -25,22 +25,47 @@
         android:paddingEnd="22dp"
         android:background="#151515">
 
-        <TextView
-            android:id="@+id/tvTitle"
+        <LinearLayout
+            android:id="@+id/btnMainCategories"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_weight="1"
-            android:text="@string/main_title"
-            android:maxLines="1"
-            android:ellipsize="end"
-            app:autoSizeTextType="uniform"
-            app:autoSizeMinTextSize="14sp"
-            app:autoSizeMaxTextSize="22sp"
-            app:autoSizeStepGranularity="1sp"
-            android:textColor="#FFFFFF"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:includeFontPadding="false" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="@string/main_categories_open">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:maxWidth="156dp"
+                android:gravity="center_vertical"
+                android:text="@string/main_title"
+                android:maxLines="1"
+                android:ellipsize="end"
+                app:autoSizeTextType="uniform"
+                app:autoSizeMinTextSize="14sp"
+                app:autoSizeMaxTextSize="22sp"
+                app:autoSizeStepGranularity="1sp"
+                android:textColor="#FFFFFF"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:importantForAccessibility="no"
+                android:includeFontPadding="false" />
+
+            <ImageView
+                android:id="@+id/categoryChevron"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="12dp"
+                android:padding="5dp"
+                android:src="@drawable/ic_category_chevron"
+                android:importantForAccessibility="no"
+                android:contentDescription="@null" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/btnLanguage"
@@ -61,12 +86,17 @@
 
     </LinearLayout>
 
-    <!-- 본문 스크롤 영역 -->
+    <FrameLayout
+        android:id="@+id/mainContentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+    <!-- 촬영 보조 메인: 기존 두 카메라와 설정 -->
     <ScrollView
         android:id="@+id/contentScrollView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="match_parent"
         android:fillViewport="true"
         android:scrollbars="none"
         android:overScrollMode="ifContentScrolls">
@@ -493,7 +523,13 @@
 
     </ScrollView>
 
+    <include layout="@layout/main_film_notes" />
+    <include layout="@layout/main_categories" />
+
+    </FrameLayout>
+
     <LinearLayout
+        android:id="@+id/mainLegalFooter"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"

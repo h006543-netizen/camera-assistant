@@ -13,7 +13,7 @@
 4. GitHub Pages는 main 브랜치의 / (root)에서 배포한다. `.github` 자동화 폴더는 필요하지 않다.
 5. 네 언어 공개 페이지와 문의 이메일을 확인한다.
 
-`policy-config.json`의 `published`는 실제 공개 게시 여부다. 현재 true이며 공개 URL은 앱의 `res/values/privacy_config.xml`에도 생성된다. 앱 내부 방침은 동일한 원문으로 유지한다.
+`policy-config.json`의 `published`는 실제 공개 사이트 존재 여부다. `published_content_date`는 실제 게시한 문서 기준일이다. 현재 문서 기준일과 다르면 앱은 최신 내부 방침을 표시한다. 2026-10-05 지도/위치 내용은 로컬 소스와 배포용 파일만 갱신했으며 공개 페이지에는 게시하지 않았다. 실제 업로드 후 `published_content_date`를 게시한 `effective_date`와 같게 설정하고 다시 생성한다. 공개 URL은 앱의 `res/values/privacy_config.xml`에도 생성되며 앱 내부 방침은 같은 원문으로 유지한다.
 
 ## 검증 범위
 

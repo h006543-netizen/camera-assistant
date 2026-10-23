@@ -67,6 +67,9 @@ public class ExposureCameraActivity extends AppCompatActivity {
     private String selectedShutter;
     private String selectedFieldOfView;
     private ExposureSettingsStore exposureSettingsStore;
+    private FilmNoteIsoStore noteIsoStore;
+    private FilmNoteExposureStore noteExposureStore;
+    private FilmNoteFieldOfViewStore noteFieldOfViewStore;
 
     private ImageCapture imageCapture;
     private Camera camera;
@@ -80,7 +83,19 @@ public class ExposureCameraActivity extends AppCompatActivity {
     private boolean manualSensorSupported;
     private ListenableFuture<Void> fieldOfViewApplyFuture;
     private boolean captureInProgress;
+    private boolean cameraResumed;
+    private NoteShot pendingNoteShot;
     private double lastResidualBrightnessMultiplier = 1.0;
+
+    private final ActivityResultLauncher<Intent> noteResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK && FilmFrameCapture.isNote(getIntent())) {
+                    // Return the saved cut explicitly; the roll's pending field can be cleared on resume.
+                    Intent savedCut = new Intent();
+                    FilmFrameCapture.forward(getIntent(), savedCut);
+                    setResult(RESULT_OK, savedCut); finish();
+                }
+            });
 
     private final ActivityResultLauncher<String> cameraPermissionLauncher =
             registerForActivityResult(
@@ -100,6 +115,11 @@ public class ExposureCameraActivity extends AppCompatActivity {
         CameraSessionCache.clearExpired(this);
         setContentView(R.layout.activity_exposure_camera);
         exposureSettingsStore = new ExposureSettingsStore(this);
+        if (FilmFrameCapture.isNote(getIntent())) {
+            noteIsoStore = new FilmNoteIsoStore(this);
+            noteExposureStore = new FilmNoteExposureStore(this);
+            noteFieldOfViewStore = new FilmNoteFieldOfViewStore(this);
+        }
 
         SystemBarInsets.applyWithSeparateStatusBar(
                 this,
@@ -129,15 +149,47 @@ public class ExposureCameraActivity extends AppCompatActivity {
         selectedIso = ExposureSettingsStore.isValidIso(intentIso)
                 ? intentIso
                 : storedValues.getIso();
+        selectedFieldOfView = storedValues.getFieldOfView();
+        if (noteIsoStore != null) {
+            int filmSpeed = 0;
+            String focalLength = "";
+            try {
+                FilmRollRecord note = new FilmRollStore(this).find(getIntent().getStringExtra(FilmFrameCapture.ROLL));
+                FilmRollCatalog.Item film = note == null ? null : new FilmRollCatalog(this).findFilm(note.filmId);
+                if (film != null) filmSpeed = film.speed;
+                if (note != null) focalLength = note.focalLength;
+            } catch (org.json.JSONException ignored) { }
+            selectedIso = noteIsoStore.load(getIntent().getStringExtra(FilmFrameCapture.ROLL), filmSpeed);
+            selectedFieldOfView = noteFieldOfViewStore.load(getIntent().getStringExtra(FilmFrameCapture.ROLL), focalLength);
+        }
         selectedAperture = ExposureSettingsStore.isValidAperture(intentAperture)
                 ? intentAperture
                 : storedValues.getAperture();
         selectedShutter = ExposureSettingsStore.isValidShutter(intentShutter)
                 ? intentShutter
                 : storedValues.getShutter();
-        selectedFieldOfView = storedValues.getFieldOfView();
-
+        if (noteExposureStore != null) {
+            FilmNoteExposureStore.Values noteValues = noteExposureStore.load(getIntent().getStringExtra(FilmFrameCapture.ROLL));
+            selectedAperture = noteValues.aperture;
+            selectedShutter = noteValues.shutter;
+        }
         saveExposureSettings();
+    }
+
+    @Override protected void onResume() {
+        super.onResume();
+        cameraResumed = true;
+        launchNoteResultWhenReady();
+    }
+
+    @Override protected void onPause() {
+        cameraResumed = false;
+        super.onPause();
+    }
+
+    @Override protected void onDestroy() {
+        pendingNoteShot = null;
+        super.onDestroy();
     }
 
     private void bindViews() {
@@ -163,7 +215,10 @@ public class ExposureCameraActivity extends AppCompatActivity {
                 getString(R.string.choose_iso),
                 ISO_VALUES,
                 selectedIso,
-                value -> selectedIso = value
+                value -> {
+                    selectedIso = value;
+                    if (noteIsoStore != null) noteIsoStore.save(getIntent().getStringExtra(FilmFrameCapture.ROLL), value);
+                }
         ));
         apertureButton.setOnClickListener(view -> showValueDialog(
                 getString(R.string.choose_aperture),
@@ -181,7 +236,10 @@ public class ExposureCameraActivity extends AppCompatActivity {
                 getString(R.string.choose_fov),
                 FIELD_OF_VIEW_VALUES,
                 selectedFieldOfView,
-                value -> selectedFieldOfView = value
+                value -> {
+                    selectedFieldOfView = value;
+                    if (noteFieldOfViewStore != null) noteFieldOfViewStore.save(getIntent().getStringExtra(FilmFrameCapture.ROLL), value);
+                }
         ));
 
         findViewById(R.id.btnExposureCapture).setOnClickListener(view -> capturePhoto());
@@ -193,6 +251,7 @@ public class ExposureCameraActivity extends AppCompatActivity {
             String selectedValue,
             ValueSelectionListener listener
     ) {
+        if (captureInProgress) return;
         int selectedIndex = Math.max(0, Arrays.asList(values).indexOf(selectedValue));
 
         String[] labels = values.clone();
@@ -225,6 +284,10 @@ public class ExposureCameraActivity extends AppCompatActivity {
     }
 
     private void saveExposureSettings() {
+        if (noteIsoStore != null) {
+            noteExposureStore.save(getIntent().getStringExtra(FilmFrameCapture.ROLL), selectedAperture, selectedShutter);
+            return;
+        }
         exposureSettingsStore.save(
                 selectedIso,
                 selectedAperture,
@@ -564,6 +627,11 @@ public class ExposureCameraActivity extends AppCompatActivity {
 
     private void capturePhotoNow() {
 
+        // Freeze metadata with this capture, even if a control changes during the JPEG callback.
+        final String shotIso = selectedIso, shotAperture = selectedAperture, shotShutter = selectedShutter, shotField = selectedFieldOfView;
+        final double shotMultiplier = lastResidualBrightnessMultiplier;
+        final long shotTime = System.currentTimeMillis();
+
         File outputFile;
         try {
             outputFile = CameraSessionCache.createCaptureFile(this);
@@ -580,6 +648,9 @@ public class ExposureCameraActivity extends AppCompatActivity {
         ImageCapture.OutputFileOptions options =
                 new ImageCapture.OutputFileOptions.Builder(outputFile).build();
 
+        final NoteShot noteShot = FilmFrameCapture.isNote(getIntent()) ? new NoteShot(shotTime) : null;
+        if (noteShot != null) pendingNoteShot = noteShot;
+
         imageCapture.takePicture(
                 options,
                 ContextCompat.getMainExecutor(this),
@@ -588,8 +659,9 @@ public class ExposureCameraActivity extends AppCompatActivity {
                     public void onImageSaved(
                             @NonNull ImageCapture.OutputFileResults outputFileResults
                     ) {
-                        captureInProgress = false;
+                        if (isDestroyed() || (noteShot != null && pendingNoteShot != noteShot)) return;
                         if (!outputFile.isFile() || outputFile.length() <= 0L) {
+                            discardNoteShot();
                             Toast.makeText(
                                     ExposureCameraActivity.this,
                                     getString(R.string.capture_file_error),
@@ -608,27 +680,37 @@ public class ExposureCameraActivity extends AppCompatActivity {
                         );
                         intent.putExtra(
                                 FilmResultActivity.EXTRA_EXPOSURE_MULTIPLIER,
-                                lastResidualBrightnessMultiplier
+                                shotMultiplier
                         );
-                        intent.putExtra(FilmResultActivity.EXTRA_ISO, selectedIso);
+                        intent.putExtra(FilmResultActivity.EXTRA_ISO, shotIso);
                         intent.putExtra(
                                 FilmResultActivity.EXTRA_APERTURE,
-                                selectedAperture
+                                shotAperture
                         );
                         intent.putExtra(
                                 FilmResultActivity.EXTRA_SHUTTER,
-                                selectedShutter
+                                shotShutter
                         );
                         intent.putExtra(
                                 FilmResultActivity.EXTRA_FIELD_OF_VIEW,
-                                selectedFieldOfView
+                                shotField
                         );
-                        startActivity(intent);
+                        FilmFrameCapture.forward(getIntent(), intent);
+                        if (noteShot != null) {
+                            FilmFrameCapture.setShot(intent, noteShot.capturedAt, null);
+                            FilmFrameCapture.requestLocationAfterPhoto(intent, android.os.SystemClock.elapsedRealtimeNanos());
+                            noteShot.result = intent;
+                            launchNoteResultWhenReady();
+                        } else {
+                            captureInProgress = false;
+                            startActivity(intent);
+                        }
                     }
 
                     @Override
                     public void onError(@NonNull ImageCaptureException exception) {
-                        captureInProgress = false;
+                        if (isDestroyed() || (noteShot != null && pendingNoteShot != noteShot)) return;
+                        discardNoteShot();
                         Toast.makeText(
                                 ExposureCameraActivity.this,
                                 getString(R.string.capture_error),
@@ -637,6 +719,25 @@ public class ExposureCameraActivity extends AppCompatActivity {
                     }
                 }
         );
+    }
+
+    private void launchNoteResultWhenReady() {
+        NoteShot shot = pendingNoteShot;
+        if (!cameraResumed || isFinishing() || shot == null || shot.result == null) return;
+        pendingNoteShot = null;
+        captureInProgress = false;
+        noteResultLauncher.launch(shot.result);
+    }
+
+    private void discardNoteShot() {
+        pendingNoteShot = null;
+        captureInProgress = false;
+    }
+
+    private static final class NoteShot {
+        final long capturedAt;
+        Intent result;
+        NoteShot(long capturedAt) { this.capturedAt = capturedAt; }
     }
 
     private void showPersistentStatus(String message) {

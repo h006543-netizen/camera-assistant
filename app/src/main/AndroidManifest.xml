@@ -2,6 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-feature android:name="android.hardware.location" android:required="false" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+    <uses-feature android:name="android.hardware.location.network" android:required="false" />
     <!-- ARCore needs timely motion samples to match camera frames on Android 12+. -->
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
     <uses-permission
@@ -23,6 +31,13 @@
     <uses-feature
         android:name="com.google.ar.core.depth"
         android:required="false" />
+
+    <queries>
+        <package android:name="com.sec.android.app.myfiles" />
+        <intent>
+            <action android:name="android.intent.action.VIEW_DOWNLOADS" />
+        </intent>
+    </queries>
 
     <application
         android:allowBackup="true"
@@ -59,6 +74,20 @@
             android:name=".FilmResultActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".FilmRollActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity android:name=".FilmRollFramesActivity" android:exported="false" />
+        <activity android:name=".FilmFrameDetailActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".FilmScanComparisonActivity" android:exported="false" android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".CameraSelectionActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".MainActivity"

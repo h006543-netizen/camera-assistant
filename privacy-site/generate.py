@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parent
 CONFIG = json.loads((ROOT / 'policy-config.json').read_text(encoding='utf-8'))
 CONTENT = json.loads((ROOT / 'content.json').read_text(encoding='utf-8'))
 READY = bool(CONFIG['contact_email'])
+CURRENT_PUBLISHED = CONFIG['published'] and CONFIG.get('published_content_date', CONFIG['effective_date']) == CONFIG['effective_date']
 if CONFIG['published'] and not READY:
     raise ValueError('Contact email is required before publication.')
 
@@ -54,5 +55,5 @@ for lang, data in CONTENT.items():
 res = ROOT.parent / 'app/src/main/res/values/privacy_config.xml'
 res.write_text('<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'
     + f'    <string name="privacy_policy_base_url" translatable="false">{escape(CONFIG["public_url"])}</string>\n'
-    + f'    <bool name="privacy_policy_published">{str(CONFIG["published"]).lower()}</bool>\n</resources>\n', encoding='utf-8')
-print('Generated 4 policy pages and Android fallback assets. Contact ready:', READY, 'Published:', CONFIG['published'])
+    + f'    <bool name="privacy_policy_published">{str(CURRENT_PUBLISHED).lower()}</bool>\n</resources>\n', encoding='utf-8')
+print('Generated 4 policy pages and Android fallback assets. Contact ready:', READY, 'Current content published:', CURRENT_PUBLISHED)

@@ -1,5 +1,22 @@
 # ShutterNote 1.0
 
+## 2026-10-02 메인 화면 전환 UI
+
+- ShutterNote 제목 옆 화살표를 누르면 제목 아래에 작은 카테고리 팝업이 열린다. 기본 크기는 224×104dp이며 14sp 이름과 작은 체크만 표시한다. 긴 번역·큰 글꼴에서는 화면 안에서 너비와 내용 높이를 조절한다. 제목 재선택·바깥 본문 터치·뒤로가기로 메뉴를 닫는다. 촬영 보조에는 기존 노출 설정과 두 카메라 실행을 유지한다.
+- 필름 노트는 빈 상태 안내와 비활성 새 필름 롤 버튼만 제공한다. 롤 생성·노트 저장·필름 선택·보정·위치 기록은 추가하지 않았다.
+- 화면 재생성 및 언어 변경 시 선택한 메인과 메뉴 펼침 상태를 복원한다. 새 문구는 기존 네 언어를 지원한다.
+- 최신 팝업은 debug 빌드·단위 테스트 42개·lint 오류 0개·경고 60개로 검증했다. 참고한 공식 앱 전환 흐름 및 메뉴 지침, API 24 에뮬레이터의 실제 팝업 크기·전환·닫기·선택 복원·프랑스어 큰 글꼴 확인은 `MAIN_LAYOUT_VALIDATION.md`에 기록했다.
+- versionCode 1·versionName 1.0을 유지한다. 기존 Play 내부 테스트 AAB에는 이번 변경이 들어 있지 않으며 별도 업로드하지 않았다.
+
+## 2026-10-02 Play 등록 패키지명 변경
+
+- 사용자가 Play Console에 등록한 `com.shutternote.app`으로 applicationId를 변경했다. 코드 namespace는 `com.shutternote`를 유지한다.
+- 기존 `com.shutternote`로 서명한 AAB는 새 등록 앱에 사용하지 않는다. 같은 업로드 키로 변경된 소스의 release AAB를 다시 생성해야 한다.
+- 이전 패키지 설치본과는 별도 앱으로 설치되며 앱 내부 설정은 자동 이전되지 않는다. 기존 갤러리 사진은 유지한다.
+- 변경 후 `bundleRelease`, `testDebugUnitTest`(42개, 실패 없음), `lintRelease`(오류 0개, 경고 53개), `assembleDebugAndroidTest`를 통과했다. release 매니페스트의 패키지는 `com.shutternote.app`이며 기존 namespace의 Activity 이름이 정상 유지된다. 기기 테스트 실행 및 서명된 새 AAB 생성은 Android Studio에서 별도 진행한다.
+
+## 2026-10-01 GitHub 업로드 준비 기록
+
 2026-10-01 GitHub 업로드 준비 버전. `versionName 1.0`, `versionCode 1` 유지.
 
 - 앱 ID `com.shutternote`, 네 언어 ShutterNote 표시와 필름카메라 아이콘.

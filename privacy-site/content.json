@@ -15,14 +15,19 @@
         "2. 사진 처리와 저장",
         [
           "앱의 노출 보정은 기기에서 처리되며, 앱 자체는 촬영 사진을 개발자 서버에 업로드하지 않습니다. 저장 버튼을 누르면 결과가 기기의 Camera (DCIM/Camera) 앨범에 저장됩니다. 파일명에는 촬영 설정, 촬영 시각이 포함됩니다.",
-          "앱은 촬영 결과 복구를 위해 기기 내 앱 캐시에 임시 사진을 저장합니다. 생성 후 24시간이 지난 파일은 다음 메인 화면 또는 노출계 진입 시 정리됩니다. 사용자가 앱을 다시 열지 않으면 정리 시점이 늦어질 수 있고, 운영체제가 캐시를 먼저 지울 수도 있습니다. 갤러리에 저장한 사진은 이 임시 파일 정리 대상이 아닙니다. 임시 사진 정리 시 원본 파일이 없는 저장 완료 기록도 삭제합니다. 원본이 남아 있는 촬영의 저장 완료 기록은 중복 저장 방지를 위해 유지합니다."
+          "앱은 촬영 결과 복구를 위해 기기 내 앱 캐시에 임시 사진을 저장합니다. 생성 후 24시간이 지난 파일은 다음 메인 화면 또는 노출계 진입 시 정리됩니다. 사용자가 앱을 다시 열지 않으면 정리 시점이 늦어질 수 있고, 운영체제가 캐시를 먼저 지울 수도 있습니다. 갤러리에 저장한 사진은 이 임시 파일 정리 대상이 아닙니다. 임시 사진 정리 시 원본 파일이 없는 저장 완료 기록도 삭제합니다. 원본이 남아 있는 촬영의 저장 완료 기록은 중복 저장 방지를 위해 유지합니다.",
+          "필름 노트의 컷 저장은 사진을 갤러리 대신 앱 내부에 보관합니다. 컷별 사진·메모·촬영 시각·촬영 당시 노출값은 롤과 함께 기기에 보관하며 임시 캐시의 24시간 정리 및 Android 백업·기기 이전에 포함하지 않습니다. 롤을 삭제하면 해당 컷 기록과 사진을 함께 삭제하며 앱 삭제 또는 데이터 초기화 시에도 삭제됩니다.",
+          "사용자가 롤 사진 ZIP 내보내기를 실행하면 해당 롤의 촬영 사진만 컷 번호대로 묶어 시스템 파일 저장 화면에서 선택한 위치에 저장합니다. 연결 스캔·메모·좌표 등 롤 기록은 ZIP에 포함하지 않습니다. 원본 사진은 앱 내부에 유지하며 내보내기용 임시 사본은 완료·취소·실패 시 정리합니다. 내보낸 ZIP은 앱 삭제로 지워지지 않으며 사용자가 직접 관리하고 PC로 옮길 수 있습니다. 저장 대상으로 클라우드 제공자를 선택하면 해당 제공자의 정책에 따라 파일이 저장될 수 있으며 앱이 개발자 서버에 업로드하지 않습니다.",
+          "필름 노트에서 실제 필름 스캔본을 비교용으로 연결할 수 있습니다. 시스템 사진 선택 화면에서 사용자가 선택한 사진 한 장만 읽고 원본 파일을 앱 내부에 복사합니다. 앱은 갤러리 전체 읽기 권한을 추가로 요청하지 않으며 선택한 갤러리 원본을 수정하거나 삭제하지 않습니다. 연결된 스캔본은 개발자 서버로 업로드하지 않고 컷과 함께 기기에 보관하며 Android 백업·기기 이전에서 제외합니다. 연결 해제·교체 또는 컷·롤 삭제 시 해당 내부 사본을 삭제하고, 앱 삭제·데이터 초기화 시에도 삭제합니다. 연결 확인용 임시 사본은 선택 취소·화면 종료 또는 생성 후 24시간이 지난 뒤 비교 화면 진입 시 정리합니다.",
+          "새 필름 롤을 만들 때 위치 권한을 요청합니다. 허용하면 사진 촬영이 끝난 뒤 앱을 사용하는 동안 최대 10초간 기기 위치와 제공되는 정확도를 가져옵니다. 앱 안에서 다른 화면으로 이동하거나 다음 사진을 찍어도 해당 사진의 조회는 이어지며, 위치를 받거나 제한 시간이 끝나거나 앱이 백그라운드로 가면 즉시 중지합니다. 위치 조회는 셔터 촬영·결과 표시·사진 저장을 지연시키지 않습니다. 사진이 먼저 저장되면 도착한 위치를 해당 컷에 자동 추가합니다. 대략 위치 권한도 사용할 수 있습니다. 거부하거나 위치를 구하지 못해도 사진과 메모는 유지하며 촬영할 때마다 위치 권한을 요청하지 않습니다. 저장하지 않은 결과를 취소하면 조회를 중지하며 백그라운드에서는 수집하지 않습니다. 사용자가 지도에서 선택하거나 좌표를 입력해 위치를 추가·수정할 수 있고, 현재 위치 가져오기 버튼에서도 권한을 요청할 수 있습니다. 저장한 좌표와 정확도는 해당 컷과 함께 기기에 보관하며 개발자 서버로 전송하거나 Android 백업·기기 이전에 포함하지 않습니다. 위치만 삭제하거나 컷·롤 삭제 및 앱 데이터 초기화로 지울 수 있습니다. MapLibre로 OpenStreetMap 지도를 표시하며 지도 조회 시 지도 영역을 나타내는 타일 요청, IP 주소와 앱 식별 정보가 tile.openstreetmap.org에 전달됩니다. 지도 타일은 기기 캐시에 보관할 수 있습니다. 저장된 지도나 좌표를 눌러 Google Maps를 열면 해당 좌표를 Google에 전달하며 Google 개인정보처리방침이 적용됩니다. OpenStreetMap의 방침은 https://osmfoundation.org/wiki/Privacy_Policy 에서 확인할 수 있습니다."
         ]
       ],
       [
         "3. 설정과 백업",
         [
           "앱은 노출값, 화각, 언어, ARCore 안내 확인 여부와 중복 저장 방지를 위한 저장 상태를 기기에 보관합니다. Android 백업 및 기기 간 이전에는 노출값·화각·앱 언어 설정을 포함합니다. 실제 백업·복원 여부는 기기와 백업 서비스 설정에 따라 달라질 수 있습니다. ARCore 안내 확인 여부와 촬영 저장 기록은 백업·이전 대상에서 제외하며, 새 기기에서는 ARCore 안내를 다시 표시합니다. 앱 캐시의 임시 사진도 백업하지 않습니다.",
-          "앱 자체에는 회원가입, 광고 SDK 또는 별도의 사용자 행동 분석 서비스가 없습니다."
+          "앱 자체에는 회원가입, 광고 SDK 또는 별도의 사용자 행동 분석 서비스가 없습니다.",
+          "필름 노트에서 입력한 필름·카메라 이름, 롤 이름, 예정 컷 수, 화각, 촬영 기간 및 현상·스캔 메모는 기기 내 앱 데이터에 저장합니다. 개발자 서버로 전송하지 않으며 Android 백업·기기 이전에 포함하지 않습니다. 롤 기록은 촬영 임시 캐시의 24시간 정리 대상이 아니며 앱 삭제 또는 데이터 초기화 시 삭제됩니다."
         ]
       ],
       [
@@ -35,7 +40,10 @@
       [
         "5. 삭제와 관리",
         [
-          "기기의 앱 설정에서 앱 데이터를 삭제하거나 앱을 제거하면 앱 내부에 보관한 설정과 데이터가 삭제됩니다. 갤러리에 저장한 사진은 갤러리에서 직접 삭제해야 합니다. 기기 또는 사진 백업 서비스에 저장된 사본은 해당 서비스에서 별도로 관리해야 합니다. Google이 처리하는 ARCore 데이터는 Google의 방침과 계정 관리 기능을 따릅니다."
+          "기기의 앱 설정에서 앱 데이터를 삭제하거나 앱을 제거하면 앱 내부에 보관한 설정과 데이터가 삭제됩니다. 갤러리에 저장한 사진은 갤러리에서 직접 삭제해야 합니다. 기기 또는 사진 백업 서비스에 저장된 사본은 해당 서비스에서 별도로 관리해야 합니다. Google이 처리하는 ARCore 데이터는 Google의 방침과 계정 관리 기능을 따릅니다.",
+          "사진을 길게 눌러 확인하면 해당 컷의 사진·메모·촬영 기록을 삭제할 수 있습니다. 다른 컷 번호와 롤 정보는 유지됩니다. 마지막 사용 카메라·기종별 사용 횟수·최근 사용 순서 및 롤별 마지막 ISO는 기기 내에 별도로 저장하며 개발자 서버로 전송하거나 Android 백업·기기 이전에 포함하지 않습니다. 롤 삭제 시 해당 롤의 ISO 기억을 지웁니다. 카메라 사용 이력은 롤 삭제 후에도 유지되며 앱 데이터 초기화 또는 앱 삭제 시 삭제됩니다.",
+          "필름 노트 촬영에서 선택한 마지막 화각도 롤별로 기기에 저장합니다. 일반 촬영 보조 화각과 별도로 관리하며 백업·기기 이전에 포함하지 않습니다. 롤을 삭제하면 해당 화각 기억도 삭제됩니다.",
+          "자주 사용하는 필름 목록을 위해 필름별 사용 횟수와 최근 사용 순서를 기기에 저장합니다. 새 롤의 기본값으로 마지막 저장한 화각과 예정 컷 수도 기억합니다. 이 정보는 백업·기기 이전에서 제외되며 앱 데이터 초기화 또는 삭제로 지워집니다."
         ]
       ],
       [
@@ -72,14 +80,19 @@
         "2. Photo processing and storage",
         [
           "Exposure adjustments are processed on your device. The app itself does not upload captured photos to a developer server. Tapping Save stores the result in the Camera (DCIM/Camera) album on your device. Filenames include capture settings and the capture time.",
-          "Temporary photos are kept in the app cache to restore captured results. Files older than 24 hours are cleaned up the next time you open the main screen or exposure camera. Cleanup may be delayed if you do not reopen the app, and the operating system may clear the cache sooner. Saved gallery photos are not included in this cleanup. When temporary photos are cleaned up, save completion records whose source files no longer exist are also deleted. Records for captures whose source files still exist are retained to prevent duplicate saves."
+          "Temporary photos are kept in the app cache to restore captured results. Files older than 24 hours are cleaned up the next time you open the main screen or exposure camera. Cleanup may be delayed if you do not reopen the app, and the operating system may clear the cache sooner. Saved gallery photos are not included in this cleanup. When temporary photos are cleaned up, save completion records whose source files no longer exist are also deleted. Records for captures whose source files still exist are retained to prevent duplicate saves.",
+          "Saving a film-note frame stores its photo inside the app instead of the gallery. Frame photos, notes, capture times and captured exposure settings stay on your device with the roll. They are excluded from the 24-hour temporary cache cleanup, Android backup and device transfer. Deleting a roll deletes its frame records and photos. They are also removed when the app is uninstalled or its data is cleared.",
+          "When you export roll photos as ZIP, only the captured photos from that roll are grouped by frame number and saved to the location you choose in the system file picker. Linked scans, notes, coordinates and other roll records are not included. Original photos remain inside the app; temporary export copies are removed on completion, cancellation or failure. Exported ZIP files remain after uninstalling the app and can be managed or transferred to a PC by you. If you choose a cloud provider as the destination, that provider may store the file according to its policies; the app does not upload it to a developer server.",
+          "You can link a real film scan to a film-note frame for comparison. The system photo picker grants access to the single photo you choose, which is copied into app storage. The app does not request broad gallery read permission or modify or delete the gallery original. Linked scans stay on your device with the frame, are not uploaded to a developer server, and are excluded from Android backup and device transfer. Unlinking or replacing a scan, deleting its frame or roll, uninstalling the app, or clearing app data removes the internal copy. Temporary copies used to confirm a link are removed when discarded or when the comparison screen closes, or on entering comparison after they are more than 24 hours old.",
+          "Location permission is requested when you create a new film roll. If allowed, after a photo has been captured, the app obtains the device position and available accuracy for up to 10 seconds while you use the app. The request for that photo continues across screens and subsequent captures. It stops immediately when a position arrives, the time limit expires, or the app goes into the background. Location lookup does not delay shutter capture, result display, or photo saving. If the photo is saved first, the position is automatically added to its frame when it arrives. Approximate location is supported. Denial or an unavailable position does not discard the photo or note; capture does not ask for permission each time. Discarding an unsaved result stops its request; no background collection occurs. You can also add or edit a location by selecting a map point or entering coordinates, and Use current location can request permission. Saved coordinates and accuracy stay on the device with that frame, are not sent to a developer server, and are excluded from Android backup and device transfer. Remove a location separately, delete the frame or roll, or clear app data to erase it. MapLibre displays OpenStreetMap maps. Viewing a map sends tile requests identifying the map area, your IP address and app identification to tile.openstreetmap.org. Map tiles may be cached on the device. Opening Google Maps from the saved map or coordinates sends those coordinates to Google and is subject to the Google Privacy Policy. The OpenStreetMap policy is at https://osmfoundation.org/wiki/Privacy_Policy ."
         ]
       ],
       [
         "3. Settings and backups",
         [
           "The app stores exposure values, field of view, language, ARCore notice acknowledgement and save status on your device. Android backup and device transfer include exposure, field of view and app language settings. Actual backup and restoration depend on your device and backup service settings. ARCore notice acknowledgement and capture save records are excluded from backup and transfer, so the ARCore notice is shown again on a new device. Temporary photos in the app cache are not backed up.",
-          "The app itself has no account registration, advertising SDK or separate user analytics service."
+          "The app itself has no account registration, advertising SDK or separate user analytics service.",
+          "Film notes store film and camera names, roll names, planned frame counts, focal lengths, shooting dates, and processing and scan notes in local app data. These records are not sent to a developer server or included in Android backup or device transfer. They are not subject to the 24-hour capture cache cleanup and are removed when the app is uninstalled or its data is cleared."
         ]
       ],
       [
@@ -92,7 +105,10 @@
       [
         "5. Deletion and control",
         [
-          "Clearing app data in device settings or uninstalling the app removes its internally stored settings and data. Delete saved photos separately in your gallery. Manage any copies held by device or photo backup services through those services. ARCore data processed by Google is subject to Google policies and account controls."
+          "Clearing app data in device settings or uninstalling the app removes its internally stored settings and data. Delete saved photos separately in your gallery. Manage any copies held by device or photo backup services through those services. ARCore data processed by Google is subject to Google policies and account controls.",
+          "Long-press a photo and confirm to delete that frame’s photo, note and capture record. Other frame numbers and roll information remain. The last used camera, camera usage counts and recency, and each roll’s last ISO are stored separately on the device. They are not sent to developer servers or included in Android backup or device transfer. Deleting a roll clears its remembered ISO. Camera usage history remains after roll deletion and is removed when app data is cleared or the app is uninstalled.",
+          "The last field of view selected in film-note capture is stored per roll on the device, independently of general shooting settings. It is excluded from backup and device transfer and removed when its roll is deleted.",
+          "Film usage counts and recency are stored on the device for frequently used films. The last saved roll focal length and planned frame count are also retained as new-roll defaults. This information is excluded from backup and transfer and cleared by resetting app data or uninstalling."
         ]
       ],
       [
@@ -129,14 +145,19 @@
         "2. Traitement et stockage des photos",
         [
           "Les corrections d’exposition sont effectuées sur votre appareil. L’application elle-même ne téléverse pas les photos vers un serveur du développeur. Le bouton Enregistrer sauvegarde le résultat dans l’album Camera (DCIM/Camera) de l’appareil. Le nom du fichier comprend les réglages et la date et l’heure de prise de vue.",
-          "Des photos temporaires sont conservées dans le cache pour restaurer les résultats. Les fichiers de plus de 24 heures sont supprimés lors de la prochaine ouverture de l’écran principal ou du posemètre. Cette suppression peut être retardée si vous ne rouvrez pas l’application ; le système peut aussi vider le cache plus tôt. Les photos enregistrées dans la galerie ne sont pas concernées. Lors du nettoyage des photos temporaires, les données de confirmation de sauvegarde dont le fichier source n’existe plus sont également supprimées. Celles dont le fichier source existe encore sont conservées pour éviter les sauvegardes en double."
+          "Des photos temporaires sont conservées dans le cache pour restaurer les résultats. Les fichiers de plus de 24 heures sont supprimés lors de la prochaine ouverture de l’écran principal ou du posemètre. Cette suppression peut être retardée si vous ne rouvrez pas l’application ; le système peut aussi vider le cache plus tôt. Les photos enregistrées dans la galerie ne sont pas concernées. Lors du nettoyage des photos temporaires, les données de confirmation de sauvegarde dont le fichier source n’existe plus sont également supprimées. Celles dont le fichier source existe encore sont conservées pour éviter les sauvegardes en double.",
+          "L’enregistrement d’une vue dans les notes de films conserve sa photo dans l’application, au lieu de la galerie. Les photos, notes, dates et réglages de prise de vue restent sur l’appareil avec le rouleau. Ils sont exclus du nettoyage du cache temporaire après 24 heures, des sauvegardes Android et du transfert entre appareils. La suppression d’un rouleau supprime ses vues et photos. La désinstallation ou l’effacement des données les supprime également.",
+          "Lorsque vous exportez les photos d’une pellicule en ZIP, seules les photos prises sont regroupées par numéro de vue et enregistrées à l’emplacement choisi dans le sélecteur de fichiers du système. Les scans associés, les notes, les coordonnées et les autres données de la pellicule ne sont pas inclus. Les originaux restent dans l’application ; les copies temporaires sont supprimées à la fin, en cas d’annulation ou d’échec. Le ZIP reste après la désinstallation et vous pouvez le gérer ou le transférer sur un PC. Si vous choisissez un fournisseur de stockage en nuage, celui-ci peut conserver le fichier selon ses propres règles ; l’application ne l’envoie pas à un serveur du développeur.",
+          "Vous pouvez associer un scan argentique à une vue du carnet pour comparer les photos. Le sélecteur de photos du système donne accès à la seule photo choisie, dont une copie est conservée dans les données de l’application. L’application ne demande pas un accès général à la galerie et ne modifie ni ne supprime l’original. Les scans associés restent sur l’appareil avec la vue, sans envoi à un serveur du développeur ni sauvegarde Android ou transfert entre appareils. Dissocier ou remplacer un scan, supprimer sa vue ou son rouleau, désinstaller l’application ou effacer ses données supprime la copie interne. Les copies temporaires de confirmation sont supprimées lors de l’annulation ou de la fermeture de l’écran de comparaison, ou à son ouverture lorsqu’elles ont plus de 24 heures.",
+          "L’autorisation de localisation est demandée lors de la création d’une nouvelle pellicule. Si vous l’accordez, après la prise de vue, l’application obtient la position et sa précision disponible pendant au maximum 10 secondes, tant que vous utilisez l’application. La recherche associée à cette photo continue entre les écrans et les prises suivantes. Elle s’arrête immédiatement dès qu’une position arrive, à l’expiration du délai ou lorsque l’application passe en arrière-plan. Elle ne retarde ni le déclenchement, ni l’affichage du résultat, ni l’enregistrement de la photo. Si la photo est enregistrée en premier, la position est ajoutée automatiquement à sa vue dès sa réception. La position approximative est acceptée. Un refus ou une position indisponible ne supprime pas la photo ni la note ; l’autorisation n’est pas redemandée à chaque prise. Abandonner un résultat non enregistré arrête sa recherche ; aucune collecte en arrière-plan n’a lieu. Vous pouvez aussi ajouter ou modifier le lieu sur la carte ou par ses coordonnées, et Utiliser ma position actuelle peut demander l’autorisation. Les coordonnées et la précision restent sur l’appareil avec la vue, sans envoi au serveur du développeur, sauvegarde Android ni transfert entre appareils. Vous pouvez effacer le lieu seul, supprimer la vue ou la pellicule, ou effacer les données de l’application. MapLibre affiche les cartes OpenStreetMap. La consultation d’une carte transmet les requêtes de tuiles indiquant la zone, l’adresse IP et l’identification de l’application à tile.openstreetmap.org. Les tuiles peuvent être mises en cache sur l’appareil. Ouvrir Google Maps depuis la carte ou les coordonnées enregistrées transmet ces coordonnées à Google, selon sa politique de confidentialité. Politique OpenStreetMap : https://osmfoundation.org/wiki/Privacy_Policy ."
         ]
       ],
       [
         "3. Réglages et sauvegardes",
         [
           "L’application conserve sur l’appareil les valeurs d’exposition, le champ choisi, la langue, la prise de connaissance de l’avis ARCore et l’état des enregistrements. La sauvegarde Android et le transfert entre appareils incluent les réglages d’exposition, de champ et de langue. La sauvegarde et la restauration effectives dépendent de votre appareil et du service de sauvegarde. La prise de connaissance de l’avis ARCore et les données d’état des enregistrements sont exclues de la sauvegarde et du transfert ; l’avis ARCore est donc affiché à nouveau sur un nouvel appareil. Les photos temporaires du cache ne sont pas sauvegardées.",
-          "L’application elle-même ne propose pas de création de compte et ne contient ni SDK publicitaire ni service distinct d’analyse du comportement des utilisateurs."
+          "L’application elle-même ne propose pas de création de compte et ne contient ni SDK publicitaire ni service distinct d’analyse du comportement des utilisateurs.",
+          "Les notes de pellicule, noms de film et d’appareil, nombre de vues, focale, dates de prise de vue et informations de développement et de scan sont conservés dans les données locales de l’application. Ils ne sont ni transmis à un serveur du développeur ni inclus dans la sauvegarde Android ou le transfert entre appareils. Le nettoyage du cache après 24 heures ne les supprime pas. La désinstallation ou l’effacement des données les supprime."
         ]
       ],
       [
@@ -149,7 +170,10 @@
       [
         "5. Suppression et gestion",
         [
-          "Effacer les données dans les paramètres de l’appareil ou désinstaller l’application supprime ses réglages et données internes. Les photos de la galerie doivent être supprimées séparément. Gérez les copies conservées par les services de sauvegarde auprès de ces services. Les données ARCore traitées par Google relèvent des règles et des outils de gestion de compte de Google."
+          "Effacer les données dans les paramètres de l’appareil ou désinstaller l’application supprime ses réglages et données internes. Les photos de la galerie doivent être supprimées séparément. Gérez les copies conservées par les services de sauvegarde auprès de ces services. Les données ARCore traitées par Google relèvent des règles et des outils de gestion de compte de Google.",
+          "Un appui long sur une photo suivi d’une confirmation supprime la photo, la note et les données de cette vue. Les autres numéros et les informations de la pellicule restent inchangés. Le dernier appareil utilisé, les compteurs et l’ordre d’utilisation des appareils, ainsi que le dernier ISO de chaque pellicule sont conservés séparément sur l’appareil, sans envoi au développeur ni sauvegarde Android ou transfert. Supprimer une pellicule efface son ISO mémorisé. L’historique des appareils reste conservé jusqu’à l’effacement des données de l’application ou sa désinstallation.",
+          "Le dernier angle de champ choisi lors de la capture dans les notes de film est conservé par pellicule sur l’appareil, séparément des réglages généraux. Il est exclu des sauvegardes et des transferts et supprimé avec la pellicule.",
+          "La fréquence et l’ordre d’utilisation des films sont conservés sur l’appareil. La focale et le nombre de vues enregistrés sont mémorisés pour les nouvelles pellicules. Ces données sont exclues des sauvegardes et transferts, et effacées avec les données de l’application ou sa désinstallation."
         ]
       ],
       [
@@ -186,14 +210,19 @@
         "2. 写真の処理と保存",
         [
           "露出補正は端末内で処理されます。アプリ自体が撮影写真を開発者のサーバーにアップロードすることはありません。保存ボタンを押すと端末のCamera (DCIM/Camera)アルバムに保存されます。ファイル名には撮影設定、撮影日時が含まれます。",
-          "撮影結果を復元するため、アプリのキャッシュに一時的な写真を保存します。作成から24時間を過ぎたファイルは、次にメイン画面または露出計を開いたときに削除されます。アプリを再度開かない場合は削除が遅れ、OSが先にキャッシュを削除する場合もあります。ギャラリーに保存した写真はこの削除の対象ではありません。 一時写真の整理時に、元のファイルが存在しない保存完了記録も削除します。元のファイルが残っている撮影の保存完了記録は重複保存を防ぐため保持します。"
+          "撮影結果を復元するため、アプリのキャッシュに一時的な写真を保存します。作成から24時間を過ぎたファイルは、次にメイン画面または露出計を開いたときに削除されます。アプリを再度開かない場合は削除が遅れ、OSが先にキャッシュを削除する場合もあります。ギャラリーに保存した写真はこの削除の対象ではありません。 一時写真の整理時に、元のファイルが存在しない保存完了記録も削除します。元のファイルが残っている撮影の保存完了記録は重複保存を防ぐため保持します。",
+          "フィルムノートのコマ保存では、写真をギャラリーではなくアプリ内部に保存します。コマごとの写真、メモ、撮影日時、撮影時の露出設定はロールとともに端末に保存し、一時キャッシュの24時間後の整理、Androidバックアップ、端末間転送の対象には含めません。ロールを削除するとそのコマの記録と写真も削除します。アプリのアンインストールやデータの初期化でも削除されます。",
+          "ロールの写真をZIPで書き出すと、そのロールの撮影写真だけをコマ番号順にまとめ、システムのファイル保存画面で選んだ場所に保存します。関連付けたスキャン、メモ、座標などのロール記録は含みません。元の写真はアプリ内に残り、書き出し用の一時コピーは完了、キャンセル、失敗時に削除します。書き出したZIPはアプリのアンインストール後も残り、ご自身で管理したりPCに移したりできます。保存先にクラウド提供者を選ぶと、その提供者の規定に従って保存される場合があります。アプリが開発者のサーバーにアップロードすることはありません。",
+          "フィルムノートのコマに実際のフィルムスキャンを関連付けて比較できます。システムの写真選択画面で選んだ1枚だけを読み取り、元のファイルをアプリ内部にコピーします。ギャラリー全体の読み取り権限を追加で要求せず、ギャラリーの元画像を変更・削除しません。関連付けたスキャンはコマとともに端末内に保存し、開発者サーバーへ送信せず、Androidバックアップや端末間転送にも含めません。関連付けの解除・変更、コマ・ロールの削除、アプリのアンインストールまたはデータ初期化で内部コピーを削除します。確認用の一時コピーは選択の取り消し・比較画面の終了時、または作成から24時間を過ぎた後の比較画面への移動時に整理します。",
+          "新しいフィルムロールを作成するときに位置情報の権限を要求します。許可すると、撮影完了後、アプリを使用している間に最大10秒間、端末の位置と取得できる精度を取得します。アプリ内の画面移動や次の撮影中も、その写真の位置取得は続きます。位置を取得したとき、制限時間が終了したとき、またはアプリがバックグラウンドに移ったときに直ちに停止します。位置取得はシャッター撮影・結果表示・写真保存を遅らせません。写真が先に保存された場合は、取得できた位置をそのコマに自動追加します。おおよその位置も利用できます。拒否した場合や取得できない場合も写真とメモは保持し、撮影のたびに権限を要求しません。未保存の結果を破棄すると取得を停止し、バックグラウンドでは収集しません。地図の地点選択や座標入力で位置を追加・編集でき、「現在地を取得」ボタンでも権限を要求できます。保存した座標と精度はコマとともに端末に保存し、開発者のサーバーには送信せず、Androidバックアップや端末間転送にも含めません。位置だけの削除、コマ・ロールの削除、アプリデータの初期化で消去できます。MapLibreでOpenStreetMapを表示します。地図の表示時には、地図の範囲を示すタイル要求、IPアドレス、アプリの識別情報がtile.openstreetmap.orgに送信されます。地図タイルは端末にキャッシュされる場合があります。保存した地図や座標からGoogle マップを開くと、その座標がGoogleに送信され、Googleのプライバシーポリシーが適用されます。OpenStreetMapのポリシー：https://osmfoundation.org/wiki/Privacy_Policy"
         ]
       ],
       [
         "3. 設定とバックアップ",
         [
           "アプリは露出値、画角、言語、ARCore案内の確認状態、保存状態を端末に保持します。Androidのバックアップと端末間の移行には露出値・画角・アプリの言語設定を含めます。実際のバックアップと復元は端末とバックアップサービスの設定によって異なります。ARCore案内の確認状態と撮影の保存記録はバックアップ・移行から除外し、新しい端末ではARCore案内を再表示します。アプリのキャッシュ内の一時写真もバックアップしません。",
-          "アプリ自体には会員登録、広告SDK、独自のユーザー行動分析サービスはありません。"
+          "アプリ自体には会員登録、広告SDK、独自のユーザー行動分析サービスはありません。",
+          "フィルムノートのフィルム・カメラ名、ロール名、予定枚数、画角、撮影期間、現像・スキャン記録は端末内のアプリデータに保存します。開発者のサーバーへ送信せず、Androidバックアップや端末間転送にも含めません。撮影キャッシュの24時間後の削除対象にはならず、アプリの削除またはデータ初期化で削除されます。"
         ]
       ],
       [
@@ -206,7 +235,10 @@
       [
         "5. 削除と管理",
         [
-          "端末の設定でアプリのデータを消去するか、アプリをアンインストールすると、アプリ内部の設定とデータが削除されます。ギャラリーの写真は別途ギャラリーから削除してください。端末や写真のバックアップサービスに保存されたコピーは、そのサービスで管理してください。Googleが処理するARCoreデータにはGoogleの方針とアカウント管理機能が適用されます。"
+          "端末の設定でアプリのデータを消去するか、アプリをアンインストールすると、アプリ内部の設定とデータが削除されます。ギャラリーの写真は別途ギャラリーから削除してください。端末や写真のバックアップサービスに保存されたコピーは、そのサービスで管理してください。Googleが処理するARCoreデータにはGoogleの方針とアカウント管理機能が適用されます。",
+          "写真を長押しして確認すると、そのコマの写真・メモ・撮影記録を削除できます。他のコマ番号とロール情報は保持されます。最後に使用したカメラ、機種別の使用回数と使用順序、ロール別の最後のISOは端末内に別途保存し、開発者サーバーへの送信やAndroidバックアップ・端末移行には含めません。ロールを削除するとそのISO記録も削除します。カメラの使用履歴はロール削除後も保持し、アプリデータの消去またはアンインストール時に削除されます。",
+          "フィルムノート撮影で最後に選択した画角もロールごとに端末内に保存します。通常の撮影補助とは別に管理し、バックアップ・端末移行には含めません。ロールを削除すると画角の記憶も削除します。",
+          "よく使うフィルムの表示のため、使用回数と使用順を端末内に保存します。新しいロールの初期値として最後に保存した画角と予定コマ数も記憶します。バックアップ・端末移行には含めず、アプリデータの初期化またはアンインストールで削除します。"
         ]
       ],
       [

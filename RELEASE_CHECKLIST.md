@@ -19,8 +19,8 @@
 
 ## 2. 첫 Play 등록 전에 확정할 항목
 
-- [x] 최종 패키지명을 `com.shutternote`로 정한다.
-  - 개발자 식별자를 제외한 앱 이름 기반 ID. Play 등록 시 사용 가능 여부는 별도 확인한다.
+- [x] 최종 패키지명을 `com.shutternote.app`로 정한다.
+  - 2026-10-02 사용자가 Play Console에 등록한 ID. 기존 `com.shutternote`는 사용 중으로 표시되었다. 코드 namespace는 `com.shutternote`를 유지한다.
   - Play에 앱을 만든 뒤 패키지명을 바꾸면 별도 앱으로 다시 등록해야 한다.
 - [x] 앱 이름을 ShutterNote로 확정한다.
 - [ ] 개발자 표시 이름을 확정한다.

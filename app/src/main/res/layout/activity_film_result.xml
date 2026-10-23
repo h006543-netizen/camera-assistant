@@ -1,117 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/filmResultRoot"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#000000">
-
-    <!-- 노출이 반영된 촬영 결과를 표시한다. -->
-    <ImageView
-        android:id="@+id/ivFilmResult"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:contentDescription="@string/result_description"
-        android:scaleType="fitCenter" />
-
-    <!-- 이미지 처리 중에만 표시한다. -->
-    <ProgressBar
-        android:id="@+id/progressFilmProcessing"
-        style="?android:attr/progressBarStyleLarge"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_gravity="center"
-        android:indeterminateTint="#FFFFFF"
-        android:visibility="gone" />
-
-    <!-- 이미지 로드 또는 보정 실패 시에만 표시한다. -->
-    <TextView
-        android:id="@+id/tvFilmResultStatus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginStart="32dp"
-        android:layout_marginEnd="32dp"
-        android:background="@drawable/bg_exposure_control"
-        android:gravity="center"
-        android:maxWidth="320dp"
-        android:paddingStart="18dp"
-        android:paddingTop="12dp"
-        android:paddingEnd="18dp"
-        android:paddingBottom="12dp"
-        android:textColor="#FFFFFF"
-        android:textSize="15sp"
-        android:visibility="gone" />
-
-    <!-- 상단에는 뒤로가기와 현재 화면 제목만 표시한다. -->
-    <FrameLayout
-        android:id="@+id/filmResultTopControls"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top"
-        android:background="@drawable/bg_exposure_top_scrim"
-        android:minHeight="88dp"
-        android:paddingStart="16dp"
-        android:paddingTop="18dp"
-        android:paddingEnd="16dp">
-
-        <TextView
-            android:id="@+id/btnFilmResultBack"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_gravity="start"
-            android:background="@drawable/bg_exposure_control"
-            android:clickable="true"
-            android:contentDescription="@string/back_exposure"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackgroundBorderless"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:text="‹"
-            android:textColor="#FFFFFF"
-            android:textSize="38sp" />
-
-        <TextView
-            android:id="@+id/tvFilmResultTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:layout_gravity="center_horizontal"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:text="@string/result_title"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/btnFilmResultSave"
-            android:layout_width="56dp"
-            android:layout_height="48dp"
-            android:layout_gravity="end"
-            android:background="@drawable/bg_exposure_control"
-            android:clickable="true"
-            android:contentDescription="@string/save_description"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackgroundBorderless"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:text="@string/save"
-            android:maxLines="1"
-            app:autoSizeTextType="uniform"
-            app:autoSizeMinTextSize="9sp"
-            app:autoSizeMaxTextSize="15sp"
-            app:autoSizeStepGranularity="1sp"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp"
-            android:textStyle="bold" />
-
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/filmResultRoot" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:background="#000000">
+    <LinearLayout android:id="@+id/filmResultTopControls" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:gravity="center_vertical" android:paddingStart="8dp" android:paddingEnd="16dp" android:paddingTop="8dp" android:paddingBottom="8dp">
+        <TextView android:id="@+id/btnFilmResultBack" android:layout_width="48dp" android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless" android:clickable="true" android:focusable="true"
+            android:contentDescription="@string/back_exposure" android:gravity="center" android:includeFontPadding="false"
+            android:text="‹" android:textColor="#FFFFFF" android:textSize="38sp" />
+        <include layout="@layout/note_correction_controls" />
+        <Space android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
+        <TextView android:id="@+id/btnFilmResultSave" android:layout_width="56dp" android:layout_height="48dp"
+            android:background="@drawable/bg_exposure_control" android:clickable="true" android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless" android:contentDescription="@string/save_description"
+            android:gravity="center" android:includeFontPadding="false" android:text="@string/save" android:maxLines="1"
+            app:autoSizeTextType="uniform" app:autoSizeMinTextSize="9sp" app:autoSizeMaxTextSize="15sp" app:autoSizeStepGranularity="1sp"
+            android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" />
+    </LinearLayout>
+    <FrameLayout android:id="@+id/filmResultImageArea" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+        <ImageView android:id="@+id/ivFilmResult" android:layout_width="match_parent" android:layout_height="match_parent"
+            android:contentDescription="@string/result_description" android:scaleType="fitCenter" />
+        <ProgressBar android:id="@+id/progressFilmProcessing" style="?android:attr/progressBarStyleLarge"
+            android:layout_width="48dp" android:layout_height="48dp" android:layout_gravity="center"
+            android:indeterminateTint="#FFFFFF" android:visibility="gone" />
+        <TextView android:id="@+id/tvFilmResultStatus" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_gravity="center" android:layout_marginStart="32dp" android:layout_marginEnd="32dp"
+            android:background="@drawable/bg_exposure_control" android:gravity="center" android:maxWidth="320dp"
+            android:paddingStart="18dp" android:paddingTop="12dp" android:paddingEnd="18dp" android:paddingBottom="12dp"
+            android:textColor="#FFFFFF" android:textSize="15sp" android:visibility="gone" />
     </FrameLayout>
-
-    <!-- 시스템 내비게이션 여백만 확보한다. -->
-    <View
-        android:id="@+id/filmResultBottomControls"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom" />
-
-</FrameLayout>
+    <LinearLayout android:id="@+id/filmResultBottomControls" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
+</LinearLayout>

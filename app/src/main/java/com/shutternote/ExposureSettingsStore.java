@@ -56,11 +56,13 @@ public final class ExposureSettingsStore {
     private final SharedPreferences preferences;
 
     public ExposureSettingsStore(Context context) {
-        preferences = context.getApplicationContext().getSharedPreferences(
+        this(context.getApplicationContext().getSharedPreferences(
                 PREFERENCES_NAME,
                 Context.MODE_PRIVATE
-        );
+        ));
     }
+
+    ExposureSettingsStore(SharedPreferences preferences) { this.preferences = preferences; }
 
     public Values load() {
         return new Values(

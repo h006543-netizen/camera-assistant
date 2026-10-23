@@ -83,4 +83,19 @@
     <string name="privacy_close">Fermer</string>
     <string name="privacy_load_error">Impossible de charger la politique de confidentialité.</string>
     <string name="privacy_no_browser">Aucune application ne peut ouvrir ce lien.</string>
+    <string name="main_tab_assist">Aide photo</string>
+    <string name="main_tab_notes">Carnet argentique</string>
+    <string name="film_notes_subtitle">Gardez vos souvenirs, une pellicule à la fois.</string>
+    <string name="film_notes_empty_title">Aucune pellicule enregistrée</string>
+    <string name="film_notes_empty_description">Retrouvez les notes de vos prises de vue\nau même endroit.</string>
+    <string name="film_notes_add_roll">＋ Nouvelle pellicule</string>
+    <string name="main_categories_open">Ouvrir les catégories ShutterNote</string>
+    <string name="main_categories_close">Fermer les catégories ShutterNote</string>
+    <string name="main_categories_title">Catégories</string>
+    <string name="main_categories_dismiss">Fermer</string>
+    <string name="main_category_assist_description">Exposition · Distance</string>
+    <string name="main_category_notes_description">Notes par pellicule</string>
+    <string name="roll_frequent_remove">Retirer des éléments fréquents</string>
+    <string name="roll_frequent_removed">Élément retiré des éléments fréquents</string>
+    <string name="roll_frequent_remove_error">Impossible de retirer cet élément. Réessayez.</string>
 </resources>

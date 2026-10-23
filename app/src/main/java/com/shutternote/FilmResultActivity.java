@@ -26,6 +26,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -55,6 +56,7 @@ public class FilmResultActivity extends AppCompatActivity {
     private static final class SaveJob {
         volatile boolean complete;
         volatile boolean succeeded;
+        volatile boolean partial;
     }
     private static final String GALLERY_DIRECTORY = "Camera";
 
@@ -66,8 +68,13 @@ public class FilmResultActivity extends AppCompatActivity {
     private ProgressBar progressView;
     private TextView statusView;
     private TextView saveButton;
+    private FilmCorrectionCategory correctionCategory;
 
     private Bitmap originalBitmap;
+    private Bitmap correctedBitmap;
+    private boolean correctionSelected;
+    private String correctionProfile=FilmColorCorrection.E100D;
+    private boolean viewingOriginal;
     private Bitmap displayedBitmap;
     private String imagePath;
     private String capturedIso = ExposureSettingsStore.DEFAULT_ISO;
@@ -79,6 +86,7 @@ public class FilmResultActivity extends AppCompatActivity {
     private boolean saveCompleted;
     private boolean previewProcessing;
     private boolean screenStopped;
+    private FilmResultLocationViewModel noteLocation;
     private final android.os.Handler uiHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
     private final ActivityResultLauncher<String> storagePermissionLauncher =
@@ -112,6 +120,15 @@ public class FilmResultActivity extends AppCompatActivity {
         progressView = findViewById(R.id.progressFilmProcessing);
         statusView = findViewById(R.id.tvFilmResultStatus);
         saveButton = findViewById(R.id.btnFilmResultSave);
+        correctionSelected = savedInstanceState != null && savedInstanceState.getBoolean("correctionSelected", false);
+        if(savedInstanceState!=null && FilmFrameCapture.isNote(getIntent())) {
+            String saved=savedInstanceState.getString("correctionProfile",FilmColorCorrection.E100D);
+            if(FilmCorrectionProfiles.supported(saved))correctionProfile=saved;
+        }
+        viewingOriginal = savedInstanceState != null && savedInstanceState.getBoolean("viewingOriginal", false);
+        if (savedInstanceState == null && !FilmFrameCapture.isNote(getIntent()))
+            correctionSelected = FilmGalleryRecipeStore.corrected(this, getIntent().getStringExtra(EXTRA_IMAGE_PATH));
+        correctionCategory = new FilmCorrectionCategory(findViewById(R.id.noteCorrectionCategory));
 
         findViewById(R.id.btnFilmResultBack).setOnClickListener(view -> handleBack());
         saveButton.setOnClickListener(view -> requestSave());
@@ -125,6 +142,20 @@ public class FilmResultActivity extends AppCompatActivity {
                 }
         );
 
+        if (FilmFrameCapture.isNote(getIntent())) {
+            noteLocation = new ViewModelProvider(this).get(FilmResultLocationViewModel.class);
+            boolean restoredComplete = savedInstanceState != null && savedInstanceState.getBoolean("noteLocationComplete");
+            FilmFrameLocation initial = FilmFrameCapture.location(getIntent());
+            if (restoredComplete) {
+                double latitude = savedInstanceState.getDouble("noteLatitude", Double.NaN);
+                double longitude = savedInstanceState.getDouble("noteLongitude", Double.NaN);
+                initial = FilmFrameLocation.valid(latitude, longitude)
+                        ? new FilmFrameLocation(latitude, longitude, savedInstanceState.getDouble("noteAccuracy", -1)) : null;
+            }
+            noteLocation.configure(getIntent().getStringExtra(FilmFrameCapture.ROLL),
+                    getIntent().getIntExtra(FilmFrameCapture.NUMBER, 0), getIntent().getStringExtra(EXTRA_IMAGE_PATH),
+                    FilmFrameCapture.photoReadyNanos(getIntent()), initial, restoredComplete);
+        }
         loadCapturedImage();
     }
 
@@ -183,14 +214,31 @@ public class FilmResultActivity extends AppCompatActivity {
                 }
                 working = exposureAdjusted;
 
+                Bitmap correction = null;
+                try { if (correctionSelected) {
+                    if (!FilmFrameCapture.isNote(getIntent()) && isCaptureSaved()) {
+                        if (!FilmGalleryRecipeStore.select(getApplicationContext(), imagePath, true)) throw new IOException("Correction missing");
+                        correction = decodeScaledBitmap(FilmGalleryRecipeStore.correction(getApplicationContext(), imagePath), getPreviewMaximumEdge());
+                    } else correction = FilmColorCorrection.apply(getApplicationContext(), exposureAdjusted,correctionProfile,
+                            () -> generation != processingGeneration.get());
+                } }
+                catch (java.util.concurrent.CancellationException cancelled) { throw cancelled; }
+                catch (Exception | OutOfMemoryError ignored) { /* Keep the original available. */ }
+                Bitmap corrected = correction;
+
                 runOnUiThread(() -> {
                     if (isFinishing() || generation != processingGeneration.get()) {
                         exposureAdjusted.recycle();
+                        recycleIfNeeded(corrected);
                         return;
                     }
                     originalBitmap = exposureAdjusted;
-                    displayBitmap(originalBitmap);
+                    correctedBitmap = corrected;
+                    boolean failedCorrection = correctionSelected && corrected == null;
+                    if (failedCorrection) correctionSelected = false;
+                    displayBitmap(correctionSelected && !viewingOriginal ? correctedBitmap : originalBitmap);
                     setProcessing(false);
+                    if (failedCorrection) showError(getString(R.string.correction_render_error));
                 });
                 working = null; // Ownership transferred to the main-thread callback.
             } catch (java.util.concurrent.CancellationException ignored) {
@@ -213,6 +261,7 @@ public class FilmResultActivity extends AppCompatActivity {
 
         if (previous != null
                 && previous != originalBitmap
+                && previous != correctedBitmap
                 && previous != bitmap
                 && !previous.isRecycled()) {
             previous.recycle();
@@ -230,7 +279,8 @@ public class FilmResultActivity extends AppCompatActivity {
 
         Runtime runtime = Runtime.getRuntime();
         long available = runtime.maxMemory() - (runtime.totalMemory() - runtime.freeMemory());
-        int sampleSize = ImageMemoryBudget.sampleSize(bounds.outWidth, bounds.outHeight, available);
+        int sampleSize = ImageMemoryBudget.sampleSize(bounds.outWidth, bounds.outHeight, available,
+                FilmFrameCapture.isNote(getIntent()) && maximumEdge!=Integer.MAX_VALUE?80:16);
         int largestEdge = Math.max(bounds.outWidth, bounds.outHeight);
         while (largestEdge / (sampleSize * 2) >= maximumEdge) {
             sampleSize *= 2;
@@ -311,9 +361,109 @@ public class FilmResultActivity extends AppCompatActivity {
         previewProcessing = processing;
         progressView.setVisibility(processing ? View.VISIBLE : View.GONE);
         saveButton.setEnabled(!processing && !isSaving && originalBitmap != null && !saveCompleted);
+        updateCorrectionControls();
         if (processing) {
             statusView.setVisibility(View.GONE);
         }
+    }
+
+    private void selectCorrection(boolean selected) {
+        if (previewProcessing || isSaving || originalBitmap == null) return;
+        if (saveCompleted && !FilmFrameCapture.isNote(getIntent()) && correctionSelected != selected) { changeSavedCorrection(selected); return; }
+        viewingOriginal = !selected;
+        correctionSelected = selected;
+        if (!selected || correctedBitmap != null) {
+            displayBitmap(selected ? correctedBitmap : originalBitmap);
+            updateCorrectionControls(); return;
+        }
+        renderSelectedCorrection();
+    }
+
+    private void selectNoteCorrection(String key) {
+        if(FilmCorrectionCategory.ORIGINAL.equals(key)) { selectCorrection(false);return; }
+        if(previewProcessing || isSaving || originalBitmap==null)return;
+        if(correctedBitmap != null && FilmCorrectionProfiles.key(correctionProfile).equals(key)) {selectCorrection(true);return;}
+        String profile=FilmCorrectionProfiles.latest(key);
+        if(profile.isEmpty())return;
+        setProcessing(true);int generation=processingGeneration.incrementAndGet();Bitmap source=originalBitmap;
+        processingExecutor.execute(()->{
+            Bitmap result=null;
+            try {result=FilmColorCorrection.apply(getApplicationContext(),source,profile,()->generation!=processingGeneration.get());}
+            catch(Exception | OutOfMemoryError ignored) { }
+            Bitmap rendered=result;
+            runOnUiThread(()->{
+                if(isDestroyed() || isFinishing() || generation!=processingGeneration.get()) {recycleIfNeeded(rendered);return;}
+                if(rendered!=null) {
+                    Bitmap previous=correctedBitmap;correctedBitmap=rendered;correctionProfile=profile;
+                    correctionSelected=true;viewingOriginal=false;displayBitmap(rendered);recycleIfNeeded(previous);
+                }
+                setProcessing(false);
+                if(rendered==null)showError(getString(R.string.correction_render_error));
+            });
+        });
+    }
+
+    private void changeSavedCorrection(boolean selected) {
+        boolean previousSelection = correctionSelected;
+        correctionSelected = selected;
+        if (!selected) displayBitmap(originalBitmap);
+        setProcessing(true); int generation = processingGeneration.incrementAndGet();
+        processingExecutor.execute(() -> {
+            Bitmap preview = null;
+            boolean success = FilmGalleryRecipeStore.select(getApplicationContext(), imagePath, selected);
+            if (success && selected) try {
+                preview = decodeScaledBitmap(FilmGalleryRecipeStore.correction(getApplicationContext(), imagePath), getPreviewMaximumEdge());
+            } catch (Exception | OutOfMemoryError ignored) { }
+            Bitmap rendered = preview;
+            runOnUiThread(() -> {
+                if (isDestroyed() || isFinishing() || generation != processingGeneration.get()) { recycleIfNeeded(rendered); return; }
+                if (success) {
+                    Bitmap previous = correctedBitmap;
+                    viewingOriginal = !selected;
+                    correctionSelected = selected; correctedBitmap = rendered;
+                    displayBitmap(selected && !viewingOriginal && rendered != null ? rendered : originalBitmap);
+                    if (previous != rendered) recycleIfNeeded(previous);
+                } else {
+                    correctionSelected = previousSelection;
+                    displayBitmap(correctionSelected && !viewingOriginal ? correctedBitmap : originalBitmap);
+                }
+                setProcessing(false);
+                if (!success || selected && rendered == null) showError(getString(R.string.correction_change_error));
+            });
+        });
+    }
+
+    private void renderSelectedCorrection() {
+        setProcessing(true);
+        int generation = processingGeneration.incrementAndGet();
+        Bitmap source = originalBitmap;
+        String version=correctionProfile;
+        processingExecutor.execute(() -> {
+            Bitmap result = null;
+            try { result = FilmColorCorrection.apply(getApplicationContext(), source,version,
+                    () -> generation != processingGeneration.get()); }
+            catch (Exception | OutOfMemoryError ignored) { }
+            Bitmap rendered = result;
+            runOnUiThread(() -> {
+                if (isDestroyed() || isFinishing() || generation != processingGeneration.get()) { recycleIfNeeded(rendered); return; }
+                correctedBitmap = rendered;
+                if (rendered == null) {
+                    correctionSelected = false;
+                    if (saveCompleted && !FilmFrameCapture.isNote(getIntent())) FilmGalleryRecipeStore.select(this, imagePath, false);
+                }
+                displayBitmap(rendered == null || viewingOriginal ? originalBitmap : rendered);
+                setProcessing(false);
+                if (rendered == null) showError(getString(R.string.correction_render_error));
+            });
+        });
+    }
+
+    private void updateCorrectionControls() {
+        boolean note=FilmFrameCapture.isNote(getIntent());
+        correctionCategory.bind(correctionSelected && !viewingOriginal ? FilmCorrectionProfiles.key(correctionProfile) : FilmCorrectionCategory.ORIGINAL,
+                !previewProcessing && !isSaving && originalBitmap != null, previewProcessing || isSaving,
+                key -> note || FilmCorrectionCategory.ORIGINAL.equals(key) || FilmCorrectionCategory.E100D.equals(key),
+                key -> {if(note)selectNoteCorrection(key);else selectCorrection(FilmCorrectionCategory.E100D.equals(key));});
     }
 
     private void showError(String message) {
@@ -323,11 +473,11 @@ public class FilmResultActivity extends AppCompatActivity {
     }
 
     private void requestSave() {
-        if (isSaving || originalBitmap == null || imagePath == null) {
+        if (isSaving || previewProcessing || originalBitmap == null || imagePath == null) {
             return;
         }
 
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P
+        if (!FilmFrameCapture.isNote(getIntent()) && Build.VERSION.SDK_INT <= Build.VERSION_CODES.P
                 && ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -351,19 +501,25 @@ public class FilmResultActivity extends AppCompatActivity {
         }
 
         isSaving = true;
+        updateCorrectionControls();
         saveButton.setEnabled(false);
         saveButton.setText(getString(R.string.saving));
 
         double multiplierToSave = exposureMultiplier;
+        boolean applyCorrection = correctionSelected;
+        String profileToSave=correctionProfile;
         SaveJob job = new SaveJob();
         if (SAVE_JOBS.putIfAbsent(imagePath, job) != null) {
             observeSave();
             return;
         }
+        if (noteLocation != null) noteLocation.saving();
         SAVE_EXECUTOR.execute(() -> {
             Bitmap decoded = null;
             Bitmap rotated = null;
             Bitmap finalBitmap = null;
+            Bitmap corrected = null;
+            java.util.List<Uri> addedGallery = new java.util.ArrayList<>();
 
             try {
                 decoded = decodeScaledBitmap(sourceFile, Integer.MAX_VALUE);
@@ -378,21 +534,42 @@ public class FilmResultActivity extends AppCompatActivity {
                     rotated.recycle();
                 }
                 rotated = null;
+                if (applyCorrection) corrected = FilmColorCorrection.apply(getApplicationContext(), finalBitmap,profileToSave, () -> false);
 
-                Uri savedUri = writeToGallery(finalBitmap);
-                if (savedUri == null) {
-                    throw new IOException("갤러리 URI를 만들지 못했습니다.");
+                if (FilmFrameCapture.isNote(getIntent())) {
+                    FilmFrameRecord frame = new FilmFrameRecord();
+                    frame.number = getIntent().getIntExtra(FilmFrameCapture.NUMBER, 0);
+                    frame.captureId = imagePath;
+                    frame.capturedAt = FilmFrameCapture.capturedAt(getIntent(), sourceFile.lastModified());
+                    // Snapshot only what is available. GPS never delays photo saving.
+                    frame.location = noteLocation.position();
+                    frame.iso = capturedIso; frame.aperture = capturedAperture;
+                    frame.shutter = capturedShutter; frame.fieldOfView = capturedFieldOfView;
+                    frame.correctionEnabled = applyCorrection;
+                    frame.correctionProfile = applyCorrection ? profileToSave : "";
+                    if (!new FilmRollStore(getApplicationContext()).saveFrame(
+                            getIntent().getStringExtra(FilmFrameCapture.ROLL), frame, finalBitmap, corrected))
+                        throw new IOException("Note cut could not be committed");
+                    noteLocation.saved();
+                } else {
+                    Uri output = writeToGallery(finalBitmap, "");
+                    addedGallery.add(output);
+                    if (!FilmGalleryRecipeStore.save(getApplicationContext(), imagePath, output, applyCorrection, corrected)) {
+                        getSharedPreferences("capture_saves", MODE_PRIVATE).edit().remove(imagePath).commit();
+                        throw new IOException("Save receipt failed");
+                    }
                 }
-
-                getSharedPreferences("capture_saves", MODE_PRIVATE).edit()
-                        .putBoolean(imagePath, true).commit();
                 job.succeeded = true;
             } catch (Exception | OutOfMemoryError error) {
                 job.succeeded = false;
+                android.util.Log.e("FilmResult", "Photo save failed", error);
+                for (Uri uri : addedGallery) if (!removeGalleryOutput(uri)) job.partial = true;
+                if (noteLocation != null) noteLocation.failed();
             } finally {
                 recycleIfNeeded(decoded);
                 recycleIfNeeded(rotated);
                 recycleIfNeeded(finalBitmap);
+                recycleIfNeeded(corrected);
                 job.complete = true;
             }
         });
@@ -400,6 +577,8 @@ public class FilmResultActivity extends AppCompatActivity {
     }
 
     private boolean isCaptureSaved() {
+        if (FilmFrameCapture.isNote(getIntent())) return imagePath != null && new FilmRollStore(this)
+                .hasCapture(getIntent().getStringExtra(FilmFrameCapture.ROLL), imagePath);
         return imagePath != null && getSharedPreferences("capture_saves", MODE_PRIVATE)
                 .getBoolean(imagePath, false);
     }
@@ -419,32 +598,55 @@ public class FilmResultActivity extends AppCompatActivity {
         if (job != null) {
             SAVE_JOBS.remove(imagePath, job);
             Toast.makeText(this, saveCompleted ? getString(R.string.save_success)
-                    : getString(R.string.save_error), Toast.LENGTH_SHORT).show();
+                    : getString(job.partial ? R.string.correction_save_partial : FilmFrameCapture.isNote(getIntent())
+                    ? R.string.note_store_error : R.string.save_error), Toast.LENGTH_SHORT).show();
         }
-        saveButton.setText(saveCompleted ? getString(R.string.saved) : getString(R.string.save));
+        saveButton.setText(saveCompleted ? getString(R.string.saved) : getString(
+                FilmFrameCapture.isNote(getIntent()) ? R.string.note_save_frame : R.string.save));
         saveButton.setEnabled(!previewProcessing && originalBitmap != null && !saveCompleted);
+        updateCorrectionControls();
+        if (saveCompleted && FilmFrameCapture.isNote(getIntent())) { setResult(RESULT_OK); finish(); }
     }
 
     @Override protected void onStart() {
         super.onStart();
         boolean resumePreview = screenStopped;
         screenStopped = false;
+        if (noteLocation != null) noteLocation.start();
         if (resumePreview) {
             if (originalBitmap == null) loadCapturedImage();
+            else if (saveCompleted && !FilmFrameCapture.isNote(getIntent()) && correctionSelected && correctedBitmap == null) changeSavedCorrection(true);
+            else if (correctionSelected && correctedBitmap == null) renderSelectedCorrection();
             else setProcessing(false);
         }
         observeSave();
     }
 
     @Override protected void onStop() {
+        correctionCategory.dismiss();
         screenStopped = true;
         processingGeneration.incrementAndGet();
         uiHandler.removeCallbacksAndMessages(null);
         super.onStop();
     }
 
+    @Override protected void onSaveInstanceState(Bundle out) {
+        out.putBoolean("correctionSelected", correctionSelected);
+        out.putString("correctionProfile",correctionProfile);
+        out.putBoolean("viewingOriginal", viewingOriginal);
+        if (noteLocation != null && noteLocation.isComplete()) {
+            out.putBoolean("noteLocationComplete", true);
+            FilmFrameLocation position = noteLocation.position();
+            if (position != null) {
+                out.putDouble("noteLatitude", position.latitude); out.putDouble("noteLongitude", position.longitude);
+                out.putDouble("noteAccuracy", position.accuracyMeters);
+            }
+        }
+        super.onSaveInstanceState(out);
+    }
+
     private Uri writeToGallery(
-            Bitmap bitmap
+            Bitmap bitmap, String kind
     ) throws IOException {
         String fileName = GalleryFileNameBuilder.build(
                 capturedIso,
@@ -453,12 +655,26 @@ public class FilmResultActivity extends AppCompatActivity {
                 capturedFieldOfView,
                 new Date(new File(imagePath).lastModified())
         );
+        fileName = fileName.substring(0, fileName.length()-4) + kind + ".jpg";
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             return writeUsingMediaStore(bitmap, fileName);
         }
 
         return writeLegacyGalleryFile(bitmap, fileName);
+    }
+
+    private boolean removeGalleryOutput(Uri uri) {
+        if (uri == null) return true;
+        try {
+            if ("file".equals(uri.getScheme())) {
+                File file = new File(uri.getPath());
+                boolean removed = !file.exists() || file.delete();
+                MediaScannerConnection.scanFile(this, new String[]{file.getAbsolutePath()}, new String[]{"image/jpeg"}, null);
+                return removed;
+            }
+            return getContentResolver().delete(uri, null, null) > 0;
+        } catch (Exception error) { return false; }
     }
 
     private Uri writeUsingMediaStore(
@@ -508,7 +724,7 @@ public class FilmResultActivity extends AppCompatActivity {
             completed.put(MediaStore.Images.Media.IS_PENDING, 0);
             resolver.update(uri, completed, null, null);
             return uri;
-        } catch (IOException | RuntimeException error) {
+        } catch (IOException | RuntimeException | OutOfMemoryError error) {
             resolver.delete(uri, null, null);
             throw error;
         }
@@ -540,7 +756,7 @@ public class FilmResultActivity extends AppCompatActivity {
             if (!bitmap.compress(Bitmap.CompressFormat.JPEG, 95, stream)) {
                 throw new IOException("JPEG 저장에 실패했습니다.");
             }
-        } catch (IOException error) {
+        } catch (IOException | RuntimeException | OutOfMemoryError error) {
             if (outputFile.exists()) {
                 outputFile.delete();
             }
@@ -586,6 +802,7 @@ public class FilmResultActivity extends AppCompatActivity {
         // after both the view and worker release their references.
         displayedBitmap = null;
         originalBitmap = null;
+        correctedBitmap = null;
 
         super.onDestroy();
     }

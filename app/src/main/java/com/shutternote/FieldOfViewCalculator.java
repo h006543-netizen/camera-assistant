@@ -7,6 +7,9 @@ public final class FieldOfViewCalculator {
 
     static final double DEFAULT_PHONE_EQUIVALENT_MM = 24.0;
 
+    // Apply once to every selection; CameraX shares this zoom with preview and capture.
+    private static final double FIELD_OF_VIEW_ZOOM_CORRECTION = 1.03;
+
     private static final double FULL_FRAME_WIDTH_MM = 36.0;
     private static final double FULL_FRAME_HEIGHT_MM = 24.0;
     private static final double FULL_FRAME_DIAGONAL_MM = Math.hypot(
@@ -93,6 +96,16 @@ public final class FieldOfViewCalculator {
             String selectedFieldOfView,
             double baseEquivalentFocalLengthMm
     ) {
+        return (float) (calculateNominalZoomRatio(
+                selectedFieldOfView,
+                baseEquivalentFocalLengthMm
+        ) * FIELD_OF_VIEW_ZOOM_CORRECTION);
+    }
+
+    private static double calculateNominalZoomRatio(
+            String selectedFieldOfView,
+            double baseEquivalentFocalLengthMm
+    ) {
         if (!Double.isFinite(baseEquivalentFocalLengthMm)
                 || baseEquivalentFocalLengthMm <= 0.0
                 || ExposureSettingsStore.FIELD_OF_VIEW_DEFAULT.equals(selectedFieldOfView)) {
@@ -114,7 +127,7 @@ public final class FieldOfViewCalculator {
                 return 1.0f;
         }
 
-        return (float) (targetEquivalentFocalLengthMm / baseEquivalentFocalLengthMm);
+        return targetEquivalentFocalLengthMm / baseEquivalentFocalLengthMm;
     }
 
     static float clampZoomRatio(float requestedZoomRatio, float minZoomRatio, float maxZoomRatio) {
