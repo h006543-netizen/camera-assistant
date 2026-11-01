@@ -1,0 +1,8 @@
+# Pinned correction assets are SHA-256 checked at runtime; preserve exact bytes.
+app/src/main/assets/film_corrections/** -text
+*.dat binary
+*.png binary
+
+# Keep the Gradle wrappers usable with platform-appropriate line endings.
+gradlew text eol=lf
+gradlew.bat text eol=crlf

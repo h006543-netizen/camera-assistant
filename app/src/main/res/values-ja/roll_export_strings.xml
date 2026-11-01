@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="note_export_zip">写真をZIPで書き出す</string>
+    <string name="note_export_empty">書き出す撮影写真がありません。</string>
+    <string name="note_export_progress">写真をまとめています · %1$d / %2$d</string>
+    <string name="note_export_copying">選択した場所にZIPを保存しています…</string>
+    <string name="note_export_complete">ZIPを保存しました</string>
+    <string name="note_export_failed">ZIPを保存できませんでした。空き容量と写真を確認して再試行してください。</string>
+    <string name="note_export_partial">書き出しが完了しませんでした。選択した場所の未完成ZIPを削除してから再試行してください。</string>
+    <string name="note_export_channel">ファイルの書き出し</string>
+    <string name="note_export_open_location">ダウンロードを開く</string>
+    <string name="note_export_open_zip">ZIPを開く</string>
+</resources>

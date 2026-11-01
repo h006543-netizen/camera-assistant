@@ -1,0 +1,27 @@
+<resources>
+    <string name="scan_link">필름 스캔본 연결</string>
+    <string name="scan_compare">스캔 비교</string>
+    <string name="scan_note_photo">노트 사진</string>
+    <string name="scan_film_photo">필름 스캔</string>
+    <string name="scan_notes_empty">미입력</string>
+    <string name="scan_location_accuracy">위치 정확도</string>
+    <string name="scan_compare_title">%1$d번 컷 스캔 비교</string>
+    <string name="scan_confirm_title">%1$d번 컷 · 연결 확인</string>
+    <string name="scan_zoom_title">%1$d번 컷 확대</string>
+    <string name="scan_actions">스캔본 연결 관리</string>
+    <string name="scan_reselect">다시 선택</string>
+    <string name="scan_confirm">연결하고 비교</string>
+    <string name="scan_enlarge">확대</string>
+    <string name="scan_discard">선택 취소</string>
+    <string name="scan_unlink">연결 해제</string>
+    <string name="scan_loading">사진을 불러오고 있습니다.</string>
+    <string name="scan_read_error">사진을 읽지 못했습니다. 기기에서 지원하는 128MB 이하의 사진을 다시 선택해 주세요.</string>
+    <string name="scan_save_error">연결을 저장하지 못했습니다. 컷과 연결 상태를 확인한 뒤 다시 시도해 주세요. 기존 기록은 유지됩니다.</string>
+    <string name="scan_picker_error">사진 선택 화면을 열 수 없습니다.</string>
+    <string name="scan_zoom_in">확대</string>
+    <string name="scan_zoom_out">축소</string>
+    <string name="scan_selected">선택됨</string>
+    <string name="scan_zoom_percent" translatable="false">%1$d%%</string>
+    <string name="scan_plus" translatable="false">＋</string>
+    <string name="scan_minus" translatable="false">−</string>
+</resources>

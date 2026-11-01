@@ -1,0 +1,12 @@
+<resources>
+    <string name="note_folder_new">新しいフォルダ</string>
+    <string name="note_folder_name">フォルダ名</string>
+    <string name="note_folder_name_error">フォルダ名を1〜80文字で入力してください。</string>
+    <string name="note_folder_rename">フォルダ名を変更</string>
+    <string name="note_folder_remove">フォルダを削除 · ロールは保持</string>
+    <string name="note_folder_move">移動</string>
+    <string name="note_folder_outside">フォルダの外へ</string>
+    <string name="note_folder_count">%1$dロール</string>
+    <string name="note_folder_open">%1$sを開く · %2$dロール</string>
+    <string name="note_folder_error">変更を保存できませんでした。既存の記録は保持されます。</string>
+</resources>

@@ -1,0 +1,338 @@
+<?xml version='1.0' encoding='utf-8'?>
+<catalog>
+    <film id="kodak-vision3-50d" brand="KODAK" name="VISION3 50D" speed="50" ei="false" cine="true" />
+    <film id="kodak-ektar-100" brand="KODAK" name="EKTAR 100" speed="100" ei="false" cine="false" />
+    <film id="kodak-ektachrome-e100" brand="KODAK" name="EKTACHROME E100" speed="100" ei="false" cine="false" />
+    <film id="kodak-ektachrome-e100d" brand="KODAK" name="EKTACHROME E100D" speed="100" ei="false" cine="true" />
+    <film id="kodak-pro-image-100" brand="KODAK" name="PRO IMAGE 100" speed="100" ei="false" cine="false" />
+    <film id="kodak-kodacolor-100" brand="KODAK" name="KODACOLOR 100" speed="100" ei="false" cine="false" />
+    <film id="kodak-t-max-100" brand="KODAK" name="T-MAX 100" speed="100" ei="false" cine="false" />
+    <film id="kodak-ektapan-100" brand="KODAK" name="EKTAPAN 100" speed="100" ei="false" cine="false" />
+    <film id="kodak-portra-160" brand="KODAK" name="PORTRA 160" speed="160" ei="false" cine="false" />
+    <film id="kodak-ektacolor-pro-160" brand="KODAK" name="EKTACOLOR PRO 160" speed="160" ei="false" cine="false" />
+    <film id="kodak-gold-200" brand="KODAK" name="GOLD 200" speed="200" ei="false" cine="false" />
+    <film id="kodak-kodacolor-200" brand="KODAK" name="KODACOLOR 200" speed="200" ei="false" cine="false" />
+    <film id="kodak-vision3-200t" brand="KODAK" name="VISION3 200T" speed="200" ei="false" cine="true" />
+    <film id="kodak-verita-200d" brand="KODAK" name="VERITA 200D" speed="200" ei="false" cine="true" />
+    <film id="kodak-vision3-250d" brand="KODAK" name="VISION3 250D" speed="250" ei="false" cine="true" />
+    <film id="kodak-portra-400" brand="KODAK" name="PORTRA 400" speed="400" ei="false" cine="false" />
+    <film id="kodak-ektacolor-pro-400" brand="KODAK" name="EKTACOLOR PRO 400" speed="400" ei="false" cine="false" />
+    <film id="kodak-ultramax-400" brand="KODAK" name="ULTRAMAX 400" speed="400" ei="false" cine="false" />
+    <film id="kodak-tri-x-400" brand="KODAK" name="TRI-X 400" speed="400" ei="false" cine="false" />
+    <film id="kodak-t-max-400" brand="KODAK" name="T-MAX 400" speed="400" ei="false" cine="false" />
+    <film id="kodak-ektapan-400" brand="KODAK" name="EKTAPAN 400" speed="400" ei="false" cine="false" />
+    <film id="kodak-vision3-500t" brand="KODAK" name="VISION3 500T" speed="500" ei="false" cine="true" />
+    <film id="kodak-portra-800" brand="KODAK" name="PORTRA 800" speed="800" ei="false" cine="false" />
+    <film id="kodak-ektacolor-pro-800" brand="KODAK" name="EKTACOLOR PRO 800" speed="800" ei="false" cine="false" />
+    <film id="kodak-t-max-p3200" brand="KODAK" name="T-MAX P3200" speed="3200" ei="true" cine="false" />
+    <film id="kodak-ektapan-p3200" brand="KODAK" name="EKTAPAN P3200" speed="3200" ei="true" cine="false" />
+    <film id="cinestill-50d" brand="CINESTILL" name="50D" speed="50" ei="false" cine="true" />
+    <!-- BwXX uses the manufacturer's daylight EI; tungsten EI is 200. -->
+    <film id="cinestill-bwxx" brand="CINESTILL" name="BwXX" speed="250" ei="true" cine="true" />
+    <film id="cinestill-400d" brand="CINESTILL" name="400D" speed="400" ei="false" cine="true" />
+    <film id="cinestill-800t" brand="CINESTILL" name="800T" speed="800" ei="false" cine="true" />
+    <film id="fujifilm-velvia-50" brand="FUJIFILM" name="Velvia 50" speed="50" ei="false" cine="false" />
+    <film id="fujifilm-fujicolor-100" brand="FUJIFILM" name="FUJICOLOR 100" speed="100" ei="false" cine="false" />
+    <film id="fujifilm-neopan-100-acros-ii" brand="FUJIFILM" name="NEOPAN 100 ACROS II" speed="100" ei="false" cine="false" />
+    <film id="fujifilm-provia-100f" brand="FUJIFILM" name="PROVIA 100F" speed="100" ei="false" cine="false" />
+    <film id="fujifilm-velvia-100" brand="FUJIFILM" name="Velvia 100" speed="100" ei="false" cine="false" />
+    <film id="fujifilm-fujifilm-400" brand="FUJIFILM" name="FUJIFILM 400" speed="400" ei="false" cine="false" />
+    <film id="fujifilm-superia-premium-400" brand="FUJIFILM" name="SUPERIA PREMIUM 400" speed="400" ei="false" cine="false" />
+    <camera id="leica-m3" brand="Leica" name="M3" format="135" ratio="3:2" half="false" />
+    <camera id="leica-m2" brand="Leica" name="M2" format="135" ratio="3:2" half="false" />
+    <camera id="leica-m4" brand="Leica" name="M4" format="135" ratio="3:2" half="false" />
+    <camera id="leica-m4-2" brand="Leica" name="M4-2" format="135" ratio="3:2" half="false" />
+    <camera id="leica-m4-p" brand="Leica" name="M4-P" format="135" ratio="3:2" half="false" />
+    <camera id="leica-m5" brand="Leica" name="M5" format="135" ratio="3:2" half="false" />
+    <camera id="leica-m6" brand="Leica" name="M6" format="135" ratio="3:2" half="false" />
+    <camera id="leica-m6-ttl" brand="Leica" name="M6 TTL" format="135" ratio="3:2" half="false" />
+    <camera id="leica-m7" brand="Leica" name="M7" format="135" ratio="3:2" half="false" />
+    <camera id="leica-mp" brand="Leica" name="MP" format="135" ratio="3:2" half="false" />
+    <camera id="leica-m-a" brand="Leica" name="M-A" format="135" ratio="3:2" half="false" />
+    <camera id="leica-cl" brand="Leica" name="CL" format="135" ratio="3:2" half="false" />
+    <camera id="leica-r6" brand="Leica" name="R6" format="135" ratio="3:2" half="false" />
+    <camera id="leica-r6-2" brand="Leica" name="R6.2" format="135" ratio="3:2" half="false" />
+    <camera id="leica-r7" brand="Leica" name="R7" format="135" ratio="3:2" half="false" />
+    <camera id="leica-r8" brand="Leica" name="R8" format="135" ratio="3:2" half="false" />
+    <camera id="leica-r9" brand="Leica" name="R9" format="135" ratio="3:2" half="false" />
+    <camera id="leica-minilux" brand="Leica" name="Minilux" format="135" ratio="3:2" half="false" />
+    <camera id="leica-minilux-zoom" brand="Leica" name="Minilux Zoom" format="135" ratio="3:2" half="false" />
+    <camera id="leica-cm" brand="Leica" name="CM" format="135" ratio="3:2" half="false" />
+    <camera id="leica-cm-zoom" brand="Leica" name="CM Zoom" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-f" brand="Nikon" name="F" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-f2" brand="Nikon" name="F2" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-f3" brand="Nikon" name="F3" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-f4" brand="Nikon" name="F4" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-f5" brand="Nikon" name="F5" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-f6" brand="Nikon" name="F6" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-fm" brand="Nikon" name="FM" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-fm2" brand="Nikon" name="FM2" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-fm2n" brand="Nikon" name="FM2n" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-fm3a" brand="Nikon" name="FM3A" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-fe" brand="Nikon" name="FE" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-fe2" brand="Nikon" name="FE2" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-fa" brand="Nikon" name="FA" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-em" brand="Nikon" name="EM" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-fg" brand="Nikon" name="FG" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-f80" brand="Nikon" name="F80" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-f90x" brand="Nikon" name="F90X" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-f100" brand="Nikon" name="F100" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-28ti" brand="Nikon" name="28Ti" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-35ti" brand="Nikon" name="35Ti" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-l35af" brand="Nikon" name="L35AF" format="135" ratio="3:2" half="false" />
+    <camera id="nikon-l35ad" brand="Nikon" name="L35AD" format="135" ratio="3:2" half="false" />
+    <camera id="canon-ae-1" brand="Canon" name="AE-1" format="135" ratio="3:2" half="false" />
+    <camera id="canon-ae-1-program" brand="Canon" name="AE-1 Program" format="135" ratio="3:2" half="false" />
+    <camera id="canon-a-1" brand="Canon" name="A-1" format="135" ratio="3:2" half="false" />
+    <camera id="canon-at-1" brand="Canon" name="AT-1" format="135" ratio="3:2" half="false" />
+    <camera id="canon-av-1" brand="Canon" name="AV-1" format="135" ratio="3:2" half="false" />
+    <camera id="canon-f-1" brand="Canon" name="F-1" format="135" ratio="3:2" half="false" />
+    <camera id="canon-new-f-1" brand="Canon" name="New F-1" format="135" ratio="3:2" half="false" />
+    <camera id="canon-ftb" brand="Canon" name="FTb" format="135" ratio="3:2" half="false" />
+    <camera id="canon-t70" brand="Canon" name="T70" format="135" ratio="3:2" half="false" />
+    <camera id="canon-t90" brand="Canon" name="T90" format="135" ratio="3:2" half="false" />
+    <camera id="canon-eos-5" brand="Canon" name="EOS 5" format="135" ratio="3:2" half="false" />
+    <camera id="canon-eos-3" brand="Canon" name="EOS 3" format="135" ratio="3:2" half="false" />
+    <camera id="canon-eos-1" brand="Canon" name="EOS-1" format="135" ratio="3:2" half="false" />
+    <camera id="canon-eos-1n" brand="Canon" name="EOS-1N" format="135" ratio="3:2" half="false" />
+    <camera id="canon-eos-1v" brand="Canon" name="EOS-1V" format="135" ratio="3:2" half="false" />
+    <camera id="canon-eos-30" brand="Canon" name="EOS 30" format="135" ratio="3:2" half="false" />
+    <camera id="canon-eos-50" brand="Canon" name="EOS 50" format="135" ratio="3:2" half="false" />
+    <camera id="canon-canon-p" brand="Canon" name="Canon P" format="135" ratio="3:2" half="false" />
+    <camera id="canon-canon-7" brand="Canon" name="Canon 7" format="135" ratio="3:2" half="false" />
+    <camera id="canon-canonet-ql17-giii" brand="Canon" name="Canonet QL17 GIII" format="135" ratio="3:2" half="false" />
+    <camera id="canon-af35m" brand="Canon" name="AF35M" format="135" ratio="3:2" half="false" />
+    <camera id="canon-sure-shot-af35m-ii" brand="Canon" name="Sure Shot AF35M II" format="135" ratio="3:2" half="false" />
+    <camera id="canon-autoboy-s" brand="Canon" name="Autoboy S" format="135" ratio="3:2" half="false" />
+    <camera id="contax-t" brand="Contax" name="T" format="135" ratio="3:2" half="false" />
+    <camera id="contax-t2" brand="Contax" name="T2" format="135" ratio="3:2" half="false" />
+    <camera id="contax-t3" brand="Contax" name="T3" format="135" ratio="3:2" half="false" />
+    <camera id="contax-tvs" brand="Contax" name="TVS" format="135" ratio="3:2" half="false" />
+    <camera id="contax-tvs-ii" brand="Contax" name="TVS II" format="135" ratio="3:2" half="false" />
+    <camera id="contax-tvs-iii" brand="Contax" name="TVS III" format="135" ratio="3:2" half="false" />
+    <camera id="contax-g1" brand="Contax" name="G1" format="135" ratio="3:2" half="false" />
+    <camera id="contax-g2" brand="Contax" name="G2" format="135" ratio="3:2" half="false" />
+    <camera id="contax-rts" brand="Contax" name="RTS" format="135" ratio="3:2" half="false" />
+    <camera id="contax-rts-ii" brand="Contax" name="RTS II" format="135" ratio="3:2" half="false" />
+    <camera id="contax-rts-iii" brand="Contax" name="RTS III" format="135" ratio="3:2" half="false" />
+    <camera id="contax-139-quartz" brand="Contax" name="139 Quartz" format="135" ratio="3:2" half="false" />
+    <camera id="contax-159-mm" brand="Contax" name="159 MM" format="135" ratio="3:2" half="false" />
+    <camera id="contax-167-mt" brand="Contax" name="167 MT" format="135" ratio="3:2" half="false" />
+    <camera id="contax-aria" brand="Contax" name="Aria" format="135" ratio="3:2" half="false" />
+    <camera id="contax-s2" brand="Contax" name="S2" format="135" ratio="3:2" half="false" />
+    <camera id="contax-645" brand="Contax" name="645" format="120" ratio="4:3" half="false" />
+    <camera id="olympus-om-1" brand="Olympus" name="OM-1" format="135" ratio="3:2" half="false" />
+    <camera id="olympus-om-1n" brand="Olympus" name="OM-1n" format="135" ratio="3:2" half="false" />
+    <camera id="olympus-om-2" brand="Olympus" name="OM-2" format="135" ratio="3:2" half="false" />
+    <camera id="olympus-om-2n" brand="Olympus" name="OM-2n" format="135" ratio="3:2" half="false" />
+    <camera id="olympus-om-3" brand="Olympus" name="OM-3" format="135" ratio="3:2" half="false" />
+    <camera id="olympus-om-4" brand="Olympus" name="OM-4" format="135" ratio="3:2" half="false" />
+    <camera id="olympus-om-4ti" brand="Olympus" name="OM-4Ti" format="135" ratio="3:2" half="false" />
+    <camera id="olympus-om-10" brand="Olympus" name="OM-10" format="135" ratio="3:2" half="false" />
+    <camera id="olympus-om-20" brand="Olympus" name="OM-20" format="135" ratio="3:2" half="false" />
+    <camera id="olympus-om-40" brand="Olympus" name="OM-40" format="135" ratio="3:2" half="false" />
+    <camera id="olympus-xa" brand="Olympus" name="XA" format="135" ratio="3:2" half="false" />
+    <camera id="olympus-xa2" brand="Olympus" name="XA2" format="135" ratio="3:2" half="false" />
+    <camera id="olympus-xa3" brand="Olympus" name="XA3" format="135" ratio="3:2" half="false" />
+    <camera id="olympus-xa4" brand="Olympus" name="XA4" format="135" ratio="3:2" half="false" />
+    <camera id="olympus-trip-35" brand="Olympus" name="Trip 35" format="135" ratio="3:2" half="false" />
+    <camera id="olympus-35-sp" brand="Olympus" name="35 SP" format="135" ratio="3:2" half="false" />
+    <camera id="olympus-35-rc" brand="Olympus" name="35 RC" format="135" ratio="3:2" half="false" />
+    <camera id="olympus-mju-i" brand="Olympus" name="mju I" format="135" ratio="3:2" half="false" />
+    <camera id="olympus-mju-ii" brand="Olympus" name="mju II" format="135" ratio="3:2" half="false" />
+    <camera id="olympus-pen-ee" brand="Olympus" name="PEN EE" format="135" ratio="3:4" half="true" />
+    <camera id="olympus-pen-ee-2" brand="Olympus" name="PEN EE-2" format="135" ratio="3:4" half="true" />
+    <camera id="olympus-pen-ee-3" brand="Olympus" name="PEN EE-3" format="135" ratio="3:4" half="true" />
+    <camera id="olympus-pen-ees-2" brand="Olympus" name="PEN EES-2" format="135" ratio="3:4" half="true" />
+    <camera id="olympus-pen-f" brand="Olympus" name="PEN F" format="135" ratio="3:4" half="true" />
+    <camera id="olympus-pen-ft" brand="Olympus" name="PEN FT" format="135" ratio="3:4" half="true" />
+    <camera id="olympus-pen-fv" brand="Olympus" name="PEN FV" format="135" ratio="3:4" half="true" />
+    <camera id="pentax-17" brand="Pentax" name="17" format="135" ratio="3:4" half="true" />
+    <camera id="pentax-k1000" brand="Pentax" name="K1000" format="135" ratio="3:2" half="false" />
+    <camera id="pentax-kx" brand="Pentax" name="KX" format="135" ratio="3:2" half="false" />
+    <camera id="pentax-km" brand="Pentax" name="KM" format="135" ratio="3:2" half="false" />
+    <camera id="pentax-k2" brand="Pentax" name="K2" format="135" ratio="3:2" half="false" />
+    <camera id="pentax-mx" brand="Pentax" name="MX" format="135" ratio="3:2" half="false" />
+    <camera id="pentax-me" brand="Pentax" name="ME" format="135" ratio="3:2" half="false" />
+    <camera id="pentax-me-super" brand="Pentax" name="ME Super" format="135" ratio="3:2" half="false" />
+    <camera id="pentax-lx" brand="Pentax" name="LX" format="135" ratio="3:2" half="false" />
+    <camera id="pentax-super-a" brand="Pentax" name="Super A" format="135" ratio="3:2" half="false" />
+    <camera id="pentax-spotmatic" brand="Pentax" name="Spotmatic" format="135" ratio="3:2" half="false" />
+    <camera id="pentax-spotmatic-f" brand="Pentax" name="Spotmatic F" format="135" ratio="3:2" half="false" />
+    <camera id="pentax-espio-mini" brand="Pentax" name="Espio Mini" format="135" ratio="3:2" half="false" />
+    <camera id="pentax-645" brand="Pentax" name="645" format="120" ratio="4:3" half="false" />
+    <camera id="pentax-645n" brand="Pentax" name="645N" format="120" ratio="4:3" half="false" />
+    <camera id="pentax-645n-ii" brand="Pentax" name="645N II" format="120" ratio="4:3" half="false" />
+    <camera id="pentax-6x7" brand="Pentax" name="6x7" format="120" ratio="7:6" half="false" />
+    <camera id="pentax-67" brand="Pentax" name="67" format="120" ratio="7:6" half="false" />
+    <camera id="pentax-67ii" brand="Pentax" name="67II" format="120" ratio="7:6" half="false" />
+    <camera id="minolta-srt-101" brand="Minolta" name="SRT 101" format="135" ratio="3:2" half="false" />
+    <camera id="minolta-srt-102" brand="Minolta" name="SRT 102" format="135" ratio="3:2" half="false" />
+    <camera id="minolta-srt-303" brand="Minolta" name="SRT 303" format="135" ratio="3:2" half="false" />
+    <camera id="minolta-x-700" brand="Minolta" name="X-700" format="135" ratio="3:2" half="false" />
+    <camera id="minolta-x-500" brand="Minolta" name="X-500" format="135" ratio="3:2" half="false" />
+    <camera id="minolta-x-300" brand="Minolta" name="X-300" format="135" ratio="3:2" half="false" />
+    <camera id="minolta-xd" brand="Minolta" name="XD" format="135" ratio="3:2" half="false" />
+    <camera id="minolta-xd-7" brand="Minolta" name="XD-7" format="135" ratio="3:2" half="false" />
+    <camera id="minolta-xe-1" brand="Minolta" name="XE-1" format="135" ratio="3:2" half="false" />
+    <camera id="minolta-xg-m" brand="Minolta" name="XG-M" format="135" ratio="3:2" half="false" />
+    <camera id="minolta-cle" brand="Minolta" name="CLE" format="135" ratio="3:2" half="false" />
+    <camera id="minolta-tc-1" brand="Minolta" name="TC-1" format="135" ratio="3:2" half="false" />
+    <camera id="minolta-hi-matic-7sii" brand="Minolta" name="Hi-Matic 7SII" format="135" ratio="3:2" half="false" />
+    <camera id="minolta-hi-matic-f" brand="Minolta" name="Hi-Matic F" format="135" ratio="3:2" half="false" />
+    <camera id="minolta-af-c" brand="Minolta" name="AF-C" format="135" ratio="3:2" half="false" />
+    <camera id="minolta-dynax-7" brand="Minolta" name="Dynax 7" format="135" ratio="3:2" half="false" />
+    <camera id="minolta-dynax-9" brand="Minolta" name="Dynax 9" format="135" ratio="3:2" half="false" />
+    <camera id="yashica-t2" brand="Yashica" name="T2" format="135" ratio="3:2" half="false" />
+    <camera id="yashica-t3" brand="Yashica" name="T3" format="135" ratio="3:2" half="false" />
+    <camera id="yashica-t4" brand="Yashica" name="T4" format="135" ratio="3:2" half="false" />
+    <camera id="yashica-t5" brand="Yashica" name="T5" format="135" ratio="3:2" half="false" />
+    <camera id="yashica-t4-zoom" brand="Yashica" name="T4 Zoom" format="135" ratio="3:2" half="false" />
+    <camera id="yashica-electro-35" brand="Yashica" name="Electro 35" format="135" ratio="3:2" half="false" />
+    <camera id="yashica-electro-35-gsn" brand="Yashica" name="Electro 35 GSN" format="135" ratio="3:2" half="false" />
+    <camera id="yashica-electro-35-gtn" brand="Yashica" name="Electro 35 GTN" format="135" ratio="3:2" half="false" />
+    <camera id="yashica-electro-35-cc" brand="Yashica" name="Electro 35 CC" format="135" ratio="3:2" half="false" />
+    <camera id="yashica-electro-35-gx" brand="Yashica" name="Electro 35 GX" format="135" ratio="3:2" half="false" />
+    <camera id="yashica-fx-3-super-2000" brand="Yashica" name="FX-3 Super 2000" format="135" ratio="3:2" half="false" />
+    <camera id="yashica-mat-124g" brand="Yashica" name="Mat-124G" format="120" ratio="1:1" half="false" />
+    <camera id="yashica-yashica-mat" brand="Yashica" name="Yashica-Mat" format="120" ratio="1:1" half="false" />
+    <camera id="yashica-yashica-d" brand="Yashica" name="Yashica-D" format="120" ratio="1:1" half="false" />
+    <camera id="konica-hexar-af" brand="Konica" name="Hexar AF" format="135" ratio="3:2" half="false" />
+    <camera id="konica-hexar-rf" brand="Konica" name="Hexar RF" format="135" ratio="3:2" half="false" />
+    <camera id="konica-auto-s2" brand="Konica" name="Auto S2" format="135" ratio="3:2" half="false" />
+    <camera id="konica-auto-s3" brand="Konica" name="Auto S3" format="135" ratio="3:2" half="false" />
+    <camera id="konica-autoreflex-t" brand="Konica" name="Autoreflex T" format="135" ratio="3:2" half="false" />
+    <camera id="konica-autoreflex-t3" brand="Konica" name="Autoreflex T3" format="135" ratio="3:2" half="false" />
+    <camera id="konica-autoreflex-tc" brand="Konica" name="Autoreflex TC" format="135" ratio="3:2" half="false" />
+    <camera id="konica-c35" brand="Konica" name="C35" format="135" ratio="3:2" half="false" />
+    <camera id="konica-c35-af" brand="Konica" name="C35 AF" format="135" ratio="3:2" half="false" />
+    <camera id="konica-big-mini-bm-201" brand="Konica" name="Big Mini BM-201" format="135" ratio="3:2" half="false" />
+    <camera id="konica-big-mini-bm-301" brand="Konica" name="Big Mini BM-301" format="135" ratio="3:2" half="false" />
+    <camera id="konica-big-mini-f" brand="Konica" name="Big Mini F" format="135" ratio="3:2" half="false" />
+    <camera id="voigtl-nder-bessa-r" brand="Voigtländer" name="Bessa R" format="135" ratio="3:2" half="false" />
+    <camera id="voigtl-nder-bessa-r2" brand="Voigtländer" name="Bessa R2" format="135" ratio="3:2" half="false" />
+    <camera id="voigtl-nder-bessa-r2a" brand="Voigtländer" name="Bessa R2A" format="135" ratio="3:2" half="false" />
+    <camera id="voigtl-nder-bessa-r2m" brand="Voigtländer" name="Bessa R2M" format="135" ratio="3:2" half="false" />
+    <camera id="voigtl-nder-bessa-r3a" brand="Voigtländer" name="Bessa R3A" format="135" ratio="3:2" half="false" />
+    <camera id="voigtl-nder-bessa-r3m" brand="Voigtländer" name="Bessa R3M" format="135" ratio="3:2" half="false" />
+    <camera id="voigtl-nder-bessa-r4a" brand="Voigtländer" name="Bessa R4A" format="135" ratio="3:2" half="false" />
+    <camera id="voigtl-nder-bessa-r4m" brand="Voigtländer" name="Bessa R4M" format="135" ratio="3:2" half="false" />
+    <camera id="voigtl-nder-bessa-l" brand="Voigtländer" name="Bessa L" format="135" ratio="3:2" half="false" />
+    <camera id="voigtl-nder-bessa-t" brand="Voigtländer" name="Bessa T" format="135" ratio="3:2" half="false" />
+    <camera id="voigtl-nder-bessa-iii" brand="Voigtländer" name="Bessa III" format="120" ratio="1:1 / 7:6" half="false" />
+    <camera id="ricoh-gr1" brand="Ricoh" name="GR1" format="135" ratio="3:2" half="false" />
+    <camera id="ricoh-gr1s" brand="Ricoh" name="GR1s" format="135" ratio="3:2" half="false" />
+    <camera id="ricoh-gr1v" brand="Ricoh" name="GR1v" format="135" ratio="3:2" half="false" />
+    <camera id="ricoh-gr21" brand="Ricoh" name="GR21" format="135" ratio="3:2" half="false" />
+    <camera id="ricoh-r1" brand="Ricoh" name="R1" format="135" ratio="3:2" half="false" />
+    <camera id="ricoh-r1s" brand="Ricoh" name="R1s" format="135" ratio="3:2" half="false" />
+    <camera id="ricoh-r10" brand="Ricoh" name="R10" format="135" ratio="3:2" half="false" />
+    <camera id="ricoh-ff-1" brand="Ricoh" name="FF-1" format="135" ratio="3:2" half="false" />
+    <camera id="ricoh-ff-3-af" brand="Ricoh" name="FF-3 AF" format="135" ratio="3:2" half="false" />
+    <camera id="ricoh-xr-7" brand="Ricoh" name="XR-7" format="135" ratio="3:2" half="false" />
+    <camera id="ricoh-kr-5-super" brand="Ricoh" name="KR-5 Super" format="135" ratio="3:2" half="false" />
+    <camera id="ricoh-kr-10-super" brand="Ricoh" name="KR-10 Super" format="135" ratio="3:2" half="false" />
+    <camera id="fujifilm-klasse" brand="Fujifilm" name="KLASSE" format="135" ratio="3:2" half="false" />
+    <camera id="fujifilm-klasse-s" brand="Fujifilm" name="KLASSE S" format="135" ratio="3:2" half="false" />
+    <camera id="fujifilm-klasse-w" brand="Fujifilm" name="KLASSE W" format="135" ratio="3:2" half="false" />
+    <camera id="fujifilm-natura-s" brand="Fujifilm" name="NATURA S" format="135" ratio="3:2" half="false" />
+    <camera id="fujifilm-natura-classica" brand="Fujifilm" name="NATURA CLASSICA" format="135" ratio="3:2" half="false" />
+    <camera id="fujifilm-tiara" brand="Fujifilm" name="TIARA" format="135" ratio="3:2" half="false" />
+    <camera id="fujifilm-tiara-ii" brand="Fujifilm" name="TIARA II" format="135" ratio="3:2" half="false" />
+    <camera id="fujifilm-cardia-mini-tiara" brand="Fujifilm" name="Cardia Mini TIARA" format="135" ratio="3:2" half="false" />
+    <camera id="fujifilm-ga645" brand="Fujifilm" name="GA645" format="120" ratio="4:3" half="false" />
+    <camera id="fujifilm-ga645w" brand="Fujifilm" name="GA645W" format="120" ratio="4:3" half="false" />
+    <camera id="fujifilm-ga645i" brand="Fujifilm" name="GA645i" format="120" ratio="4:3" half="false" />
+    <camera id="fujifilm-ga645wi" brand="Fujifilm" name="GA645Wi" format="120" ratio="4:3" half="false" />
+    <camera id="fujifilm-ga645zi" brand="Fujifilm" name="GA645Zi" format="120" ratio="4:3" half="false" />
+    <camera id="fujifilm-gs645s" brand="Fujifilm" name="GS645S" format="120" ratio="4:3" half="false" />
+    <camera id="fujifilm-gs645w" brand="Fujifilm" name="GS645W" format="120" ratio="4:3" half="false" />
+    <camera id="fujifilm-gw690ii" brand="Fujifilm" name="GW690II" format="120" ratio="3:2" half="false" />
+    <camera id="fujifilm-gw690iii" brand="Fujifilm" name="GW690III" format="120" ratio="3:2" half="false" />
+    <camera id="fujifilm-gsw690iii" brand="Fujifilm" name="GSW690III" format="120" ratio="3:2" half="false" />
+    <camera id="fujifilm-gw680iii" brand="Fujifilm" name="GW680III" format="120" ratio="4:3" half="false" />
+    <camera id="fujifilm-gf670" brand="Fujifilm" name="GF670" format="120" ratio="1:1 / 7:6" half="false" />
+    <camera id="fujifilm-gf670w" brand="Fujifilm" name="GF670W" format="120" ratio="1:1 / 7:6" half="false" />
+    <camera id="hasselblad-500c" brand="Hasselblad" name="500C" format="120" ratio="1:1" half="false" />
+    <camera id="hasselblad-500c-m" brand="Hasselblad" name="500C/M" format="120" ratio="1:1" half="false" />
+    <camera id="hasselblad-501c" brand="Hasselblad" name="501C" format="120" ratio="1:1" half="false" />
+    <camera id="hasselblad-501cm" brand="Hasselblad" name="501CM" format="120" ratio="1:1" half="false" />
+    <camera id="hasselblad-503cx" brand="Hasselblad" name="503CX" format="120" ratio="1:1" half="false" />
+    <camera id="hasselblad-503cxi" brand="Hasselblad" name="503CXi" format="120" ratio="1:1" half="false" />
+    <camera id="hasselblad-503cw" brand="Hasselblad" name="503CW" format="120" ratio="1:1" half="false" />
+    <camera id="hasselblad-swc" brand="Hasselblad" name="SWC" format="120" ratio="1:1" half="false" />
+    <camera id="hasselblad-903swc" brand="Hasselblad" name="903SWC" format="120" ratio="1:1" half="false" />
+    <camera id="hasselblad-2000fc" brand="Hasselblad" name="2000FC" format="120" ratio="1:1" half="false" />
+    <camera id="hasselblad-201f" brand="Hasselblad" name="201F" format="120" ratio="1:1" half="false" />
+    <camera id="hasselblad-202fa" brand="Hasselblad" name="202FA" format="120" ratio="1:1" half="false" />
+    <camera id="hasselblad-203fe" brand="Hasselblad" name="203FE" format="120" ratio="1:1" half="false" />
+    <camera id="hasselblad-205tcc" brand="Hasselblad" name="205TCC" format="120" ratio="1:1" half="false" />
+    <camera id="hasselblad-xpan" brand="Hasselblad" name="XPan" format="135" ratio="3:2 / 65:24" half="false" />
+    <camera id="hasselblad-xpan-ii" brand="Hasselblad" name="XPan II" format="135" ratio="3:2 / 65:24" half="false" />
+    <camera id="rolleiflex-2-8f" brand="Rolleiflex" name="2.8F" format="120" ratio="1:1" half="false" />
+    <camera id="rolleiflex-3-5f" brand="Rolleiflex" name="3.5F" format="120" ratio="1:1" half="false" />
+    <camera id="rolleiflex-2-8e" brand="Rolleiflex" name="2.8E" format="120" ratio="1:1" half="false" />
+    <camera id="rolleiflex-3-5e" brand="Rolleiflex" name="3.5E" format="120" ratio="1:1" half="false" />
+    <camera id="rolleiflex-2-8gx" brand="Rolleiflex" name="2.8GX" format="120" ratio="1:1" half="false" />
+    <camera id="rolleiflex-2-8fx" brand="Rolleiflex" name="2.8FX" format="120" ratio="1:1" half="false" />
+    <camera id="rolleiflex-t" brand="Rolleiflex" name="T" format="120" ratio="1:1" half="false" />
+    <camera id="rolleiflex-rolleicord-vb" brand="Rolleiflex" name="Rolleicord Vb" format="120" ratio="1:1" half="false" />
+    <camera id="rolleiflex-sl66" brand="Rolleiflex" name="SL66" format="120" ratio="1:1" half="false" />
+    <camera id="rolleiflex-sl66e" brand="Rolleiflex" name="SL66E" format="120" ratio="1:1" half="false" />
+    <camera id="rolleiflex-sl66se" brand="Rolleiflex" name="SL66SE" format="120" ratio="1:1" half="false" />
+    <camera id="rolleiflex-slx" brand="Rolleiflex" name="SLX" format="120" ratio="1:1" half="false" />
+    <camera id="rolleiflex-6006" brand="Rolleiflex" name="6006" format="120" ratio="1:1" half="false" />
+    <camera id="rolleiflex-6008-integral" brand="Rolleiflex" name="6008 Integral" format="120" ratio="1:1" half="false" />
+    <camera id="mamiya-645-1000s" brand="Mamiya" name="645 1000S" format="120" ratio="4:3" half="false" />
+    <camera id="mamiya-645-super" brand="Mamiya" name="645 Super" format="120" ratio="4:3" half="false" />
+    <camera id="mamiya-645-pro" brand="Mamiya" name="645 Pro" format="120" ratio="4:3" half="false" />
+    <camera id="mamiya-645-pro-tl" brand="Mamiya" name="645 Pro TL" format="120" ratio="4:3" half="false" />
+    <camera id="mamiya-645af" brand="Mamiya" name="645AF" format="120" ratio="4:3" half="false" />
+    <camera id="mamiya-645afd" brand="Mamiya" name="645AFD" format="120" ratio="4:3" half="false" />
+    <camera id="mamiya-rb67-pro" brand="Mamiya" name="RB67 Pro" format="120" ratio="7:6" half="false" />
+    <camera id="mamiya-rb67-pro-s" brand="Mamiya" name="RB67 Pro-S" format="120" ratio="7:6" half="false" />
+    <camera id="mamiya-rb67-pro-sd" brand="Mamiya" name="RB67 Pro-SD" format="120" ratio="7:6" half="false" />
+    <camera id="mamiya-rz67-pro" brand="Mamiya" name="RZ67 Pro" format="120" ratio="7:6" half="false" />
+    <camera id="mamiya-rz67-pro-ii" brand="Mamiya" name="RZ67 Pro II" format="120" ratio="7:6" half="false" />
+    <camera id="mamiya-mamiya-6" brand="Mamiya" name="Mamiya 6" format="120" ratio="1:1" half="false" />
+    <camera id="mamiya-mamiya-7" brand="Mamiya" name="Mamiya 7" format="120" ratio="7:6" half="false" />
+    <camera id="mamiya-mamiya-7ii" brand="Mamiya" name="Mamiya 7II" format="120" ratio="7:6" half="false" />
+    <camera id="mamiya-c220" brand="Mamiya" name="C220" format="120" ratio="1:1" half="false" />
+    <camera id="mamiya-c330" brand="Mamiya" name="C330" format="120" ratio="1:1" half="false" />
+    <camera id="bronica-etr" brand="Bronica" name="ETR" format="120" ratio="4:3" half="false" />
+    <camera id="bronica-etrs" brand="Bronica" name="ETRS" format="120" ratio="4:3" half="false" />
+    <camera id="bronica-etrsi" brand="Bronica" name="ETRSi" format="120" ratio="4:3" half="false" />
+    <camera id="bronica-sq" brand="Bronica" name="SQ" format="120" ratio="1:1" half="false" />
+    <camera id="bronica-sq-a" brand="Bronica" name="SQ-A" format="120" ratio="1:1" half="false" />
+    <camera id="bronica-sq-ai" brand="Bronica" name="SQ-Ai" format="120" ratio="1:1" half="false" />
+    <camera id="bronica-sq-b" brand="Bronica" name="SQ-B" format="120" ratio="1:1" half="false" />
+    <camera id="bronica-gs-1" brand="Bronica" name="GS-1" format="120" ratio="7:6" half="false" />
+    <camera id="bronica-s2" brand="Bronica" name="S2" format="120" ratio="1:1" half="false" />
+    <camera id="bronica-s2a" brand="Bronica" name="S2A" format="120" ratio="1:1" half="false" />
+    <camera id="bronica-ec" brand="Bronica" name="EC" format="120" ratio="1:1" half="false" />
+    <camera id="bronica-ec-tl" brand="Bronica" name="EC-TL" format="120" ratio="1:1" half="false" />
+    <camera id="bronica-rf645" brand="Bronica" name="RF645" format="120" ratio="4:3" half="false" />
+    <camera id="plaubel-makina-67" brand="Plaubel" name="Makina 67" format="120" ratio="7:6" half="false" />
+    <camera id="plaubel-makina-670" brand="Plaubel" name="Makina 670" format="120" ratio="7:6" half="false" />
+    <camera id="plaubel-makina-w67" brand="Plaubel" name="Makina W67" format="120" ratio="7:6" half="false" />
+    <camera id="rollei-35" brand="Rollei" name="35" format="135" ratio="3:2" half="false" />
+    <camera id="rollei-35-s" brand="Rollei" name="35 S" format="135" ratio="3:2" half="false" />
+    <camera id="rollei-35-se" brand="Rollei" name="35 SE" format="135" ratio="3:2" half="false" />
+    <camera id="rollei-35-t" brand="Rollei" name="35 T" format="135" ratio="3:2" half="false" />
+    <camera id="rollei-35-te" brand="Rollei" name="35 TE" format="135" ratio="3:2" half="false" />
+    <camera id="rollei-35-b" brand="Rollei" name="35 B" format="135" ratio="3:2" half="false" />
+    <camera id="rollei-35af" brand="Rollei" name="35AF" format="135" ratio="3:2" half="false" />
+    <camera id="kodak-ektar-h35" brand="KODAK" name="EKTAR H35" format="135" ratio="3:4" half="true" />
+    <camera id="kodak-ektar-h35n" brand="KODAK" name="EKTAR H35N" format="135" ratio="3:4" half="true" />
+    <camera id="kodak-snapic-a1" brand="KODAK" name="Snapic A1" format="135" ratio="3:2" half="false" />
+    <camera id="kodak-ec35" brand="KODAK" name="EC35" format="135" ratio="3:2" half="false" />
+    <camera id="kodak-m35" brand="KODAK" name="M35" format="135" ratio="3:2" half="false" />
+    <camera id="kodak-m38" brand="KODAK" name="M38" format="135" ratio="3:2" half="false" />
+    <camera id="lomography-lomo-lc-a" brand="Lomography" name="Lomo LC-A+" format="135" ratio="3:2" half="false" />
+    <camera id="lomography-lomo-lc-wide" brand="Lomography" name="Lomo LC-Wide" format="135" ratio="3:2 / 1:1 / 3:4" half="false" />
+    <camera id="lomography-lomoapparat" brand="Lomography" name="LomoApparat" format="135" ratio="3:2" half="false" />
+    <camera id="lomography-sprocket-rocket" brand="Lomography" name="Sprocket Rocket" format="135" ratio="72:35" half="false" />
+    <camera id="lomography-diana-f" brand="Lomography" name="Diana F+" format="120" ratio="1:1" half="false" />
+    <camera id="lomography-lubitel-166" brand="Lomography" name="Lubitel 166+" format="120" ratio="1:1" half="false" />
+    <camera id="lomography-lomo-lc-a-120" brand="Lomography" name="Lomo LC-A 120" format="120" ratio="1:1" half="false" />
+</catalog>

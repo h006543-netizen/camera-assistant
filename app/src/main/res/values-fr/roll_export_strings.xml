@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="note_export_zip">Exporter les photos en ZIP</string>
+    <string name="note_export_empty">Aucune photo prise à exporter.</string>
+    <string name="note_export_progress">Préparation des photos · %1$d / %2$d</string>
+    <string name="note_export_copying">Enregistrement du ZIP à l’emplacement choisi…</string>
+    <string name="note_export_complete">ZIP enregistré</string>
+    <string name="note_export_failed">Impossible d’enregistrer le ZIP. Vérifiez les photos et l’espace disponible, puis réessayez.</string>
+    <string name="note_export_partial">L’exportation est inachevée. Supprimez le ZIP incomplet à l’emplacement choisi avant de réessayer.</string>
+    <string name="note_export_channel">Exportation de fichiers</string>
+    <string name="note_export_open_location">Ouvrir les téléchargements</string>
+    <string name="note_export_open_zip">Ouvrir le ZIP</string>
+</resources>

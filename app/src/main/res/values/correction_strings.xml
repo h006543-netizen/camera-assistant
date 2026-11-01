@@ -1,0 +1,15 @@
+<resources>
+    <string name="correction_category">필름 보정: %1$s</string>
+    <string name="correction_original">원본</string>
+    <string name="correction_processing">필름 보정 중…</string>
+    <string name="correction_render_error">보정을 적용하지 못했습니다. 원본을 표시합니다.</string>
+    <string name="correction_change_error">보정 상태를 저장하지 못했습니다. 기존 사진을 유지합니다.</string>
+    <string name="correction_save_partial">저장을 완료하지 못했습니다. 갤러리에 일부 파일이 남아 있을 수 있습니다.</string>
+    <string name="correction_50d">비전3 50D</string>
+    <string name="correction_e100d">엑타크롬 E100D</string>
+    <string name="correction_250d">비전3 250D</string>
+    <string name="correction_800t">씨네스틸 800T</string>
+    <string name="correction_500t">비전3 500T</string>
+    <string name="correction_portra400">포트라 400</string>
+    <string name="note_save_gallery">갤러리에 사진 저장</string>
+</resources>

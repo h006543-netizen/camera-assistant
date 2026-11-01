@@ -219,7 +219,7 @@ public class FilmResultActivity extends AppCompatActivity {
                     if (!FilmFrameCapture.isNote(getIntent()) && isCaptureSaved()) {
                         if (!FilmGalleryRecipeStore.select(getApplicationContext(), imagePath, true)) throw new IOException("Correction missing");
                         correction = decodeScaledBitmap(FilmGalleryRecipeStore.correction(getApplicationContext(), imagePath), getPreviewMaximumEdge());
-                    } else correction = FilmColorCorrection.apply(getApplicationContext(), exposureAdjusted,correctionProfile,
+                    } else correction = renderFilmCorrection(exposureAdjusted,correctionProfile,exposureMultiplier,
                             () -> generation != processingGeneration.get());
                 } }
                 catch (java.util.concurrent.CancellationException cancelled) { throw cancelled; }
@@ -266,6 +266,16 @@ public class FilmResultActivity extends AppCompatActivity {
                 && !previous.isRecycled()) {
             previous.recycle();
         }
+    }
+
+    private Bitmap renderFilmCorrection(Bitmap source,String profile,double multiplier,java.util.function.BooleanSupplier cancelled) throws Exception {
+        File file=new File(imagePath);Bitmap analysis=FilmColorCorrection.analysisSource(getApplicationContext(),file,profile,cancelled);
+        try {
+            if(analysis!=null){Bitmap oriented=rotateFromExif(analysis,file);if(oriented!=analysis){analysis.recycle();analysis=oriented;}
+                Bitmap exposed=FilmProcessor.applyExposure(analysis,multiplier,cancelled);if(exposed!=analysis){analysis.recycle();analysis=exposed;}}
+            return FilmColorCorrection.apply(getApplicationContext(),source,profile,cancelled,analysis,
+                    FilmCorrectionProfiles.usesSceneTime(profile)?FilmSceneMetadata.captureHour(file,FilmFrameCapture.captureHour(getIntent())):Double.NaN);
+        }finally{if(analysis!=null)analysis.recycle();}
     }
 
     private Bitmap decodeScaledBitmap(File file, int maximumEdge) throws IOException {
@@ -382,13 +392,14 @@ public class FilmResultActivity extends AppCompatActivity {
     private void selectNoteCorrection(String key) {
         if(FilmCorrectionCategory.ORIGINAL.equals(key)) { selectCorrection(false);return; }
         if(previewProcessing || isSaving || originalBitmap==null)return;
-        if(correctedBitmap != null && FilmCorrectionProfiles.key(correctionProfile).equals(key)) {selectCorrection(true);return;}
+        if(correctedBitmap != null && FilmCorrectionProfiles.key(correctionProfile).equals(key)
+                && !FilmCorrectionProfiles.upgradeOnReselect(correctionProfile)) {selectCorrection(true);return;}
         String profile=FilmCorrectionProfiles.latest(key);
         if(profile.isEmpty())return;
         setProcessing(true);int generation=processingGeneration.incrementAndGet();Bitmap source=originalBitmap;
         processingExecutor.execute(()->{
             Bitmap result=null;
-            try {result=FilmColorCorrection.apply(getApplicationContext(),source,profile,()->generation!=processingGeneration.get());}
+            try {result=renderFilmCorrection(source,profile,exposureMultiplier,()->generation!=processingGeneration.get());}
             catch(Exception | OutOfMemoryError ignored) { }
             Bitmap rendered=result;
             runOnUiThread(()->{
@@ -440,7 +451,7 @@ public class FilmResultActivity extends AppCompatActivity {
         String version=correctionProfile;
         processingExecutor.execute(() -> {
             Bitmap result = null;
-            try { result = FilmColorCorrection.apply(getApplicationContext(), source,version,
+            try { result = renderFilmCorrection(source,version,exposureMultiplier,
                     () -> generation != processingGeneration.get()); }
             catch (Exception | OutOfMemoryError ignored) { }
             Bitmap rendered = result;
@@ -534,13 +545,14 @@ public class FilmResultActivity extends AppCompatActivity {
                     rotated.recycle();
                 }
                 rotated = null;
-                if (applyCorrection) corrected = FilmColorCorrection.apply(getApplicationContext(), finalBitmap,profileToSave, () -> false);
+                if (applyCorrection) corrected = renderFilmCorrection(finalBitmap,profileToSave,multiplierToSave, () -> false);
 
                 if (FilmFrameCapture.isNote(getIntent())) {
                     FilmFrameRecord frame = new FilmFrameRecord();
                     frame.number = getIntent().getIntExtra(FilmFrameCapture.NUMBER, 0);
                     frame.captureId = imagePath;
                     frame.capturedAt = FilmFrameCapture.capturedAt(getIntent(), sourceFile.lastModified());
+                    frame.sceneCaptureHour = FilmSceneMetadata.captureHour(sourceFile,FilmFrameCapture.captureHour(getIntent()));
                     // Snapshot only what is available. GPS never delays photo saving.
                     frame.location = noteLocation.position();
                     frame.iso = capturedIso; frame.aperture = capturedAperture;

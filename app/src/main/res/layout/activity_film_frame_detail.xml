@@ -1,0 +1,12 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/noteDetailRoot" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/note_gallery_background">
+    <View android:id="@+id/noteDetailStatusSpace" android:layout_width="match_parent" android:layout_height="0dp" android:background="#151515" android:importantForAccessibility="no" />
+    <LinearLayout android:id="@+id/noteDetailHeader" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:paddingStart="8dp" android:paddingEnd="8dp">
+        <ImageButton android:id="@+id/noteDetailBack" style="@style/NoteIcon" app:tint="@color/note_gallery_text" android:src="@drawable/ic_roll_back" android:contentDescription="@string/note_back_frames" />
+        <include layout="@layout/note_correction_controls" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" />
+        <TextView android:id="@+id/noteDetailIndex" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:gravity="end" android:textSize="14sp" android:textColor="@color/note_gallery_text" />
+        <ImageButton android:id="@+id/noteDetailSave" style="@style/NoteIcon" app:tint="@color/note_gallery_text" android:src="@drawable/ic_note_save" android:contentDescription="@string/note_save_gallery" android:enabled="false" />
+    </LinearLayout>
+    <androidx.recyclerview.widget.RecyclerView android:id="@+id/noteDetailPager" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:overScrollMode="never" android:scrollbars="none" />
+    <View android:id="@+id/noteDetailNavigationSpace" android:layout_width="match_parent" android:layout_height="0dp" android:background="#000000" android:importantForAccessibility="no" />
+</LinearLayout>

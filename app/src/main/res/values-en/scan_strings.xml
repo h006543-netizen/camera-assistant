@@ -1,0 +1,24 @@
+<resources>
+    <string name="scan_link">Link film scan</string>
+    <string name="scan_compare">Scan comparison</string>
+    <string name="scan_note_photo">Note photo</string>
+    <string name="scan_film_photo">Film scan</string>
+    <string name="scan_notes_empty">Not recorded</string>
+    <string name="scan_location_accuracy">Location accuracy</string>
+    <string name="scan_compare_title">Frame %1$d scan comparison</string>
+    <string name="scan_confirm_title">Frame %1$d · Confirm link</string>
+    <string name="scan_zoom_title">Frame %1$d zoom</string>
+    <string name="scan_actions">Manage scan link</string>
+    <string name="scan_reselect">Choose again</string>
+    <string name="scan_confirm">Link and compare</string>
+    <string name="scan_enlarge">Zoom</string>
+    <string name="scan_discard">Discard selection</string>
+    <string name="scan_unlink">Unlink scan</string>
+    <string name="scan_loading">Loading photos…</string>
+    <string name="scan_read_error">Could not read the photo. Choose a supported image up to 128 MB.</string>
+    <string name="scan_save_error">Could not save the link. Check the frame and current link, then retry. Existing records are preserved.</string>
+    <string name="scan_picker_error">Could not open the photo picker.</string>
+    <string name="scan_zoom_in">Zoom in</string>
+    <string name="scan_zoom_out">Zoom out</string>
+    <string name="scan_selected">Selected</string>
+</resources>

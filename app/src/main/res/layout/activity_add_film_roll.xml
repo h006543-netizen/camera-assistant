@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rollRoot" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:orientation="vertical" android:background="#FFFFFF">
+    <View android:id="@+id/rollStatusSpace" android:layout_width="match_parent"
+        android:layout_height="0dp" android:background="#151515" android:importantForAccessibility="no" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:minHeight="58dp" android:gravity="center_vertical" android:paddingStart="20dp" android:paddingEnd="20dp"
+        android:background="#151515" android:orientation="horizontal">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:text="@string/main_title" android:textStyle="bold" android:textSize="22sp" android:textColor="#FFFFFF" />
+        <TextView android:id="@+id/rollLanguage" android:layout_width="wrap_content" android:layout_height="48dp"
+            android:minWidth="48dp" android:gravity="center" android:text="@string/language_button"
+            android:contentDescription="@string/language_description" android:textColor="#FFFFFF" android:textSize="12sp"
+            android:clickable="true" android:focusable="true" android:background="?attr/selectableItemBackgroundBorderless" />
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:minHeight="56dp" android:gravity="center_vertical" android:orientation="horizontal">
+        <androidx.appcompat.widget.AppCompatImageButton android:id="@+id/rollBack" android:layout_width="48dp" android:layout_height="48dp"
+            android:src="@drawable/ic_roll_back" android:padding="12dp"
+            android:contentDescription="@string/back" android:clickable="true" android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless" />
+        <TextView android:id="@+id/rollTitle" android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:layout_marginEnd="48dp" android:gravity="center"
+            android:text="@string/roll_new" android:textColor="#151515" android:textSize="18sp"
+            android:textStyle="bold" android:tag="roll_heading" />
+    </LinearLayout>
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E6EAF0" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:baselineAligned="false"
+        android:layout_weight="1" android:orientation="horizontal">
+        <ScrollView android:layout_width="96dp" android:layout_height="match_parent"
+            android:background="#F3F5F8" android:fillViewport="true">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                <TextView android:id="@+id/rollCategoryFilm" style="@style/RollCategory" android:text="@string/roll_film" />
+                <TextView android:id="@+id/rollCategoryCamera" style="@style/RollCategory" android:text="@string/roll_camera" />
+                <TextView android:id="@+id/rollCategoryInfo" style="@style/RollCategory" android:text="@string/roll_info" />
+                <TextView android:id="@+id/rollCategoryLab" style="@style/RollCategory" android:text="@string/roll_lab" />
+            </LinearLayout>
+        </ScrollView>
+        <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1">
+            <ScrollView android:id="@+id/rollFilmPane" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:padding="8dp">
+                    <LinearLayout android:id="@+id/rollFilmList" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
+                    <TextView android:id="@+id/rollFilmCustomButton" style="@style/RollAction" android:layout_marginTop="16dp" android:text="@string/roll_custom_film" />
+                    <EditText android:id="@+id/rollCustomFilm" style="@style/RollInput" android:layout_marginTop="8dp"
+                        android:hint="@string/roll_film_name" android:maxLength="120" android:visibility="gone" />
+                </LinearLayout>
+            </ScrollView>
+            <ScrollView android:id="@+id/rollCameraPane" android:layout_width="match_parent" android:layout_height="match_parent" android:visibility="gone" android:fillViewport="true">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp">
+                    <TextView style="@style/RollHeading" android:text="@string/roll_camera" android:tag="roll_heading" />
+                    <TextView android:id="@+id/rollChooseCamera" style="@style/RollAction" android:layout_marginTop="12dp" android:text="@string/roll_choose_camera" />
+                    <TextView android:id="@+id/rollSelectedCameraDetail" style="@style/RollHint" />
+                    <TextView android:id="@+id/rollCameraCustomButton" style="@style/RollAction" android:layout_marginTop="12dp" android:text="@string/roll_custom_camera" />
+                    <EditText android:id="@+id/rollCustomCamera" style="@style/RollInput" android:layout_marginTop="8dp"
+                        android:hint="@string/roll_camera_name" android:maxLength="120" android:visibility="gone" />
+                </LinearLayout>
+            </ScrollView>
+            <ScrollView android:id="@+id/rollInfoPane" android:layout_width="match_parent" android:layout_height="match_parent" android:visibility="gone" android:fillViewport="true">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp">
+                    <TextView style="@style/RollHeading" android:text="@string/roll_info" android:tag="roll_heading" />
+                    <TextView style="@style/RollLabel" android:text="@string/roll_focal" android:labelFor="@id/rollFocal" />
+                    <TextView android:id="@+id/rollFocal" style="@style/RollAction" />
+                    <TextView style="@style/RollLabel" android:text="@string/roll_count" android:labelFor="@id/rollCountGroup" />
+                    <RadioGroup android:id="@+id/rollCountGroup" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                        <androidx.appcompat.widget.AppCompatRadioButton android:id="@+id/rollCount24" style="@style/RollRadio" android:text="@string/roll_count_24" />
+                        <androidx.appcompat.widget.AppCompatRadioButton android:id="@+id/rollCount36" style="@style/RollRadio" android:checked="true" android:text="@string/roll_count_36" />
+                        <androidx.appcompat.widget.AppCompatRadioButton android:id="@+id/rollCountOther" style="@style/RollRadio" android:text="@string/roll_custom" />
+                    </RadioGroup>
+                    <EditText android:id="@+id/rollCustomCount" style="@style/RollInput" android:visibility="gone"
+                        android:inputType="number" android:hint="@string/roll_count_hint" />
+                    <TextView style="@style/RollLabel" android:text="@string/roll_name" android:labelFor="@id/rollName" />
+                    <EditText android:id="@+id/rollName" style="@style/RollInput" android:maxLength="120" android:hint="@string/roll_name_hint" />
+                    <TextView style="@style/RollLabel" android:text="@string/roll_period" android:labelFor="@id/rollPeriod" />
+                    <TextView android:id="@+id/rollPeriod" style="@style/RollAction" android:text="@string/roll_select_period" />
+                    <TextView android:id="@+id/rollClearPeriod" style="@style/RollAction" android:text="@string/roll_clear_date" android:layout_marginTop="8dp" />
+                    <TextView style="@style/RollLabel" android:text="@string/roll_memo" android:labelFor="@id/rollMemo" />
+                    <EditText android:id="@+id/rollMemo" style="@style/RollInput" android:inputType="textCapSentences|textMultiLine"
+                        android:gravity="top|start" android:minLines="4" android:maxLength="1000" android:hint="@string/roll_memo_hint" />
+                    <TextView android:id="@+id/rollMemoCounter" style="@style/RollHint" android:gravity="end" />
+                </LinearLayout>
+            </ScrollView>
+            <ScrollView android:id="@+id/rollLabPane" android:layout_width="match_parent" android:layout_height="match_parent" android:visibility="gone" android:fillViewport="true">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp">
+                    <TextView style="@style/RollHeading" android:text="@string/roll_lab" android:tag="roll_heading" />
+                    <TextView style="@style/RollLabel" android:text="@string/roll_status" android:labelFor="@id/rollStatusGroup" />
+                    <RadioGroup android:id="@+id/rollStatusGroup" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                        <androidx.appcompat.widget.AppCompatRadioButton android:id="@+id/rollStatusNew" style="@style/RollRadio" android:checked="true" android:text="@string/roll_status_new" />
+                        <androidx.appcompat.widget.AppCompatRadioButton android:id="@+id/rollStatusProcessing" style="@style/RollRadio" android:text="@string/roll_status_processing" />
+                        <androidx.appcompat.widget.AppCompatRadioButton android:id="@+id/rollStatusDone" style="@style/RollRadio" android:text="@string/roll_status_done" />
+                    </RadioGroup>
+                    <TextView style="@style/RollLabel" android:text="@string/roll_lab_name" android:labelFor="@id/rollLabName" />
+                    <EditText android:id="@+id/rollLabName" style="@style/RollInput" android:maxLength="120" android:hint="@string/roll_lab_name_hint" />
+                    <TextView style="@style/RollLabel" android:text="@string/roll_received" android:labelFor="@id/rollReceived" />
+                    <TextView android:id="@+id/rollReceived" style="@style/RollAction" android:text="@string/roll_select_date" />
+                    <TextView android:id="@+id/rollClearReceived" style="@style/RollAction" android:layout_marginTop="8dp" android:text="@string/roll_clear_date" />
+                    <TextView style="@style/RollLabel" android:text="@string/roll_completed" android:labelFor="@id/rollCompleted" />
+                    <TextView android:id="@+id/rollCompleted" style="@style/RollAction" android:text="@string/roll_select_date" />
+                    <TextView android:id="@+id/rollClearCompleted" style="@style/RollAction" android:layout_marginTop="8dp" android:text="@string/roll_clear_date" />
+                    <TextView style="@style/RollLabel" android:text="@string/roll_lab_memo" android:labelFor="@id/rollLabMemo" />
+                    <EditText android:id="@+id/rollLabMemo" style="@style/RollInput" android:inputType="textCapSentences|textMultiLine"
+                        android:gravity="top|start" android:minLines="4" android:maxLength="1000" android:hint="@string/roll_lab_memo_hint" />
+                </LinearLayout>
+            </ScrollView>
+        </FrameLayout>
+    </LinearLayout>
+    <TextView android:id="@+id/rollError" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:paddingStart="16dp" android:paddingEnd="16dp" android:paddingTop="8dp" android:textColor="#B3261E" android:textSize="14sp"
+        android:visibility="gone" android:accessibilityLiveRegion="assertive" />
+    <androidx.appcompat.widget.AppCompatButton android:id="@+id/rollSave" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:minHeight="52dp" android:layout_margin="16dp" android:padding="12dp"
+        android:background="@drawable/bg_btn_blue" app:backgroundTint="@null" android:text="@string/roll_create"
+        android:textColor="#FFFFFF" android:textSize="17sp" android:textAllCaps="false" android:textStyle="bold" />
+    <View android:id="@+id/rollNavigationSpace" android:layout_width="match_parent" android:layout_height="0dp"
+        android:background="#000000" android:importantForAccessibility="no" />
+</LinearLayout>

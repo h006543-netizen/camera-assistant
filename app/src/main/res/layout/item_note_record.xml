@@ -1,0 +1,10 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="12dp">
+    <LinearLayout android:id="@+id/recordHit" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:orientation="horizontal" android:gravity="center_vertical" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:paddingTop="4dp" android:paddingBottom="4dp">
+            <TextView android:id="@+id/recordTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/note_gallery_muted" android:textSize="12sp" />
+            <TextView android:id="@+id/recordValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textColor="@color/note_gallery_text" android:textSize="16sp" android:lineSpacingExtra="3dp" />
+        </LinearLayout>
+        <TextView android:id="@+id/recordArrow" android:layout_width="24dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/note_record_arrow" android:textColor="@color/note_gallery_muted" android:textSize="22sp" android:importantForAccessibility="no" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/recordEditor" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="vertical" android:padding="12dp" android:background="@color/note_gallery_empty" android:visibility="gone" />
+</LinearLayout>

@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/filmNotesScrollView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:visibility="gone"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/filmRollSelectionBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="4dp"
+        android:visibility="gone">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnCancelRollSelection"
+            style="@style/NoteSelectionAction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/cancel"
+            android:textColor="@color/note_selection_action" />
+        <TextView
+            android:id="@+id/filmRollSelectionCount"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:gravity="center"
+            android:textSize="14sp"
+            android:textColor="@color/note_ink"
+            android:includeFontPadding="false"
+            android:accessibilityLiveRegion="polite" />
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnMoveFilmRolls"
+            style="@style/NoteSelectionAction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/note_folder_move"
+            android:textColor="@color/note_selection_action" />
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnDeleteFilmRolls"
+            style="@style/NoteSelectionAction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/roll_delete"
+            android:textColor="@color/note_delete_action" />
+        </LinearLayout>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/note_rule"
+            android:importantForAccessibility="no" />
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/filmNotesViewport"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:overScrollMode="ifContentScrolls">
+
+    <LinearLayout
+        android:id="@+id/filmNotesBody"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:clipToPadding="false"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="12dp">
+
+        <LinearLayout android:id="@+id/noteFolderPath" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginEnd="-20dp" android:gravity="center_vertical" android:orientation="horizontal" android:background="@drawable/note_folder_drop">
+        <ImageButton android:id="@+id/noteFolderBack" style="@style/NoteIcon" android:src="@drawable/ic_roll_back" android:contentDescription="@string/note_folder_outside" android:visibility="gone" />
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/filmNotesHeading"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="@string/main_tab_notes"
+            android:textColor="#111111"
+            android:textSize="18sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:gravity="start|center_vertical"
+            app:autoSizeTextType="uniform"
+            app:autoSizeMinTextSize="14sp"
+            app:autoSizeMaxTextSize="18sp"
+            app:autoSizeStepGranularity="1sp"
+            android:textStyle="bold" />
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnAddFilmRoll"
+            style="@style/NoteSelectionAction"
+            android:layout_width="88dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="2dp"
+            android:minWidth="48dp"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:background="@drawable/bg_btn_blue"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="@string/note_add_roll_compact"
+            android:contentDescription="@string/film_notes_add_roll"
+            android:textSize="13sp"
+            android:textColor="#FFFFFF"
+            app:backgroundTint="@null"
+            app:autoSizeTextType="uniform"
+            app:autoSizeMinTextSize="10sp"
+            app:autoSizeMaxTextSize="13sp"
+            app:autoSizeStepGranularity="1sp" />
+        <androidx.appcompat.widget.AppCompatButton android:id="@+id/btnSelectFilmRolls" style="@style/NoteSelectionAction"
+            android:layout_width="48dp" android:layout_height="48dp"
+            android:minWidth="48dp" android:paddingStart="2dp" android:paddingEnd="2dp"
+            android:maxLines="1" android:ellipsize="end" android:textSize="12sp"
+            app:autoSizeTextType="uniform" app:autoSizeMinTextSize="10sp"
+            app:autoSizeMaxTextSize="12sp" app:autoSizeStepGranularity="1sp"
+            android:text="@string/roll_select" android:textColor="@color/note_ink" android:visibility="gone" />
+        <ImageButton android:id="@+id/btnAddNoteFolder" style="@style/NoteIcon" android:src="@drawable/ic_note_folder_add" android:contentDescription="@string/note_folder_new" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/filmNotesEmptyState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginTop="20dp"
+            android:minHeight="220dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="24dp"
+            android:background="@android:color/transparent">
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_film_roll"
+                android:importantForAccessibility="no" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:gravity="center"
+                android:text="@string/film_notes_empty_title"
+                android:textColor="#222222"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:text="@string/film_notes_empty_description"
+                android:textColor="#666666"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/filmNotesFolderList" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="vertical" android:visibility="gone" />
+
+        <com.shutternote.FilmRollListLayout
+            android:id="@+id/filmNotesRollList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="-20dp"
+            android:layout_marginEnd="-20dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="0dp"
+            android:orientation="vertical"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/filmNotesLoadError"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/roll_error_load"
+            android:textColor="#B3261E"
+            android:visibility="gone" />
+
+    </LinearLayout>
+    </ScrollView>
+</LinearLayout>

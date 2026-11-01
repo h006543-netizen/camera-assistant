@@ -1,0 +1,19 @@
+<resources>
+    <string name="note_map_loading">Chargement de la carte…</string>
+    <string name="note_map_error_retry">Carte indisponible. Touchez pour réessayer</string>
+    <string name="note_map_no_app">Aucune application ni navigateur ne peut ouvrir cette carte.</string>
+    <string name="note_open_google_maps">Ouvrir dans Google Maps</string>
+    <string name="note_location_add">Ajouter un lieu</string>
+    <string name="note_location_edit">Modifier le lieu</string>
+    <string name="note_location_remove">Supprimer le lieu</string>
+    <string name="note_location_select_hint">Touchez le lieu de prise de vue ou saisissez les coordonnées.</string>
+    <string name="note_location_current">Utiliser ma position actuelle</string>
+    <string name="note_location_latitude">Latitude (−90 à 90)</string>
+    <string name="note_location_longitude">Longitude (−180 à 180)</string>
+    <string name="note_location_invalid">Saisissez une latitude et une longitude valides.</string>
+    <string name="note_location_permission_denied">Localisation non autorisée. Sélectionnez un point ou saisissez les coordonnées.</string>
+    <string name="note_location_unavailable">Position indisponible. Vérifiez la localisation ou sélectionnez un point.</string>
+    <string name="note_location_locating">Recherche de la position actuelle…</string>
+    <string name="note_location_accuracy">Environ %1$d m</string>
+    <string name="note_location_save_error">Enregistrement du lieu impossible. Réessayez.</string>
+</resources>

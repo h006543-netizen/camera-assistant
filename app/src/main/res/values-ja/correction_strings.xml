@@ -1,0 +1,15 @@
+<resources>
+    <string name="correction_category">フィルム補正: %1$s</string>
+    <string name="correction_original">オリジナル</string>
+    <string name="correction_processing">フィルム補正中…</string>
+    <string name="correction_render_error">補正を適用できませんでした。オリジナルを表示します。</string>
+    <string name="correction_change_error">補正の選択を保存できませんでした。元の写真を保持します。</string>
+    <string name="correction_save_partial">保存が完了しませんでした。ギャラリーに一部のファイルが残っている可能性があります。</string>
+    <string name="correction_50d">ビジョン3 50D</string>
+    <string name="correction_e100d">エクタクローム E100D</string>
+    <string name="correction_250d">ビジョン3 250D</string>
+    <string name="correction_800t">シネスチール 800T</string>
+    <string name="correction_500t">ビジョン3 500T</string>
+    <string name="correction_portra400">ポートラ400</string>
+    <string name="note_save_gallery">写真をギャラリーに保存</string>
+</resources>

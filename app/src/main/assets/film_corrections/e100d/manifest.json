@@ -1,0 +1,31 @@
+{
+  "schema_version": 4,
+  "kind": "correction_values_only",
+  "film_name": "E100D",
+  "version": "c90de76b-0cd3-484f-b2a7-e4b5eedeff99",
+  "validation_status": "research_only",
+  "data_kind": "real",
+  "android_validated": false,
+  "deployment_allowed": false,
+  "fixture_seed": 117,
+  "android_parity_tolerance": null,
+  "artifact_sha256": {
+    "profile.json": "7ac4f28a037f94142c51e26a978c57604d1a85c09d7a693a5ce835365298d84f",
+    "color.cube": "23ee7824fe0349c9ef742bb21a5d14ede56f53b2121de9864b3a5450fcff49a9",
+    "reference_input.png": "e38b610931d71c7e83d27152916c45386fea4ad5034aad079423deb372e3fb8e",
+    "reference_output.png": "8b2ef657b59fae48e0c4cfb1d2d70c061e62b527f817dc46937169ce0238d39a"
+  },
+  "quality_gate": {
+    "passed": false,
+    "reasons": [
+      "Independent final evaluation required.",
+      "Pilot scene split is exploratory; independent rolls/dates are required for final validation.",
+      "Quality thresholds must be fixed from a real pilot before final evaluation."
+    ],
+    "android_validated": false,
+    "deployment_allowed": false,
+    "note": "Visual review, grain/halation quality and Android parity/performance still require verification."
+  },
+  "note": "Android reads correction values; no training model/weights/runtime. Device renderer integration and parity remain pending.",
+  "fingerprint": "aac583be15b768ee8fec554c4b552c8f430606e0f3072ec01098a4e0829b9f05"
+}

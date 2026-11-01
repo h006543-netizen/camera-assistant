@@ -1,0 +1,19 @@
+<resources>
+    <string name="note_map_loading">지도 불러오는 중…</string>
+    <string name="note_map_error_retry">지도를 불러오지 못했습니다. 눌러서 다시 시도</string>
+    <string name="note_map_no_app">지도를 열 수 있는 앱이나 브라우저가 없습니다.</string>
+    <string name="note_open_google_maps">구글 지도에서 열기</string>
+    <string name="note_location_add">위치 추가</string>
+    <string name="note_location_edit">위치 수정</string>
+    <string name="note_location_remove">위치 삭제</string>
+    <string name="note_location_select_hint">지도에서 촬영한 지점을 누르거나 좌표를 입력하세요.</string>
+    <string name="note_location_current">현재 위치 가져오기</string>
+    <string name="note_location_latitude">위도 (−90 ~ 90)</string>
+    <string name="note_location_longitude">경도 (−180 ~ 180)</string>
+    <string name="note_location_invalid">유효한 위도와 경도를 입력하세요.</string>
+    <string name="note_location_permission_denied">위치 권한이 없습니다. 지도에서 선택하거나 좌표를 입력할 수 있습니다.</string>
+    <string name="note_location_unavailable">현재 위치를 가져오지 못했습니다. 위치 서비스를 확인하거나 지도에서 선택하세요.</string>
+    <string name="note_location_locating">현재 위치 확인 중…</string>
+    <string name="note_location_accuracy">약%1$dm</string>
+    <string name="note_location_save_error">위치를 저장하지 못했습니다. 다시 시도하세요.</string>
+</resources>

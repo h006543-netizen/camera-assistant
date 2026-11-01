@@ -1,0 +1,12 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:padding="16dp">
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/noteNextRoll"
+        style="@style/NoteSelectionAction"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@string/note_next_roll_photos"
+        android:textColor="@color/note_gallery_text"
+        android:background="@drawable/bg_btn_blue" />
+</FrameLayout>

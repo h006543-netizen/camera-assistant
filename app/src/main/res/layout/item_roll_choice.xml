@@ -1,0 +1,18 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:minHeight="48dp" android:padding="8dp" android:orientation="horizontal"
+    android:gravity="center_vertical" android:background="@drawable/bg_roll_choice"
+    android:foreground="?attr/selectableItemBackground" android:clickable="true"
+    android:focusable="true">
+    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_weight="1" android:orientation="vertical">
+        <TextView android:id="@+id/rollChoiceTitle" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:textColor="#222222" android:textSize="15sp" />
+        <TextView android:id="@+id/rollChoiceDetail" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="4dp"
+            android:textColor="#697586" android:textSize="12sp" />
+    </LinearLayout>
+    <ImageView android:id="@+id/rollChoiceCheck" android:layout_width="24dp"
+        android:layout_height="24dp" android:layout_marginStart="6dp"
+        android:src="@drawable/ic_category_check" android:importantForAccessibility="no" />
+</LinearLayout>

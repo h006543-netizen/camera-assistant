@@ -1,0 +1,12 @@
+<resources>
+    <string name="note_folder_new">Nouveau dossier</string>
+    <string name="note_folder_name">Nom du dossier</string>
+    <string name="note_folder_name_error">Saisissez un nom de 1 à 80 caractères.</string>
+    <string name="note_folder_rename">Renommer le dossier</string>
+    <string name="note_folder_remove">Supprimer le dossier · Garder les pellicules</string>
+    <string name="note_folder_move">Déplacer</string>
+    <string name="note_folder_outside">Hors des dossiers</string>
+    <string name="note_folder_count">%1$d pellicules</string>
+    <string name="note_folder_open">Ouvrir %1$s · %2$d pellicules</string>
+    <string name="note_folder_error">Impossible de sauvegarder ce changement. Vos données sont conservées.</string>
+</resources>

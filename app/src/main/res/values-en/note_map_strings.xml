@@ -1,0 +1,19 @@
+<resources>
+    <string name="note_map_loading">Loading map…</string>
+    <string name="note_map_error_retry">Map unavailable. Tap to retry</string>
+    <string name="note_map_no_app">No app or browser can open this map.</string>
+    <string name="note_open_google_maps">Open in Google Maps</string>
+    <string name="note_location_add">Add location</string>
+    <string name="note_location_edit">Edit location</string>
+    <string name="note_location_remove">Remove location</string>
+    <string name="note_location_select_hint">Tap where you took the photo, or enter coordinates.</string>
+    <string name="note_location_current">Use current location</string>
+    <string name="note_location_latitude">Latitude (−90 to 90)</string>
+    <string name="note_location_longitude">Longitude (−180 to 180)</string>
+    <string name="note_location_invalid">Enter a valid latitude and longitude.</string>
+    <string name="note_location_permission_denied">Location permission is unavailable. Select a point or enter coordinates.</string>
+    <string name="note_location_unavailable">Could not get your location. Check location services or select a point.</string>
+    <string name="note_location_locating">Finding current location…</string>
+    <string name="note_location_accuracy">About %1$d m</string>
+    <string name="note_location_save_error">Could not save the location. Try again.</string>
+</resources>

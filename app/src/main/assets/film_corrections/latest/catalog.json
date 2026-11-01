@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "films": [
+    {
+      "key": "vision3-50d",
+      "label": "50D",
+      "id": "vision3-50d-1a0f2d21-3610-5c4f-928c-007d643e5122",
+      "source_run_id": "1a0f2d21-3610-5c4f-928c-007d643e5122",
+      "created_at": "2026-10-23T10:08:42",
+      "origin": "imported_improvement",
+      "mean_delta_e00": 5.589926743942218,
+      "evaluation_scope": "train",
+      "asset": "film_corrections/latest/vision3-50d.json",
+      "sha256": "8a1f68c2557a02f3f5464b26b53517450cff56e6d31015b6766de0816d06568d"
+    },
+    {
+      "key": "e100d",
+      "label": "E100D",
+      "id": "e100d-eaaf4c28-25aa-5e85-9d1c-ea400b11085d",
+      "source_run_id": "eaaf4c28-25aa-5e85-9d1c-ea400b11085d",
+      "created_at": "2026-10-26T17:11:27",
+      "origin": "user_approved_manual_settings",
+      "mean_delta_e00": 10.757295506412083,
+      "evaluation_scope": "train",
+      "asset": "film_corrections/latest/e100d.json",
+      "sha256": "6e31d3bea94eb3cdaec5a401062f6bfec7d15a81ca56d711c6d8e8e007fe2242",
+      "selection_basis": "explicit_user_approved_settings_overrides_automatic_delta_e6_filter",
+      "manual_parameters": {
+        "green_percent": 5.564644038677216,
+        "blue_percent": 70.0,
+        "black_percent": 55.0,
+        "base_percent": 25.0,
+        "pipeline": "base_then_controls"
+      }
+    },
+    {
+      "key": "vision3-250d",
+      "label": "250D",
+      "id": "vision3-250d-report-grain20-20261101-v1",
+      "source_run_id": "06e8fb50-0233-57b5-83d4-6eeecc7b608e",
+      "created_at": "2026-11-01T00:00:00+09:00",
+      "origin": "user_approved_report_grade_grain20",
+      "evaluation_scope": "report_reproduction_not_independent_film_accuracy",
+      "asset": "film_corrections/latest/vision3-250d-report-grain20-v1.json",
+      "sha256": "c33241e9a46474d1bacc1ac1bc78190402bf6092049f6e422a43b3138f90ad92",
+      "selection_basis": "explicit_user_approved_report_with_synthetic_grain20",
+      "previous_recipe_id": "vision3-250d-ab252233-e36f-5fb2-9df4-b069934ce4cf",
+      "report": "outputs\\250D_Color_Tuner\\report-grain20-20261101-132120-319382"
+    },
+    {
+      "key": "cine800t",
+      "label": "800T",
+      "id": "cine800t-0d28547e-18ab-57a9-bb8b-c07907444868",
+      "source_run_id": "0d28547e-18ab-57a9-bb8b-c07907444868",
+      "created_at": "2026-10-27T00:00:00",
+      "origin": "user_approved_day_night_settings",
+      "mean_delta_e00": 8.48518727989173,
+      "evaluation_scope": "train",
+      "asset": "film_corrections/latest/cine800t.json",
+      "sha256": "f8c4963e6ccc6d186e5739a8d2f3456b0247f392cde068800d09e122635001ee",
+      "selection_basis": "explicit_user_approved_settings_overrides_automatic_delta_e6_filter",
+      "day_parameters": {
+        "base_percent": 25.0,
+        "grain_percent": 41.6,
+        "brightness": -10.0,
+        "tungsten": 150.0,
+        "temperature": 30.0,
+        "halo_strength": 82.1,
+        "halo_saturation": 71.9,
+        "halo_hue": -52.7,
+        "halo_depth": 21.4,
+        "halo_width": 55.8,
+        "halo_color": "#FF3B30",
+        "pipeline": "components_v4"
+      },
+      "night_parameters": {
+        "base_percent": 40.0,
+        "grain_percent": 200.0,
+        "brightness": -40.0,
+        "tungsten": 300.0,
+        "temperature": 40.0,
+        "halo_strength": 40.0,
+        "halo_saturation": 80.0,
+        "halo_hue": 80.0,
+        "halo_depth": 5.0,
+        "halo_width": 55.0,
+        "halo_color": "#FF3B30",
+        "pipeline": "components_v4"
+      },
+      "halo_detection_guard": {
+        "method": "positive_support_and_margin_v1",
+        "minimum_support": 0.9,
+        "full_support": 0.97,
+        "minimum_margin": 0.02,
+        "full_margin": 0.04
+      },
+      "source_analysis_edge": 1024
+    },
+    {
+      "key": "vision3-500t",
+      "label": "500T",
+      "id": "vision3-500t-47ff02b7-1ba1-55ce-b352-e7ddad32412b",
+      "default_recipe_id": "vision3-500t-47ff02b7-1ba1-55ce-b352-e7ddad32412b-scene-time-v1",
+      "scene_policy": {
+        "method": "photo_similarity_weak_local_capture_time_v1",
+        "hard_mean_brightness_limits": false,
+        "max_time_blend_weight": 0.1,
+        "time_weight": "0.1 * 4 * photo_day_weight * (1 - photo_day_weight)",
+        "clock_day_hint": "0.5 + 0.5 * cos((local_capture_hour - 12) * pi / 12)",
+        "time_cannot_reverse_photo_majority": true,
+        "missing_or_untrusted_capture_time": "photo_only",
+        "manual_scene_ui": false
+      },
+      "source_run_id": "afea45eb-458b-4c64-a391-3790e680e276",
+      "created_at": "2026-10-29T00:00:00+09:00",
+      "origin": "learned_content_scene_routing_over_approved_tuning",
+      "evaluation_scope": "held_out_targets_and_local_scene_group_diagnostics",
+      "asset": "film_corrections/latest/vision3-500t-content-v1.json",
+      "sha256": "492bd740de887883ae78d54161e12eb847c2c1d608bc9c5ca90abb73a70056a1",
+      "baseline_mean_delta_e00": 5.920962239119835,
+      "baseline_id": "vision3-500t-afea45eb-458b-4c64-a391-3790e680e276",
+      "selection_basis": "user_approved_night_report_20261029_120227_preserve_day_B",
+      "night_baseline_id": "vision3-500t-7238369c-3982-5f1f-ab94-6bfa4569d791",
+      "day_parameters": {
+        "base_percent": 85,
+        "grain_percent": 30
+      },
+      "night_parameters": {
+        "base_position": 5.0,
+        "grain_percent": 50.0,
+        "light_protection": 0.0,
+        "light_threshold": 10.0,
+        "mask_softness": 0.0,
+        "brightness": -10.0,
+        "contrast": 100.0,
+        "shadows": -10.0,
+        "highlights": 40.0,
+        "tungsten": 300.0,
+        "temperature": -40.0,
+        "tint": -50.0,
+        "saturation": 135.0,
+        "red": -18.0,
+        "green": 0.0,
+        "blue": 10.0,
+        "protect_adjustments": true
+      },
+      "grain_reference": "unpaired_500t_scan_luminance_texture_native_6774px_fine_synthetic",
+      "previous_scene_id": "vision3-500t-552f290f-8336-53b0-bdbf-d9ce02ceb54b",
+      "night_report": "outputs/500T_Night_Tuner/report-20261029-120227-16ecbc",
+      "transition": "continuous_blend_of_complete_day_and_approved_night_outputs",
+      "classifier_method": "source_spatial_colour_texture_rbf_v1",
+      "colour_tuning_changed": false
+    }
+  ],
+  "grain_atlases": [
+    {
+      "asset": "film_corrections/latest/grain_0.dat",
+      "sha256": "d4e7887c1860d0c45c0213c8b649c77f3078d32bf03d01afe5c8fa70718014d2"
+    },
+    {
+      "asset": "film_corrections/latest/grain_1.dat",
+      "sha256": "ea602a2e04b2883cc832ea49f3e52805e31c125f895cb35ab155568817f86e28"
+    },
+    {
+      "asset": "film_corrections/latest/grain_2.dat",
+      "sha256": "f860ee192959061a043121e6e655c8541262a2dd21000fccd8083bebbc7b25fc"
+    }
+  ]
+}

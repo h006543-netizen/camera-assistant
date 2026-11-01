@@ -1,0 +1,12 @@
+<resources>
+    <style name="FilmCorrectionPopupTheme" parent="ThemeOverlay.AppCompat.Dark">
+        <item name="popupMenuStyle">@style/FilmCorrectionPopup</item>
+        <item name="android:textColorPrimary">@color/note_gallery_text</item>
+        <item name="android:textColorSecondary">@color/note_gallery_text</item>
+        <item name="colorControlNormal">@color/note_gallery_muted</item>
+        <item name="colorControlActivated">#93C5FD</item>
+    </style>
+    <style name="FilmCorrectionPopup" parent="Widget.AppCompat.PopupMenu">
+        <item name="android:popupBackground">@drawable/bg_correction_popup</item>
+    </style>
+</resources>

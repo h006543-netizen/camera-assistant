@@ -1,0 +1,31 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:layout_marginBottom="0dp" android:orientation="horizontal" android:paddingTop="8dp" android:paddingBottom="8dp"
+    android:gravity="center_vertical"
+    android:minHeight="64dp" android:background="@drawable/note_roll_row"
+    android:foreground="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+    <androidx.appcompat.widget.AppCompatCheckBox
+        android:id="@+id/filmRollCardCheck"
+        android:layout_width="48dp" android:layout_height="48dp"
+        android:layout_marginEnd="8dp" android:visibility="gone"
+        android:gravity="center"
+        app:buttonCompat="@drawable/note_roll_check"
+        app:buttonTint="@null" />
+    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_weight="1" android:orientation="vertical">
+    <TextView android:id="@+id/filmRollCardTitle" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="@color/note_ink" android:textSize="17sp" android:textStyle="bold" />
+    <TextView android:id="@+id/filmRollCardFilm" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="5dp" android:textColor="@color/note_muted" android:textSize="13sp" />
+    <TextView android:id="@+id/filmRollCardDetail" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="0dp" android:textColor="@color/note_muted" android:textSize="12sp" />
+    <TextView android:id="@+id/filmRollCardPeriod" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="8dp" android:textColor="@color/note_muted" android:textSize="13sp" />
+    </LinearLayout>
+    <com.shutternote.FilmRollReorderHandle
+        android:id="@+id/filmRollReorder" style="@style/NoteIcon"
+        android:layout_marginStart="28dp" android:padding="12dp"
+        android:src="@drawable/ic_roll_reorder" app:tint="@color/note_muted"
+        android:contentDescription="@string/roll_reorder" />
+</LinearLayout>

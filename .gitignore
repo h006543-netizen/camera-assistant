@@ -29,3 +29,27 @@ key.properties
 # Local copies prepared for manual privacy-site upload
 /privacy-site/github-pages/
 /privacy-site/shutternote-privacy-github-pages.zip
+
+# Local film research, photographs, reports and generated release files
+/.artifact-build/
+/outputs/
+/film-research/
+/app/release/
+*.apk
+*.aab
+__pycache__/
+*.pyc
+
+# Private full-resolution image fixtures; public JSON regression samples remain
+/app/src/test/resources/cine800t-full/
+/app/src/test/resources/cine800t-guard-full/
+/app/src/test/resources/cine800t-mobile/
+/app/src/test/resources/render-speed/
+/app/src/androidTest/assets/render-speed/
+/app/src/androidTest/assets/cine800t-lamp-source.png
+
+# Local Windows launchers and editor/agent state
+/.agents/
+/.codex/
+/*.cmd
+/*.exe

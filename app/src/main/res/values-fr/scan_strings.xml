@@ -1,0 +1,24 @@
+<resources>
+    <string name="scan_link">Associer un scan argentique</string>
+    <string name="scan_compare">Comparaison du scan</string>
+    <string name="scan_note_photo">Photo du carnet</string>
+    <string name="scan_film_photo">Scan argentique</string>
+    <string name="scan_notes_empty">Non renseigné</string>
+    <string name="scan_location_accuracy">Précision de la position</string>
+    <string name="scan_compare_title">Vue %1$d comparaison du scan</string>
+    <string name="scan_confirm_title">Vue %1$d · Association</string>
+    <string name="scan_zoom_title">Vue %1$d agrandissement</string>
+    <string name="scan_actions">Gérer le scan associé</string>
+    <string name="scan_reselect">Choisir à nouveau</string>
+    <string name="scan_confirm">Associer et comparer</string>
+    <string name="scan_enlarge">Agrandir</string>
+    <string name="scan_discard">Annuler la sélection</string>
+    <string name="scan_unlink">Dissocier le scan</string>
+    <string name="scan_loading">Chargement des photos…</string>
+    <string name="scan_read_error">Lecture impossible. Choisissez une image prise en charge de 128 Mo maximum.</string>
+    <string name="scan_save_error">Association non enregistrée. Vérifiez la vue et le scan associé, puis réessayez. Les données existantes sont conservées.</string>
+    <string name="scan_picker_error">Impossible d’ouvrir le sélecteur de photos.</string>
+    <string name="scan_zoom_in">Agrandir</string>
+    <string name="scan_zoom_out">Réduire</string>
+    <string name="scan_selected">Sélectionné</string>
+</resources>

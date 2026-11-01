@@ -1,0 +1,15 @@
+<resources>
+    <string name="correction_category">Correction de film : %1$s</string>
+    <string name="correction_original">Original</string>
+    <string name="correction_processing">Application de la correction…</string>
+    <string name="correction_render_error">Correction impossible. Affichage de l’original.</string>
+    <string name="correction_change_error">Impossible d’enregistrer le choix. La photo précédente est conservée.</string>
+    <string name="correction_save_partial">Enregistrement incomplet. Certains fichiers peuvent rester dans la galerie.</string>
+    <string name="correction_50d">VISION3 50D</string>
+    <string name="correction_e100d">EKTACHROME E100D</string>
+    <string name="correction_250d">VISION3 250D</string>
+    <string name="correction_800t">CineStill 800T</string>
+    <string name="correction_500t">VISION3 500T</string>
+    <string name="correction_portra400">PORTRA 400</string>
+    <string name="note_save_gallery">Enregistrer la photo dans la galerie</string>
+</resources>

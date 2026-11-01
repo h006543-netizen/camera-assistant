@@ -1,0 +1,10 @@
+<androidx.appcompat.widget.AppCompatTextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/noteCorrectionCategory"
+    android:layout_width="wrap_content" android:layout_height="48dp"
+    android:minWidth="64dp" android:maxWidth="180dp"
+    android:paddingStart="10dp" android:paddingEnd="6dp"
+    android:gravity="center_vertical" android:maxLines="1" android:ellipsize="end"
+    android:text="@string/correction_original" android:textSize="14sp" android:textColor="@color/note_gallery_text"
+    android:drawableEnd="@drawable/ic_category_chevron" android:drawablePadding="2dp"
+    android:background="@drawable/bg_correction_choice"
+    android:clickable="true" android:focusable="true" />

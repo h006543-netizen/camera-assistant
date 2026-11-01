@@ -1,0 +1,24 @@
+<resources>
+    <string name="scan_link">フィルムスキャンを関連付け</string>
+    <string name="scan_compare">スキャン比較</string>
+    <string name="scan_note_photo">ノートの写真</string>
+    <string name="scan_film_photo">フィルムスキャン</string>
+    <string name="scan_notes_empty">未入力</string>
+    <string name="scan_location_accuracy">位置の精度</string>
+    <string name="scan_compare_title">%1$dコマ目 スキャン比較</string>
+    <string name="scan_confirm_title">%1$dコマ目 · 関連付け確認</string>
+    <string name="scan_zoom_title">%1$dコマ目 拡大</string>
+    <string name="scan_actions">スキャンの関連付けを管理</string>
+    <string name="scan_reselect">選び直す</string>
+    <string name="scan_confirm">関連付けて比較</string>
+    <string name="scan_enlarge">拡大</string>
+    <string name="scan_discard">選択を取り消す</string>
+    <string name="scan_unlink">関連付けを解除</string>
+    <string name="scan_loading">写真を読み込んでいます。</string>
+    <string name="scan_read_error">写真を読み込めませんでした。端末が対応する128MB以下の画像を選び直してください。</string>
+    <string name="scan_save_error">関連付けを保存できませんでした。コマと現在の関連付けを確認して再試行してください。既存の記録は保持されます。</string>
+    <string name="scan_picker_error">写真選択画面を開けません。</string>
+    <string name="scan_zoom_in">拡大</string>
+    <string name="scan_zoom_out">縮小</string>
+    <string name="scan_selected">選択済み</string>
+</resources>

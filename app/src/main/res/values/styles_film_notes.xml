@@ -1,0 +1,49 @@
+<resources>
+    <color name="note_paper">#FAF9F6</color>
+    <color name="note_ink">#272623</color>
+    <color name="note_muted">#78756E</color>
+    <color name="note_empty">#F0EFEA</color>
+    <color name="note_rule">#D6D3CB</color>
+    <color name="note_gallery_background">#0D0D0D</color>
+    <color name="note_gallery_empty">#2B2723</color>
+    <color name="note_gallery_text">#ECECE8</color>
+    <color name="note_gallery_muted">#A8AAA5</color>
+    <color name="note_gallery_rule">#4A4D49</color>
+    <style name="NoteFeedLabel">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">16dp</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/note_gallery_muted</item>
+    </style>
+    <style name="NoteFeedValue">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+        <item name="android:textColor">@color/note_gallery_text</item>
+    </style>
+    <style name="NoteSelectionAction" parent="Widget.AppCompat.Button.Borderless">
+        <item name="android:minWidth">56dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:elevation">0dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+    <style name="NoteIcon">
+        <item name="android:layout_width">48dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+        <item name="android:padding">13dp</item>
+        <item name="tint">@color/note_ink</item>
+    </style>
+</resources>

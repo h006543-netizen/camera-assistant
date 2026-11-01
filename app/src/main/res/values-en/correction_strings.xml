@@ -1,0 +1,15 @@
+<resources>
+    <string name="correction_category">Film correction: %1$s</string>
+    <string name="correction_original">Original</string>
+    <string name="correction_processing">Applying film correction…</string>
+    <string name="correction_render_error">Could not apply correction. Showing the original.</string>
+    <string name="correction_change_error">Could not save the correction choice. The previous photo is unchanged.</string>
+    <string name="correction_save_partial">Save did not complete. Some files may remain in the gallery.</string>
+    <string name="correction_50d">VISION3 50D</string>
+    <string name="correction_e100d">EKTACHROME E100D</string>
+    <string name="correction_250d">VISION3 250D</string>
+    <string name="correction_800t">CineStill 800T</string>
+    <string name="correction_500t">VISION3 500T</string>
+    <string name="correction_portra400">PORTRA 400</string>
+    <string name="note_save_gallery">Save photo to gallery</string>
+</resources>
