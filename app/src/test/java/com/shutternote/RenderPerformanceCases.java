@@ -39,7 +39,7 @@ final class RenderPerformanceCases {
     }
     static void filters() {
         Random random=new Random(27155);
-        for(int[] shape:new int[][]{{1,1},{1,23},{31,1},{3,2},{41,31}})for(double sigma:new double[]{.1,1,5,12}) {
+        for(int[] shape:new int[][]{{1,1},{1,23},{31,1},{3,2},{41,31},{513,257}})for(double sigma:new double[]{.1,1,5,12}) {
             int n=shape[0]*shape[1];float[] source=new float[n];for(int i=0;i<n;i++)source[i]=random.nextFloat()*2-1;
             float[] old=new float[n],now=new float[n];double[] kernel=RenderBaselineFilmRenderMath.gaussian(sigma);
             RenderBaselineFilmRenderMath.filter(source,shape[0],shape[1],kernel,old,new float[n],()->false);

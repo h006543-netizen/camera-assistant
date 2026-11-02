@@ -49,13 +49,13 @@ final class FilmGalleryRecipeStore {
         // Older two-file gallery saves are user files and are not rewritten or deleted.
         if (output == null) return !corrected;
         File cached = correction(context, capture);
-        if (corrected && corrected(context, capture) && cached != null && cached.isFile()) return true;
+        if (corrected && corrected(context, capture) && cached != null && cached.isFile() && cached.length()>0) return true;
         File added = null; Bitmap rendered = null;
         try {
-            if (corrected) { rendered = render(context, Uri.parse(output)); added = write(context, rendered); }
+            if (corrected && (cached == null || !cached.isFile() || cached.length()==0)) { rendered = render(context, Uri.parse(output)); added = write(context, rendered); }
         String previous = records.getString("recipe:" + output, null);
-        if (records.edit().putString("recipe:" + output, recipe(corrected, added)).commit()) {
-            if (cached != null && !cached.equals(added)) cached.delete();
+        if (records.edit().putString("recipe:" + output, recipe(corrected, added == null ? cached : added)).commit()) {
+            if (cached != null && added != null && !cached.equals(added)) cached.delete();
             return true;
         }
         SharedPreferences.Editor restore = records.edit(); restore(restore, "recipe:" + output, previous); restore.commit(); return false;
@@ -81,12 +81,12 @@ final class FilmGalleryRecipeStore {
             if (output == null) return null;
             JSONObject recipe = new JSONObject(records.getString("recipe:" + output, "{}"));
             String name = recipe.optString("correctionPhoto");
-            if (!recipe.optBoolean("enabled") || !name.matches("[A-Za-z0-9_-]+\\.jpg")) return null;
+            if (!name.matches("[A-Za-z0-9_-]+\\.jpg")) return null;
             return new File(new File(context.getFilesDir(), "capture_corrections"), name);
         } catch (Exception ignored) { return null; }
     }
     private static String recipe(boolean corrected, File file) {
-        try { return new JSONObject().put("schema", 1).put("profile", corrected ? FilmColorCorrection.E100D : "")
+        try { return new JSONObject().put("schema", 1).put("profile", corrected || file != null ? FilmColorCorrection.E100D : "")
                 .put("enabled", corrected).put("correctionPhoto", file == null ? "" : file.getName()).toString(); }
         catch (Exception impossible) { throw new IllegalStateException(impossible); }
     }
@@ -103,8 +103,8 @@ final class FilmGalleryRecipeStore {
         BitmapFactory.Options bounds = new BitmapFactory.Options(); bounds.inJustDecodeBounds = true;
         try (InputStream in = context.getContentResolver().openInputStream(output)) { BitmapFactory.decodeStream(in, null, bounds); }
         if (bounds.outWidth <= 0 || bounds.outHeight <= 0) throw new java.io.IOException("Gallery original missing");
-        Runtime runtime = Runtime.getRuntime(); BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inSampleSize = ImageMemoryBudget.sampleSize(bounds.outWidth, bounds.outHeight, runtime.maxMemory() - (runtime.totalMemory() - runtime.freeMemory()));
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = 1;
         Bitmap original;
         try (InputStream in = context.getContentResolver().openInputStream(output)) { original = BitmapFactory.decodeStream(in, null, options); }
         if (original == null) throw new java.io.IOException("Cannot decode original");

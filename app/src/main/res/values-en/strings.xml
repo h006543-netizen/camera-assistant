@@ -1,4 +1,5 @@
 <resources>
+    <string name="correction_jobs_failed">Full-size correction failed · Select the film again to retry</string>
     <string name="app_name">ShutterNote</string>
     <string name="distance_back">Back</string>
     <string name="distance_reading">Distance: %1$s</string>

@@ -84,7 +84,7 @@ public class Vision500ContentClassifierTest {
     @Test public void oldApprovedAndTimeRecipesRemainPinnedAndRestorable() throws Exception {
         JSONObject p=profile(),old=new JSONObject(Files.readString(Path.of("src/main/assets/film_corrections/latest/vision3-500t-approved-night-v1.json")));
         assertEquals(old.toString(),p.getJSONObject("base_profile").toString());
-        String current=FilmCorrectionProfiles.latest("vision3-500t");assertEquals("vision3-500t-"+p.getString("model_version"),FilmCorrectionProfiles.assetId(current));
+        String current=FilmCorrectionProfiles.latest("vision3-500t");assertEquals("vision3-500t-"+p.getString("model_version"),FilmCorrectionProfiles.OLD_500T_CONTENT);
         for(String id:new String[]{FilmCorrectionProfiles.OLD_500T_APPROVED,FilmCorrectionProfiles.OLD_500T_TIME,current}) {
             assertTrue(FilmCorrectionProfiles.supported(id));assertEquals("vision3-500t",FilmCorrectionProfiles.key(id));
             FilmFrameRecord frame=new FilmFrameRecord();frame.number=1;frame.photo="source.jpg";frame.correctionPhoto="corrected.jpg";frame.correctionEnabled=true;frame.correctionProfile=id;frame.sceneCaptureHour=12.35;

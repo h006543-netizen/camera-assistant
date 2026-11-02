@@ -167,6 +167,8 @@ public class FilmRollFramesActivity extends AppCompatActivity {
         });
         deletion = new FilmFrameDeletion(this, cut -> { if (readRoll()) refresh(); });
         initialized = true;refresh();
+        FilmColorCorrection.preparePreviews(this);
+        FilmCorrectionJobs.changes.observe(this, ignored -> { if (initialized && readRoll()) refresh(); });
         export.state.observe(this, status -> {
             updateExportProgress(); adapter.notifyDataSetChanged();
             int message = status==FilmRollExportViewModel.State.PARTIAL ? R.string.note_export_partial

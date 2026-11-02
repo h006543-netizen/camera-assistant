@@ -64,6 +64,7 @@ public class FilmScanComparisonActivity extends AppCompatActivity {
             restoredZoom = saved.getFloat("zoom", 1); restoredX = saved.getFloat("centerX", .5f); restoredY = saved.getFloat("centerY", .5f);
         }
         model = new ViewModelProvider(this).get(FilmScanViewModel.class);
+        FilmCorrectionJobs.changes.observe(this, ignored -> model.refreshCorrection());
         displayedDraft = model.draftName();
         zoomImage = findViewById(R.id.scanZoomImage);
         zoomImage.restore(restoredZoom, restoredX, restoredY);
@@ -90,6 +91,7 @@ public class FilmScanComparisonActivity extends AppCompatActivity {
             if (draft != null && !draft.equals(displayedDraft)) enlarged = false;
             displayedDraft = draft;
             render();
+            if(state==FilmScanViewModel.State.READY)model.refreshCorrection();
             if (state == FilmScanViewModel.State.READY && model.frame != null && !initialPickerLaunched
                     && getIntent().getBooleanExtra(PICK, false) && !model.hasDraft()) {
                 initialPickerLaunched = true; choose();

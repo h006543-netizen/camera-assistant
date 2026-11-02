@@ -20,6 +20,7 @@ final class Cine800Geometry {
             if((i&4095)==0)check(cancel);if(!mask[i]||ids[i]!=0)continue;
             Component c=new Component(rows.size()+1,w,h);int head=0,tail=1;queue[0]=i;ids[i]=c.id;
             while(head<tail) {
+                if((head&4095)==0)check(cancel);
                 int p=queue[head++],x=p%w,y=p/w;c.count++;c.cx+=x;c.cy+=y;
                 c.x0=Math.min(c.x0,x);c.y0=Math.min(c.y0,y);c.x1=Math.max(c.x1,x+1);c.y1=Math.max(c.y1,y+1);
                 for(int dy=-1;dy<=1;dy++)for(int dx=-1;dx<=1;dx++) {
@@ -32,9 +33,13 @@ final class Cine800Geometry {
         return new Labels(ids,rows);
     }
     static float[] distance(boolean[] core,int w,int h,int[] owners) {
+        return distance(core,w,h,owners,()->false);
+    }
+    static float[] distance(boolean[] core,int w,int h,int[] owners,BooleanSupplier cancel) {
         float[] d=new float[core.length];for(int i=0;i<d.length;i++)d[i]=core[i]?0:1e10f;
         int[][] offsets={{-1,0},{0,-1},{-1,-1},{1,-1},{-2,-1},{2,-1},{-1,-2},{1,-2}};
         for(int pass=0;pass<2;pass++)for(int yy=0;yy<h;yy++)for(int xx=0;xx<w;xx++) {
+            if(xx==0)check(cancel);
             int x=pass==0?xx:w-1-xx,y=pass==0?yy:h-1-yy,at=y*w+x;if(d[at]==0)continue;
             for(int[] o:offsets){int nx=x+(pass==0?o[0]:-o[0]),ny=y+(pass==0?o[1]:-o[1]);if(nx<0||ny<0||nx>=w||ny>=h)continue;
                 float cost=Math.abs(o[0])+Math.abs(o[1])==1?1:Math.abs(o[0])+Math.abs(o[1])==2?1.4f:2.1969f;
@@ -52,11 +57,38 @@ final class Cine800Geometry {
         if(!dilate)for(int i=0;i<hit.length;i++)hit[i]=!hit[i];return hit;
     }
     static float[] dilate(float[] input,int w,int h,int radius,BooleanSupplier cancel) {
-        float[] out=new float[input.length];
-        for(int y=0;y<h;y++){if((y&15)==0)check(cancel);for(int x=0;x<w;x++)for(int dy=-radius;dy<=radius;dy++) {
-            int yy=y+dy;if(yy<0||yy>=h)continue;int span=(int)Math.rint(radius*Math.sqrt(Math.max(0,1-dy*dy/(double)(radius*radius))));
-            for(int dx=-span;dx<=span;dx++){int xx=x+dx;if(xx>=0&&xx<w)out[y*w+x]=Math.max(out[y*w+x],input[yy*w+xx]);}
-        }}return out;
+        float[] out=new float[input.length];if(radius<0)return out;
+        int[] spans=new int[radius*2+1],counts=new int[radius+1];
+        for(int dy=-radius;dy<=radius;dy++){int span=radius==0?0:(int)Math.rint(radius*Math.sqrt(Math.max(0,1-dy*dy/(double)(radius*radius))));spans[dy+radius]=span;counts[span]++;}
+        int[][] offsets=new int[radius+1][];for(int span=0;span<=radius;span++)if(counts[span]>0)offsets[span]=new int[counts[span]];
+        Arrays.fill(counts,0);for(int dy=-radius;dy<=radius;dy++){int span=spans[dy+radius];offsets[span][counts[span]++]=dy;}
+        int[] queue=new int[w];float[] rowMax=new float[w];
+        // Each elliptical row is a horizontal maximum. Reuse equal spans and slide with a deque.
+        for(int sy=0;sy<h;sy++) {
+            check(cancel);int row=sy*w;
+            int sourceFirst=w,sourceLast=-1;
+            for(int x=0;x<w;x++)if(input[row+x]>0||Float.isNaN(input[row+x])){
+                if(sourceFirst==w)sourceFirst=x;sourceLast=x;
+            }
+            // A zero/nonpositive row contributes nothing to a maximum whose floor is zero.
+            if(sourceLast<0)continue;
+            for(int span=0;span<=radius;span++) {
+                int[] destinations=offsets[span];if(destinations==null)continue;
+                boolean visible=false;for(int dy:destinations)if(sy-dy>=0&&sy-dy<h){visible=true;break;}if(!visible)continue;
+                int first=Math.max(0,sourceFirst-span),last=Math.min(w-1,sourceLast+span);
+                int head=0,tail=0,next=Math.max(0,first-span);boolean active=false;
+                for(int x=first;x<=last;x++) {
+                    int right=Math.min(w-1,x+span);
+                    while(next<=right){float value=input[row+next];while(tail>head&&(input[row+queue[tail-1]]<=value||Float.isNaN(value)))tail--;queue[tail++]=next++;}
+                    int left=Math.max(0,x-span);while(head<tail&&queue[head]<left)head++;
+                    rowMax[x]=Math.max(0,input[row+queue[head]]);active|=rowMax[x]!=0;
+                }
+                if(!active)continue;
+                for(int dy:destinations){int y=sy-dy;if(y<0||y>=h)continue;int target=y*w;
+                    for(int x=first;x<=last;x++)if(rowMax[x]!=0)out[target+x]=Math.max(out[target+x],rowMax[x]);}
+            }
+        }
+        return out;
     }
     private static long cross(int a,int b,int c,int w){return (long)(b%w-a%w)*(c/w-a/w)-(long)(b/w-a/w)*(c%w-a%w);}
     static boolean[] hulls(boolean[] input,int w,int h,BooleanSupplier cancel) {

@@ -79,6 +79,7 @@ public class E100dGallerySaveTest {
             }
             assertEquals(1,added.size()); assertTrue(FilmGalleryRecipeStore.corrected(context,source.getAbsolutePath()));
             File cached=FilmGalleryRecipeStore.correction(context,source.getAbsolutePath()); assertTrue(cached.isFile());
+            assertTrue(FilmRecipeImages.sameDimensions(source,cached));
             long modified=cached.lastModified();
             E100dResultUiTest.selectCorrection(scenario,R.string.correction_e100d);
             assertEquals(cached,FilmGalleryRecipeStore.correction(context,source.getAbsolutePath())); assertEquals(modified,cached.lastModified());
@@ -94,14 +95,21 @@ public class E100dGallerySaveTest {
             }
             assertEquals(1,colors.size());
             E100dResultUiTest.selectCorrection(scenario,R.string.correction_original);
-            assertFalse(FilmGalleryRecipeStore.corrected(context,source.getAbsolutePath()));assertFalse(cached.exists());
+            assertFalse(FilmGalleryRecipeStore.corrected(context,source.getAbsolutePath()));assertTrue(cached.exists());
             scenario.recreate();E100dResultUiTest.awaitReady(scenario);
             scenario.onActivity(activity->E100dResultUiTest.assertChoice(activity,R.string.correction_original));
             assertFalse(FilmGalleryRecipeStore.corrected(context,source.getAbsolutePath()));
             E100dResultUiTest.selectCorrection(scenario,R.string.correction_e100d);
-            File restored=FilmGalleryRecipeStore.correction(context,source.getAbsolutePath());assertNotNull(restored);assertTrue(restored.isFile());
+            File restored=FilmGalleryRecipeStore.correction(context,source.getAbsolutePath());assertEquals(cached,restored);assertEquals(modified,restored.lastModified());assertTrue(restored.isFile());
+            Bitmap small=Bitmap.createBitmap(96,64,Bitmap.Config.ARGB_8888);small.eraseColor(Color.rgb(60,90,120));
+            try(OutputStream out=new FileOutputStream(restored)){assertTrue(small.compress(Bitmap.CompressFormat.JPEG,95,out));}
+            finally{small.recycle();}
+            assertTrue(FilmGalleryRecipeStore.select(context,source.getAbsolutePath(),true));
+            assertEquals(restored,FilmGalleryRecipeStore.correction(context,source.getAbsolutePath()));
+            assertTrue(restored.exists());
+            assertFalse(FilmRecipeImages.sameDimensions(source,restored));
             E100dResultUiTest.selectCorrection(scenario,R.string.correction_original);
-            assertFalse(FilmGalleryRecipeStore.corrected(context,source.getAbsolutePath()));assertFalse(restored.exists());
+            assertFalse(FilmGalleryRecipeStore.corrected(context,source.getAbsolutePath()));assertTrue(restored.exists());
             scenario.recreate();E100dResultUiTest.awaitReady(scenario);
             scenario.onActivity(activity->E100dResultUiTest.assertChoice(activity,R.string.correction_original));
             Map<String,String> after=rows(context,prefix);after.keySet().removeAll(before);assertEquals(1,after.size());

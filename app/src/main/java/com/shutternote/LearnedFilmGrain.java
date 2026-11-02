@@ -33,6 +33,9 @@ final class LearnedFilmGrain {
         if(!active)return;
         int nw=Math.max(2,(int)Math.rint(w*nativeEdge/Math.max(w,h))),nh=Math.max(2,(int)Math.rint(h*nativeEdge/Math.max(w,h)));
         double rx=nw/(double)w,ry=nh/(double)h;
+        int atlasPeriod=edge*2;
+        BoxSampler box=rx>=1||ry>=1?new BoxSampler(w,h,rx,ry,atlasPeriod):null;
+        BilinearSampler bilinear=box==null?new BilinearSampler(w,h,rx,ry,edge):null;
         for(int part=0;part<parts;part++) {
             check(cancelled);boolean measured=false;
             for(int i=part*36;i<(part+1)*36;i++)measured|=transforms[i]!=0;
@@ -51,15 +54,19 @@ final class LearnedFilmGrain {
                     integral[c][(y+1)*stride+x+1]=(float)(row+integral[c][y*stride+x+1]);
                 }
             }
-            for(int y=0;y<h;y++) {
-                if((y&15)==0)check(cancelled);
+            int component=part;
+            rows(w,h,cancelled,(first,last,stop)->{
+            for(int y=first;y<last;y++) {
+                if((y&15)==0)check(stop);
                 for(int x=0;x<w;x++) {
                     int i=y*w+x,lo=0;double level=levels[i];
                     while(lo<2 && level>centers[lo+1])lo++;
                     double fraction=clamp((level-centers[lo])/(centers[lo+1]-centers[lo]));
-                    double a=sample(atlas,integral,0,x,y,rx,ry,period),b=sample(atlas,integral,1,x,y,rx,ry,period),c=sample(atlas,integral,2,x,y,rx,ry,period);
+                    double a=box==null?bilinear.sample(atlas,0,x,y):box.sample(integral[0],x,y);
+                    double b=box==null?bilinear.sample(atlas,1,x,y):box.sample(integral[1],x,y);
+                    double c=box==null?bilinear.sample(atlas,2,x,y):box.sample(integral[2],x,y);
                     for(int channel=0;channel<3;channel++) {
-                        int at=part*36+lo*9+channel*3;
+                        int at=component*36+lo*9+channel*3;
                         double m0=transforms[at]*(1-fraction)+transforms[at+9]*fraction;
                         double m1=transforms[at+1]*(1-fraction)+transforms[at+10]*fraction;
                         double m2=transforms[at+2]*(1-fraction)+transforms[at+11]*fraction;
@@ -67,7 +74,28 @@ final class LearnedFilmGrain {
                     }
                 }
             }
+            });
         }
+    }
+    private static final class BoxSampler {
+        final double[] qx,xx,qy,yy;final int period;final double area;
+        BoxSampler(int w,int h,double rx,double ry,int period){this.period=period;area=rx*ry;qx=new double[w+1];xx=new double[w+1];qy=new double[h+1];yy=new double[h+1];
+            for(int i=0;i<=w;i++){double v=i*rx;qx[i]=Math.floor(v/period);xx[i]=v-qx[i]*period;}
+            for(int i=0;i<=h;i++){double v=i*ry;qy[i]=Math.floor(v/period);yy[i]=v-qy[i]*period;}}
+        double prefix(float[] p,int x,int y){return qx[x]*qy[y]*p[p.length-1]+qx[x]*at(p,period,yy[y],period)+qy[y]*at(p,xx[x],period,period)+at(p,xx[x],yy[y],period);}
+        double sample(float[] p,int x,int y){return (prefix(p,x+1,y+1)-prefix(p,x,y+1)-prefix(p,x+1,y)+prefix(p,x,y))/area;}
+    }
+    private static final class BilinearSampler {
+        final int[] x0,x1,y0,y1;final double[] fx,fy;final int edge;
+        BilinearSampler(int w,int h,double rx,double ry,int edge){this.edge=edge;x0=new int[w];x1=new int[w];y0=new int[h];y1=new int[h];fx=new double[w];fy=new double[h];
+            for(int x=0;x<w;x++){double v=(x+.5)*rx-.5;int i=(int)Math.floor(v);fx[x]=v-i;x0[x]=reflect(i,edge*2);x1[x]=reflect(i+1,edge*2);}
+            for(int y=0;y<h;y++){double v=(y+.5)*ry-.5;int i=(int)Math.floor(v);fy[y]=v-i;y0[y]=reflect(i,edge*2);y1[y]=reflect(i+1,edge*2);}}
+        private int reflect(int i,int period){int v=Math.floorMod(i,period);return v<edge?v:period-1-v;}
+        double sample(float[] atlas,int channel,int x,int y){double result=0;
+            result+=atlas[(y0[y]*edge+x0[x])*3+channel]*(1-fx[x])*(1-fy[y]);
+            result+=atlas[(y0[y]*edge+x1[x])*3+channel]*fx[x]*(1-fy[y]);
+            result+=atlas[(y1[y]*edge+x0[x])*3+channel]*(1-fx[x])*fy[y];
+            result+=atlas[(y1[y]*edge+x1[x])*3+channel]*fx[x]*fy[y];return result;}
     }
     private double sample(float[] atlas,float[][] integral,int channel,int x,int y,double rx,double ry,int period) {
         if(integral!=null) {

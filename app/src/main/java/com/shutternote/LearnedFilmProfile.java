@@ -20,8 +20,12 @@ final class LearnedFilmProfile {
     private Vision250RecoveryProfile recovery250;
     private Vision500ContentProfile content500;
     private Vision250ReportProfile report250;
+    private Vision500ConfidenceProfile confidence500;
     LearnedFilmProfile(String json,LearnedFilmGrain.Noise noise) throws JSONException {
         JSONObject profile=new JSONObject(json);
+        if(profile.getInt("schema_version")==35) {
+            confidence500=new Vision500ConfidenceProfile(profile,noise);approved500=null;vision500=null;shadow=null;portra=null;scene=null;manual=null;color=null;lights=null;grain=null;return;
+        }
         if(profile.getInt("schema_version")==34) {
             report250=new Vision250ReportProfile(profile,noise);approved500=null;vision500=null;shadow=null;portra=null;scene=null;manual=null;color=null;lights=null;grain=null;return;
         }
@@ -66,6 +70,7 @@ final class LearnedFilmProfile {
         grain=new LearnedFilmGrain(effects.getJSONObject("grain"),runtime,noise);
     }
     void render(int[] pixels,int w,int h,BooleanSupplier cancelled) throws IOException {
+        if(confidence500!=null){confidence500.render(pixels,w,h,cancelled,null,0,0,Double.NaN);return;}
         if(report250!=null){report250.render(pixels,w,h,cancelled);return;}
         if(content500!=null){content500.render(pixels,w,h,cancelled,null,0,0,Double.NaN);return;}
         if(recovery250!=null){recovery250.render(pixels,w,h,cancelled,null,0,0);return;}
@@ -93,12 +98,19 @@ final class LearnedFilmProfile {
         if(levels!=null)grain.apply(result,levels,w,h,cancelled);
         return result;
     }
-    int analysisEdge(){return content500!=null||recovery250!=null?1024:approved500!=null?approved500.analysisEdge():vision500!=null?vision500.analysisEdge():scene==null?0:scene.analysisEdge();}
+    int analysisEdge(){return confidence500!=null||content500!=null||recovery250!=null?1024:approved500!=null?approved500.analysisEdge():vision500!=null?vision500.analysisEdge():scene==null?0:scene.analysisEdge();}
+    /** Interim preview has a bounded optical analysis. Final render methods above remain unchanged. */
+    void renderPreview(int[] pixels,int w,int h,BooleanSupplier cancelled,double hour) throws IOException {
+        if (scene != null && scene.analysisEdge() > 0) { scene.renderPreview(pixels,w,h,cancelled); return; }
+        if (confidence500 != null || content500 != null || approved500 != null) { renderWithSceneTime(pixels,w,h,cancelled,null,0,0,hour); return; }
+        render(pixels,w,h,cancelled);
+    }
     double blackLevel(int[] pixels,int w,int h,BooleanSupplier cancelled) {
         if(color==null)throw new IllegalStateException("Black probe requires a legacy learned color profile");
         return color.blackLevel(pixels,w,h,cancelled);
     }
     void render(int[] pixels,int w,int h,BooleanSupplier cancelled,int[] analysis,int aw,int ah) throws IOException {
+        if(confidence500!=null){confidence500.render(pixels,w,h,cancelled,analysis,aw,ah,Double.NaN);return;}
         if(content500!=null){content500.render(pixels,w,h,cancelled,analysis,aw,ah,Double.NaN);return;}
         if(recovery250!=null){recovery250.render(pixels,w,h,cancelled,analysis,aw,ah);return;}
         if(approved500!=null){approved500.render(pixels,w,h,cancelled,analysis,aw,ah);return;}
@@ -106,6 +118,7 @@ final class LearnedFilmProfile {
         if(scene!=null){scene.render(pixels,w,h,cancelled,analysis,aw,ah);return;}render(pixels,w,h,cancelled);
     }
     void renderWithSceneTime(int[] pixels,int w,int h,BooleanSupplier cancelled,int[] analysis,int aw,int ah,double captureHour) throws IOException {
+        if(confidence500!=null){confidence500.render(pixels,w,h,cancelled,analysis,aw,ah,captureHour);return;}
         if(content500!=null){content500.render(pixels,w,h,cancelled,analysis,aw,ah,captureHour);return;}
         if(approved500==null)throw new IOException("Scene-time policy requires approved 500T");
         approved500.render(pixels,w,h,cancelled,analysis,aw,ah,true,captureHour);

@@ -8,7 +8,7 @@ import androidx.lifecycle.SavedStateHandle;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/** A single explicit gallery save survives Activity recreation. */
+/** A single explicit gallery save survives Activity recreation without blocking other screen actions. */
 public class FilmNoteGalleryViewModel extends AndroidViewModel {
     enum State { IDLE, PERMISSION, SAVING, SAVED, FAILED, DENIED, PARTIAL }
     final MutableLiveData<State> state = new MutableLiveData<>(State.IDLE);
@@ -45,5 +45,8 @@ public class FilmNoteGalleryViewModel extends AndroidViewModel {
         });
     }
     void acknowledge() { if (!busy()) state.setValue(State.IDLE); }
-    @Override protected void onCleared() { worker.shutdown(); }
+    @Override protected void onCleared() {
+        // Closing the detail page must not interrupt a save waiting for original-size correction.
+        worker.shutdown();
+    }
 }

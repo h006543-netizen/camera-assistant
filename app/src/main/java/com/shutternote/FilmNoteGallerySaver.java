@@ -8,8 +8,6 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import java.io.*;
-import java.util.Date;
-import java.util.UUID;
 
 /** Copies the selected note JPEG without decoding or recompressing it. */
 final class FilmNoteGallerySaver {
@@ -18,6 +16,11 @@ final class FilmNoteGallerySaver {
     }
     static Uri save(Context context, FilmFrameRecord snapshot) throws Exception {
         FilmRollStore store = new FilmRollStore(context);
+        String rollName = "";
+        for (FilmRollRecord roll : store.load()) for (FilmFrameRecord frame : roll.frames)
+            if (frame.photo.equals(snapshot.photo) && frame.number == snapshot.number && frame.captureId.equals(snapshot.captureId))
+                rollName = roll.name;
+        String name = GalleryFileNameBuilder.buildNote(snapshot, rollName);
         File source = FilmNoteCorrectionCache.source(context, store, snapshot);
         File copy = File.createTempFile("note-gallery-", ".jpg", context.getCacheDir());
         try {
@@ -26,9 +29,6 @@ final class FilmNoteGallerySaver {
             }
             int rotation = FilmFrameRecord.normalizedRotation(snapshot.rotation);
             if (rotation != 0) FilmRollExportViewModel.orientCopy(copy, rotation);
-            String base = GalleryFileNameBuilder.build(snapshot.iso, snapshot.aperture, snapshot.shutter,
-                    snapshot.fieldOfView, new Date(snapshot.capturedAt));
-            String name = base.substring(0, base.length() - 4) + "_Note_" + UUID.randomUUID() + ".jpg";
             return publish(context, copy, name);
         } finally { copy.delete(); }
     }

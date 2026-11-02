@@ -83,7 +83,13 @@ public class FilmInteractionRegressionTest {
             while(SystemClock.uptimeMillis()<end&&store.find(id).frame(1).rotation!=270)SystemClock.sleep(50);
         } finally {release.countDown();}
         FilmFrameRecord frame=store.find(id).frame(1);assertEquals(270,frame.rotation);
-        if(alsoCorrect)assertEquals(FilmCorrectionProfiles.IDS[0],frame.correctionProfile);
+        if(alsoCorrect) {
+            assertEquals(FilmCorrectionProfiles.IDS[0],frame.selectedProfile());
+            long end=SystemClock.uptimeMillis()+20000;
+            while(store.find(id).frame(1).pendingCorrection()&&SystemClock.uptimeMillis()<end)SystemClock.sleep(50);
+            assertFalse(store.find(id).frame(1).pendingCorrection());
+            assertEquals(FilmCorrectionProfiles.IDS[0],store.find(id).frame(1).correctionProfile);
+        }
         try(ActivityScenario<FilmFrameDetailActivity> reopened=ActivityScenario.launch(intent())) {ready(reopened);assertEquals(270,store.find(id).frame(1).rotation);}
     }
     @Test public void rotationThenBackWaitsForCommit() throws Exception {busyBack(false);}

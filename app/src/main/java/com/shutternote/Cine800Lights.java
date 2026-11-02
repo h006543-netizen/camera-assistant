@@ -8,6 +8,8 @@ import static com.shutternote.Cine800Geometry.*;
 
 /** Portable selective scatter and the approved paired-source exterior response. */
 final class Cine800Lights {
+    private static final double[] LINEAR_8=new double[256];
+    static {for(int i=0;i<256;i++)LINEAR_8[i]=linear(i/255f);}
     static float[] blur(float[] x,int w,int h,double sigma,BooleanSupplier cancel){float[] out=new float[x.length];filter(x,w,h,gaussian(sigma),out,new float[x.length],cancel);return out;}
     static float[] channel(float[] rgb,int c){float[] x=new float[rgb.length/3];for(int i=0;i<x.length;i++)x[i]=rgb[i*3+c];return x;}
     static float[] encoded(int[] pixels){float[] rgb=new float[pixels.length*3];for(int i=0;i<pixels.length;i++)for(int c=0;c<3;c++)rgb[i*3+c]=((pixels[i]>>>(16-8*c))&255)/255f;return rgb;}
@@ -17,19 +19,28 @@ final class Cine800Lights {
         if(!veto)for(int k=0;k<n;k++)out[k]*=max/Math.max(sum,1e-12);return out;
     }
     static void selective(int[] original,float[] color,int w,int h,JSONObject p,double reference,BooleanSupplier cancel) throws JSONException {
+        long started=System.nanoTime();
         if(!p.getString("method").equals("source_selective_scatter_rbf_v5"))throw new JSONException("Unsupported selective light response");
-        int n=original.length;float[] rgb=encoded(original),signal=new float[n];boolean[] bright=new boolean[n];double threshold=p.getDouble("threshold_linear"),scale=Math.max(w,h)/reference,scene=0;int count=0;
-        for(int i=0;i<n;i++){for(int c=0;c<3;c++)rgb[i*3+c]=(float)linear(rgb[i*3+c]);signal[i]=Math.max(rgb[i*3],Math.max(rgb[i*3+1],rgb[i*3+2]));bright[i]=signal[i]>threshold;if(bright[i])count++;scene+=signal[i];}
+        int n=original.length;float[] signal=new float[n];boolean[] bright=new boolean[n];double threshold=p.getDouble("threshold_linear"),scale=Math.max(w,h)/reference,scene=0;int count=0;
+        for(int i=0;i<n;i++){int pixel=original[i];float r=(float)LINEAR_8[(pixel>>>16)&255],g=(float)LINEAR_8[(pixel>>>8)&255],b=(float)LINEAR_8[pixel&255];signal[i]=Math.max(r,Math.max(g,b));bright[i]=signal[i]>threshold;if(bright[i])count++;scene+=signal[i];}
         if(count==0||count==n)return;
-        Labels labels=label(bright,w,h,cancel);int m=labels.components.size();float[] surround=blur(signal,w,h,Math.max(1,12*scale),cancel),local=blur(signal,w,h,Math.max(1,scale),cancel),energy=new float[n];
-        int[] owners=labels.ids.clone();float[] distance=distance(bright,w,h,owners);double[][] stats=new double[m+1][12],outside=new double[m+1][8];
+        Labels labels=label(bright,w,h,cancel);int m=labels.components.size();float[] surround=blur(signal,w,h,Math.max(1,12*scale),cancel),energy=new float[n];
+        started=trace("surround",started);
+        double[][] stats=new double[m+1][12],outside=new double[m+1][8];
         for(int i=0;i<n;i++){
             double contrast=clamp((signal[i]-surround[i])/.25);energy[i]=(float)(Math.max(signal[i]-threshold,0)/(1-threshold)*contrast);int id=labels.ids[i];
-            if(id>0){int x=i%w,y=i/w;double[] s=stats[id];s[0]++;s[1]+=signal[i];for(int c=0;c<3;c++)s[2+c]+=rgb[i*3+c];s[5]+=contrast;s[6]+=surround[i];
+            if(id>0){int x=i%w,y=i/w;double[] s=stats[id];s[0]++;s[1]+=signal[i];for(int c=0;c<3;c++)s[2+c]+=(float)LINEAR_8[(original[i]>>>(16-8*c))&255];s[5]+=contrast;s[6]+=surround[i];
                 s[7]+=(x==0||labels.ids[i-1]!=id?1:0)+(x==w-1||labels.ids[i+1]!=id?1:0)+(y==0||labels.ids[i-w]!=id?1:0)+(y==h-1||labels.ids[i+w]!=id?1:0);
-                s[8]+=signal[i]>=.98?1:0;s[9]+=Math.abs(signal[i]-local[i]);
-            }else{double d=distance[i]/scale;int b=d<=2?0:d<=8?1:d<=24?2:d<=64?3:-1;if(b>=0){outside[owners[i]][b*2]+=signal[i];outside[owners[i]][b*2+1]++;}}
+                s[8]+=signal[i]>=.98?1:0;
+            }
         }
+        surround=null;
+        float[] local=blur(signal,w,h,Math.max(1,scale),cancel);
+        for(int i=0;i<n;i++)if(labels.ids[i]>0)stats[labels.ids[i]][9]+=Math.abs(signal[i]-local[i]);
+        local=null;
+        int[] owners=labels.ids.clone();float[] distance=distance(bright,w,h,owners,cancel);
+        for(int i=0;i<n;i++)if(labels.ids[i]==0){double d=distance[i]/scale;int b=d<=2?0:d<=8?1:d<=24?2:d<=64?3:-1;if(b>=0){outside[owners[i]][b*2]+=signal[i];outside[owners[i]][b*2+1]++;}}
+        started=trace("statistics",started);
         int prototypes=p.getJSONArray("prototypes").length();double[][] weights=new double[m+1][prototypes];double[] gate=new double[m+1];
         double[] gates=array(p,"chromatic_gate",p.getJSONArray("chromatic_gate").length());double floor=p.getDouble("gate_floor");
         JSONObject gp=new JSONObject(p.toString());gp.put("prototypes",p.getJSONArray("gate_prototypes"));gp.put("kernel_width",p.optDouble("gate_kernel_width",p.getDouble("kernel_width")));
@@ -40,23 +51,37 @@ final class Cine800Lights {
             weights[id]=member(d,p,"descriptor_center","descriptor_scale","prototypes","kernel_width",false);
             double[] gw=member(d,gp,"descriptor_center","descriptor_scale","prototypes","kernel_width",false);double v=0;for(int k=0;k<gw.length;k++)v+=gw[k]*gates[k];gate[id]=clamp((v-floor)/Math.max(1-floor,1e-9));
         }
+        // Component statistics are complete; release source-analysis planes before full-size scatter buffers.
+        signal=null;owners=null;distance=null;stats=null;outside=null;
         float[] transmission=new float[n];Arrays.fill(transmission,1);
         if(p.optString("chromatic_destination_policy").equals("source_no_halo_neighborhood_fade_v1")){
             float[] confidence=new float[n];for(int i=0;i<n;i++)if(bright[i])confidence[i]=(float)(1-gate[labels.ids[i]]);
             confidence=blur(dilate(confidence,w,h,Math.max(1,(int)Math.ceil(p.getDouble("protected_rim_reference_px")*scale)),cancel),w,h,Math.max(.5,scale),cancel);
             for(int i=0;i<n;i++)transmission[i]=(float)clamp(1-confidence[i]);
         }
+        started=trace("protection",started);
         double[] gains=array(p,"gain_rgb",prototypes*36),widths=array(p,"sigma_reference_px",4);float[] residual=new float[n*3];
+        float[] source=new float[n],spread=null,scratch=null;
         for(int k=0;k<prototypes;k++)for(int chroma=0;chroma<2;chroma++){
-            float[] source=new float[n];for(int i=0;i<n;i++)source[i]=(float)(energy[i]*weights[labels.ids[i]][k]*(chroma==1?gate[labels.ids[i]]:1));
+            boolean active=false;for(int i=0;i<n;i++){source[i]=(float)(energy[i]*weights[labels.ids[i]][k]*(chroma==1?gate[labels.ids[i]]:1));active|=source[i]!=0;}
+            check(cancel);if(!active)continue;
             for(int band=0;band<4;band++){
-                check(cancel);double sigma=Math.max(widths[band]*scale,.1),radius=Math.max(.75,Math.min(4*sigma,56*scale/Math.sqrt(2)));int edge=(int)Math.ceil(radius);double[] kernel=new double[edge*2+1];double sum=0;
+                check(cancel);int gain=k*36+chroma*18+(band+2)*3;
+                if(gains[gain]==0&&gains[gain+1]==0&&gains[gain+2]==0)continue;
+                double sigma=Math.max(widths[band]*scale,.1),radius=Math.max(.75,Math.min(4*sigma,56*scale/Math.sqrt(2)));int edge=(int)Math.ceil(radius);double[] kernel=new double[edge*2+1];double sum=0;
                 for(int x=-edge;x<=edge;x++){kernel[x+edge]=Math.exp(-.5*x*x/(sigma*sigma))*Math.pow(Math.max(1-x*x/(radius*radius),0),2);sum+=kernel[x+edge];}for(int x=0;x<kernel.length;x++)kernel[x]/=sum;
-                float[] spread=new float[n];filter(source,w,h,kernel,spread,new float[n],cancel);
+                if(spread==null){spread=new float[n];scratch=new float[n];}
+                sparseFilter(source,w,h,kernel,spread,scratch,cancel);
                 for(int i=0;i<n;i++)if(!bright[i]){float v=(float)(Math.max(spread[i]-source[i],0)*(chroma==1?transmission[i]:1));for(int c=0;c<3;c++)residual[i*3+c]+=v*(float)gains[k*36+chroma*18+(band+2)*3+c];}
             }
         }
         for(int i=0;i<n;i++)if(residual[i*3]!=0||residual[i*3+1]!=0||residual[i*3+2]!=0)for(int c=0;c<3;c++)color[i*3+c]=(float)clamp(srgb(clamp(linear(color[i*3+c])+residual[i*3+c])));
+        trace("scatter",started);
+    }
+    private static long trace(String stage,long started) {
+        long now=System.nanoTime();
+        if(Boolean.getBoolean("shutternote.render.trace"))System.out.println("800_SELECTIVE "+stage+" ms="+(now-started)/1e6);
+        return now;
     }
     static final class Fields {final float[] red,weight,target;Fields(int n){red=new float[n];weight=new float[n];target=new float[n*3];}}
     private static final class Bucket {double[] values=new double[16];int count;void add(double v){if(count==values.length)values=Arrays.copyOf(values,count*2);values[count++]=v;}double value(int minimum){return count>=minimum?median(values,count):Double.NaN;}}
@@ -83,7 +108,7 @@ final class Cine800Lights {
             for(int y=0;y<hh;y++)for(int x=0;x<ww;x++){int j=y*ww+x,i=(y+y0)*w+x+x0;core[j]=ids[i]==c.id;raw[j]=core[j]&&bright[i];if(raw[j])rawCount++;}
             double[][] pixels=new double[6][rawCount];int rawAt=0;
             for(int y=0;y<hh;y++)for(int x=0;x<ww;x++)if(raw[y*ww+x]){int i=(y+y0)*w+x+x0;for(int ch=0;ch<3;ch++){pixels[ch][rawAt]=rgb[i*3+ch];pixels[ch+3][rawAt]=linear(rgb[i*3+ch]);}rawAt++;}
-            float[] distance=distance(core,ww,hh,null);double[] med=new double[3],lin=new double[3];for(int ch=0;ch<3;ch++){med[ch]=median(pixels[ch],rawCount);lin[ch]=median(pixels[ch+3],rawCount);}
+            float[] distance=distance(core,ww,hh,null,cancel);double[] med=new double[3],lin=new double[3];for(int ch=0;ch<3;ch++){med[ch]=median(pixels[ch],rawCount);lin[ch]=median(pixels[ch+3],rawCount);}
             double[] rings=new double[4];double[][] bounds={{0,1.5},{1.5,3.5},{4,8},{10,16}};
             Bucket[][] buckets=new Bucket[17][4];for(int j=0;j<17;j++)for(int b=0;b<4;b++)buckets[j][b]=new Bucket();
             for(int y=0;y<hh;y++)for(int x=0;x<ww;x++){int j=y*ww+x,i=(y+y0)*w+x+x0;if(ids[i]!=0)continue;double d=distance[j]/scale;if(d<=0||d>16)continue;int sector=((int)((Math.atan2(y+y0-c.cy,x+x0-c.cx)+Math.PI)*16/(2*Math.PI)))%16;for(int b=0;b<4;b++)if(d>bounds[b][0]&&d<=bounds[b][1]){buckets[0][b].add(signal[i]);buckets[sector+1][b].add(signal[i]);}}

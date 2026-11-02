@@ -49,6 +49,25 @@ public class FilmScanViewModel extends AndroidViewModel {
     String draftName() { return saved.get("scanDraft"); }
     boolean hasDraft() { return draftName() != null; }
     boolean hasLinkedScan() { return frame != null && !frame.scanPhoto.isEmpty(); }
+    void refreshCorrection() {
+        if (!initialized || closed || frame == null || busy()) return;
+        String shown=frame.imageKey();
+        worker.execute(() -> {
+            Bitmap updated=null;
+            try {
+                FilmRollStore store=new FilmRollStore(getApplication()); FilmRollRecord owner=store.find(rollId);
+                FilmFrameRecord current=owner==null?null:owner.frame(cut);
+                if(current==null||!current.captureId.equals(capture)||shown.equals(current.imageKey()))return;
+                updated=FilmNoteCorrectionCache.preview(getApplication(),store,current,2000,current.rotation,()->closed||Thread.currentThread().isInterrupted());
+                Bitmap image=updated;
+                main.post(() -> {
+                    if(closed||busy()||frame==null||!shown.equals(frame.imageKey())){image.recycle();return;}
+                    Bitmap previous=noteBitmap;noteBitmap=image;frame=current;state.setValue(State.READY);
+                    if(previous!=null&&previous!=image)previous.recycle();
+                });
+            } catch(Exception|OutOfMemoryError error){if(updated!=null)updated.recycle();}
+        });
+    }
 
     private void load(boolean adoptRevision) {
         String pending = draftName();
@@ -62,8 +81,17 @@ public class FilmScanViewModel extends AndroidViewModel {
                 if (current == null || !current.captureId.equals(capture)) {
                     main.post(() -> { if (!closed) state.setValue(State.MISSING); }); return;
                 }
-                Bitmap note = FilmRecipeImages.read(getApplication(), FilmNoteCorrectionCache.source(getApplication(), store, current), 2000, current.rotation,
-                        "", () -> closed || Thread.currentThread().isInterrupted());
+                Bitmap note;
+                boolean correctionFailed = false;
+                try {
+                    note = FilmNoteCorrectionCache.preview(getApplication(), store, current, 2000, current.rotation,
+                            () -> closed || Thread.currentThread().isInterrupted());
+                } catch (java.util.concurrent.CancellationException cancelled) { throw cancelled; }
+                catch (Exception | OutOfMemoryError error) {
+                    note = FilmRecipeImages.read(getApplication(), store.photo(current), 2000, current.rotation, "",
+                            () -> closed || Thread.currentThread().isInterrupted());
+                    correctionFailed = current.correctionEnabled;
+                }
                 File linked = store.scan(current), pendingFile = files.draft(pending);
                 boolean completed = FilmScanRules.completedDraft(current, pending) && linked != null && linked.isFile();
                 boolean lostDraft = pending != null && (pendingFile == null || !pendingFile.isFile());
@@ -74,15 +102,16 @@ public class FilmScanViewModel extends AndroidViewModel {
                     try { scan = FilmScanImages.read(selected, 0, true); }
                     catch (Exception | OutOfMemoryError error) { unreadable = true; }
                 }
-                Bitmap displayScan = scan; boolean failed = unreadable;
+                Bitmap displayScan = scan, displayNote = note; boolean failed = unreadable, failedCorrection = correctionFailed;
                 main.post(() -> {
                     if (closed) return;
-                    this.roll = roll; frame = current; rollTitle = roll.title(); noteBitmap = note; scanBitmap = displayScan;
+                    this.roll = roll; frame = current; rollTitle = roll.title(); noteBitmap = displayNote; scanBitmap = displayScan;
                     if (completed || lostDraft) {
                         saved.remove("scanDraft"); if (pendingFile != null) pendingFile.delete();
                     }
                     if (!hasRevision || adoptRevision || completed || lostDraft) { revision = current.scanRevision; hasRevision = true; saved.set("scanRevision", revision); }
                     if (failed) message.setValue(R.string.scan_read_error);
+                    else if (failedCorrection) message.setValue(R.string.correction_render_error);
                     state.setValue(State.READY);
                 });
             } catch (Exception | OutOfMemoryError error) {

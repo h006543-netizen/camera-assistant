@@ -32,4 +32,15 @@ final class Cine800Analysis {
         }}return out;
     }
     private static void add(Cine800Lights.Fields f,int i,double a,double[] sum){sum[0]+=f.red[i]*a;sum[1]+=f.weight[i]*a;for(int c=0;c<3;c++)sum[2+c]+=(float)(f.target[i*3+c]*f.weight[i])*a;}
+    /** Same arithmetic/rounding as resize(), without materializing five full-size scalar planes. */
+    static void sample(Cine800Lights.Fields fields,int sw,int sh,int w,int h,int x,int y,float[] out,double[] sum) {
+        if(sw==w&&sh==h){int i=y*w+x;out[0]=fields.red[i];out[1]=fields.weight[i];for(int c=0;c<3;c++)out[c+2]=fields.target[i*3+c];return;}
+        java.util.Arrays.fill(sum,0);
+        if(w<=sw&&h<=sh){double x0=x*sw/(double)w,x1=(x+1)*sw/(double)w,y0=y*sh/(double)h,y1=(y+1)*sh/(double)h,area=(x1-x0)*(y1-y0);
+            for(int yy=(int)y0;yy<Math.ceil(y1)&&yy<sh;yy++)for(int xx=(int)x0;xx<Math.ceil(x1)&&xx<sw;xx++){double a=(Math.min(xx+1,x1)-Math.max(xx,x0))*(Math.min(yy+1,y1)-Math.max(yy,y0))/area;add(fields,yy*sw+xx,a,sum);}
+        }else{double sx=(x+.5)*sw/w-.5,sy=(y+.5)*sh/h-.5;int ix=(int)Math.floor(sx),iy=(int)Math.floor(sy);double fx=sx-ix,fy=sy-iy;
+            for(int dy=0;dy<2;dy++)for(int dx=0;dx<2;dx++){int xx=Math.max(0,Math.min(sw-1,ix+dx)),yy=Math.max(0,Math.min(sh-1,iy+dy));add(fields,yy*sw+xx,(dx==0?1-fx:fx)*(dy==0?1-fy:fy),sum);}
+        }
+        out[0]=(float)sum[0];out[1]=(float)sum[1];for(int c=0;c<3;c++)out[c+2]=(float)(sum[1]>1e-9?sum[2+c]/sum[1]:0);
+    }
 }

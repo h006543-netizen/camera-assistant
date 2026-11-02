@@ -40,21 +40,8 @@ final class FilmRollStore {
             JSONArray data = new JSONArray(preferences.getString("rolls", "[]"));
             List<FilmRollRecord> records = new ArrayList<>();
             for (int i = 0; i < data.length(); i++) records.add(FilmRollRecord.fromJson(data.getJSONObject(i)));
-            cleanDisabledCorrections(records);
             return records;
         }
-    }
-
-    private void cleanDisabledCorrections(List<FilmRollRecord> records) throws JSONException {
-        Set<String> originals = new java.util.HashSet<>();
-        for (FilmRollRecord roll : records) for (FilmFrameRecord frame : roll.frames) originals.add(photo(frame).getName());
-        boolean changed = false;
-        for (FilmRollRecord roll : records) for (FilmFrameRecord frame : roll.frames) {
-            java.io.File old = correction(frame);
-            if (old == null || frame.correctionEnabled || originals.contains(frame.correctionPhoto) || !photo(frame).isFile()) continue;
-            if (!old.exists() || old.delete()) { frame.correctionPhoto = ""; changed = true; }
-        }
-        if (changed) commit(records);
     }
 
     FilmRollRecord find(String id) throws JSONException {
@@ -159,7 +146,7 @@ final class FilmRollStore {
     boolean saveFrame(String rollId, FilmFrameRecord frame, android.graphics.Bitmap bitmap) {
         android.graphics.Bitmap corrected = null;
         try {
-            if (frame.correctionEnabled) {
+            if (frame.correctionEnabled && !frame.pendingCorrection()) {
                 if (!FilmCorrectionProfiles.supported(frame.correctionProfile)) return false;
                 corrected = FilmColorCorrection.apply(context, bitmap,frame.correctionProfile, () -> false,null,frame.sceneCaptureHour);
             }
@@ -187,8 +174,10 @@ final class FilmRollStore {
                     stream.flush(); stream.getFD().sync();
                 }
                 frame.correctionPhoto = "";
-                if (frame.correctionEnabled) {
+                if (frame.correctionEnabled && !frame.pendingCorrection()) {
                     if (corrected == null || !FilmCorrectionProfiles.supported(frame.correctionProfile)) throw new java.io.IOException("Correction missing");
+                    if (corrected.getWidth() != bitmap.getWidth() || corrected.getHeight() != bitmap.getHeight())
+                        throw new java.io.IOException("Correction dimensions changed");
                     frame.correctionPhoto = java.util.UUID.randomUUID() + ".jpg";
                     derived = correction(frame); writeCorrection(corrected, derived);
                 }
@@ -290,6 +279,128 @@ final class FilmRollStore {
         return file.equals(photo(frame)) ? null : file;
     }
 
+    java.io.File correctionPreview(FilmFrameRecord frame) {
+        if (!frame.currentPreviewRenderer()) return null;
+        return FilmFrameRecord.validCorrectionName(frame.correctionPreview)
+                ? new java.io.File(previewDirectory(), frame.correctionPreview) : null;
+    }
+    private java.io.File previewDirectory() { return new java.io.File(context.getNoBackupFilesDir(), "film_note_previews"); }
+    java.io.File correctionWorkDirectory() { return new java.io.File(context.getNoBackupFilesDir(), "film_correction_work"); }
+    void cleanCorrectionCaches() throws JSONException {
+        synchronized (LOCK) {
+            List<FilmRollRecord> records = load();
+            boolean upgraded = false;
+            for (FilmRollRecord roll : records) for (FilmFrameRecord frame : roll.frames) {
+                if (!frame.currentPreviewRenderer() && !frame.correctionPreview.isEmpty()) {
+                    frame.correctionPreview = "";
+                    frame.correctionRevision++;
+                    upgraded = true;
+                }
+                if (frame.pendingCorrection() && frame.correctionPreviewEdge < FilmFrameRecord.NOTE_PREVIEW_EDGE) {
+                    frame.correctionPreviewEdge = FilmFrameRecord.NOTE_PREVIEW_EDGE;
+                    frame.correctionPreview = "";
+                    frame.correctionRevision++;
+                    upgraded = true;
+                }
+            }
+            // Retire only interim low-resolution caches, after the replacement request is durable.
+            if (upgraded && !commit(records)) return;
+            Set<String> previews=new java.util.HashSet<>(), completed=new java.util.HashSet<>();
+            for (FilmRollRecord roll:records) for (FilmFrameRecord frame:roll.frames) {
+                previews.add(frame.correctionPreview); completed.add(frame.correctionPhoto); completed.add(frame.photo);
+            }
+            java.io.File[] files=previewDirectory().listFiles();
+            if(files!=null)for(java.io.File file:files)if(file.getName().matches("[a-f0-9-]{36}\\.jpg")&&!previews.contains(file.getName()))file.delete();
+            files=photoDirectory.listFiles();
+            if(files!=null)for(java.io.File file:files)if(file.getName().matches("queued-[a-f0-9-]{36}\\.jpg")&&!completed.contains(file.getName()))file.delete();
+        }
+    }
+    private void clearRequest(FilmFrameRecord frame) {
+        frame.correctionRequest = ""; frame.correctionRequestedProfile = ""; frame.correctionPreview = ""; frame.correctionFailed = false;
+        frame.correctionPreviewComplete=false;
+    }
+    boolean isOriginalFile(java.io.File file,List<FilmRollRecord> records) {
+        if(file==null)return false;
+        for(FilmRollRecord roll:records)for(FilmFrameRecord frame:roll.frames)if(file.equals(photo(frame)))return true;
+        return false;
+    }
+    /** Selection and durable queue entry are one metadata transaction. No rendering on the caller. */
+    boolean requestCorrection(String rollId, int number, String capture, boolean enabled, String profile, int edge) {
+        synchronized (LOCK) {
+            try {
+                List<FilmRollRecord> records = load();
+                for (FilmRollRecord roll : records) if (roll.id.equals(rollId)) {
+                    FilmFrameRecord frame = roll.frame(number);
+                    if (frame == null || !frame.captureId.equals(capture) || !photo(frame).isFile()) return false;
+                    java.io.File oldPreview = correctionPreview(frame), copy = correction(frame);
+                    if (enabled) {
+                        if (!FilmCorrectionProfiles.supported(profile)) return false;
+                        if (copy != null && copy.isFile() && copy.length() > 0 && !isOriginalFile(copy,records) && profile.equals(frame.correctionProfile)) clearRequest(frame);
+                        else if (!frame.pendingCorrection() || !profile.equals(frame.correctionRequestedProfile) || frame.correctionFailed) {
+                            frame.correctionRequest = java.util.UUID.randomUUID().toString(); frame.correctionRequestedProfile = profile;
+                            frame.correctionPreview = ""; frame.correctionFailed = false;frame.correctionPreviewComplete=false;
+                            frame.correctionPreviewEdge = Math.max(FilmFrameRecord.NOTE_PREVIEW_EDGE, Math.min(1080, edge)); frame.correctionQueuedAt = System.currentTimeMillis();
+                        }
+                    }
+                    frame.correctionEnabled = enabled; frame.correctionRevision++;
+                    if (!commit(records)) return false;
+                    if (oldPreview != null && !oldPreview.equals(correctionPreview(frame))) oldPreview.delete();
+                    return true;
+                }
+            } catch (Exception error) { android.util.Log.e("FilmCorrection", "Could not queue correction", error); }
+            return false;
+        }
+    }
+    boolean publishCorrectionPreview(String token, android.graphics.Bitmap bitmap) throws java.io.IOException {
+        java.io.File directory = previewDirectory();
+        if (!directory.isDirectory() && !directory.mkdirs()) throw new java.io.IOException("Preview directory unavailable");
+        java.io.File draft = new java.io.File(directory, java.util.UUID.randomUUID() + ".jpg");
+        boolean saved = false;
+        try {
+            writeCorrection(bitmap, draft);
+            synchronized (LOCK) {
+                List<FilmRollRecord> records = load();
+                for (FilmRollRecord roll : records) for (FilmFrameRecord frame : roll.frames) if (token.equals(frame.correctionRequest)) {
+                    java.io.File previous = correctionPreview(frame); frame.correctionPreview = draft.getName(); frame.correctionPreviewComplete=true; frame.correctionRevision++;
+                    if (!(saved = commit(records))) return false;
+                    if (previous != null && !previous.equals(draft)) previous.delete();
+                    return true;
+                }
+            }
+            return false;
+        } catch (JSONException error) { throw new java.io.IOException(error); }
+        finally { if (!saved) draft.delete(); }
+    }
+    /** The completed JPEG is published only if this is still the latest request. */
+    boolean publishCorrection(String token, java.io.File draft) throws Exception {
+        synchronized (LOCK) {
+            List<FilmRollRecord> records = load();
+            for (FilmRollRecord roll : records) for (FilmFrameRecord frame : roll.frames) if (token.equals(frame.correctionRequest)) {
+                if (!photo(frame).isFile() || !FilmRecipeImages.sameDimensions(photo(frame), draft)) return false;
+                java.io.File previous = correction(frame), preview = correctionPreview(frame);
+                java.io.File added = new java.io.File(photoDirectory, "queued-" + java.util.UUID.randomUUID() + ".jpg");
+                if (!draft.renameTo(added)) throw new java.io.IOException("Cannot publish correction");
+                frame.correctionPhoto = added.getName(); frame.correctionProfile = frame.correctionRequestedProfile;
+                clearRequest(frame); frame.correctionRevision++;
+                if (!commit(records)) { added.delete(); return false; }
+                if (previous != null) deleteDerivedFile(previous, records);
+                if (preview != null) preview.delete();
+                return true;
+            }
+            return false;
+        }
+    }
+    void failCorrection(String token) {
+        synchronized (LOCK) {
+            try {
+                List<FilmRollRecord> records = load();
+                for (FilmRollRecord roll : records) for (FilmFrameRecord frame : roll.frames) if (token.equals(frame.correctionRequest)) {
+                    frame.correctionFailed = true; commit(records); return;
+                }
+            } catch (JSONException ignored) { }
+        }
+    }
+
     boolean saveCorrection(String rollId, int number, String capture, long revision, boolean enabled,
                            String profile) {
         return saveCorrection(rollId, number, capture, revision, enabled, profile, null);
@@ -307,15 +418,16 @@ final class FilmRollStore {
                     java.io.File previous = correction(frame);
                     if (enabled) {
                         if (bitmap != null) {
+                            if (!FilmRecipeImages.sameDimensions(photo(frame), bitmap)) return false;
                             frame.correctionPhoto = java.util.UUID.randomUUID() + ".jpg";
                             added = correction(frame); writeCorrection(bitmap, added);
-                        } else if (previous == null || !previous.isFile() || !profile.equals(frame.correctionProfile)) return false;
-                    } else frame.correctionPhoto = "";
+                        } else if (previous == null || !previous.isFile() || previous.length()==0 || !profile.equals(frame.correctionProfile)) return false;
+                    } // Original selection retains the last correction for instant comparison/reselection.
                     boolean selectionChanged = frame.correctionEnabled != enabled || enabled && !profile.equals(frame.correctionProfile);
                     frame.correctionProfile = enabled ? profile : frame.correctionProfile;
                     frame.correctionEnabled = enabled; if (selectionChanged) frame.correctionRevision++;
                     if (!commit(records)) { if (added != null) added.delete(); return false; }
-                    if (previous != null && (added != null || !enabled)) deleteDerivedFile(previous, records);
+                    if (previous != null && added != null) deleteDerivedFile(previous, records);
                     return true;
                 }
             } catch (Exception | OutOfMemoryError error) { if (added != null) added.delete(); }
@@ -371,7 +483,9 @@ final class FilmRollStore {
                 for (FilmRollRecord roll : records) if (roll.id.equals(rollId)) {
                     FilmFrameRecord removed = removeFrame(roll, number, captureId);
                     if (removed == null || !commit(records)) return false;
+                    FilmCorrectionJobs.cancelCapture(removed.captureId);
                     photo(removed).delete();
+                    java.io.File preview = correctionPreview(removed); if (preview != null) preview.delete();
                     deleteDerivedCopy(removed, records);
                     java.io.File scan = scan(removed); if (scan != null) scan.delete(); return true;
                 }
@@ -405,7 +519,9 @@ final class FilmRollStore {
                     noteFieldOfViewStore.remove(selectedIds);
                     for (FilmRollRecord roll : all) if (selectedIds.contains(roll.id))
                         for (FilmFrameRecord frame : roll.frames) {
+                            FilmCorrectionJobs.cancelCapture(frame.captureId);
                             photo(frame).delete();
+                            java.io.File preview = correctionPreview(frame); if (preview != null) preview.delete();
                             deleteDerivedCopy(frame, all);
                             java.io.File scan = scan(frame); if (scan != null) scan.delete();
                         }

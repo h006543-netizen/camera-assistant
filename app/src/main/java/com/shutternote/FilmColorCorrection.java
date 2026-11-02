@@ -21,6 +21,16 @@ final class FilmColorCorrection {
     static final String E100D = "e100d-" + E100dColorProfile.VERSION;
     private static volatile E100dColorProfile profile;
     private static final Map<String,LearnedFilmProfile> learned = new HashMap<>();
+    private static final java.util.concurrent.atomic.AtomicBoolean preparing=new java.util.concurrent.atomic.AtomicBoolean();
+    static void preparePreviews(Context context) {
+        if(!preparing.compareAndSet(false,true))return;
+        Context app=context.getApplicationContext();
+        java.util.concurrent.ExecutorService worker=java.util.concurrent.Executors.newSingleThreadExecutor();
+        worker.execute(()->{
+            try{learned(app,FilmCorrectionProfiles.latest("cine800t"));}catch(Exception error){android.util.Log.w("FilmCorrection","800T preparation deferred",error);}
+            for(String id:FilmCorrectionProfiles.IDS)try{learned(app,id);}catch(Exception error){android.util.Log.w("FilmCorrection","Profile preparation deferred",error);}
+        });worker.shutdown();
+    }
 
     private static byte[] verified(Context context,String asset,String expected) throws Exception {
         byte[] bytes;
@@ -49,9 +59,10 @@ final class FilmColorCorrection {
         boolean previous500Shadow=FilmCorrectionProfiles.OLD_500T_SHADOW.equals(id);
         boolean previous500Scene=FilmCorrectionProfiles.OLD_500T_SCENE.equals(id);
         boolean previous500Approved=FilmCorrectionProfiles.OLD_500T_APPROVED.equals(id);
-        if(index<0&&!previous&&!previous250&&!previous250Recovery&&!previous800&&!previousScene&&!previousGuard&&!previous500&&!previous500Shadow&&!previous500Scene&&!previous500Approved)throw new IOException("Unsupported recipe version");
-        byte[] bytes=verified(context,previous?FilmCorrectionProfiles.OLD_E100D_ASSET:previous250?FilmCorrectionProfiles.OLD_250D_ASSET:previous250Recovery?FilmCorrectionProfiles.OLD_250D_RECOVERY_ASSET:previous800?FilmCorrectionProfiles.OLD_800T_ASSET:previousScene?FilmCorrectionProfiles.OLD_800T_SCENE_ASSET:previousGuard?FilmCorrectionProfiles.OLD_800T_GUARD_ASSET:previous500?FilmCorrectionProfiles.OLD_500T_ASSET:previous500Shadow?FilmCorrectionProfiles.OLD_500T_SHADOW_ASSET:previous500Scene?FilmCorrectionProfiles.OLD_500T_SCENE_ASSET:previous500Approved?FilmCorrectionProfiles.OLD_500T_APPROVED_ASSET:FilmCorrectionProfiles.ASSETS[index],
-                previous?FilmCorrectionProfiles.OLD_E100D_HASH:previous250?FilmCorrectionProfiles.OLD_250D_HASH:previous250Recovery?FilmCorrectionProfiles.OLD_250D_RECOVERY_HASH:previous800?FilmCorrectionProfiles.OLD_800T_HASH:previousScene?FilmCorrectionProfiles.OLD_800T_SCENE_HASH:previousGuard?FilmCorrectionProfiles.OLD_800T_GUARD_HASH:previous500?FilmCorrectionProfiles.OLD_500T_HASH:previous500Shadow?FilmCorrectionProfiles.OLD_500T_SHADOW_HASH:previous500Scene?FilmCorrectionProfiles.OLD_500T_SCENE_HASH:previous500Approved?FilmCorrectionProfiles.OLD_500T_APPROVED_HASH:FilmCorrectionProfiles.HASHES[index]);
+        boolean previous500Content=FilmCorrectionProfiles.OLD_500T_CONTENT.equals(id);
+        if(index<0&&!previous&&!previous250&&!previous250Recovery&&!previous800&&!previousScene&&!previousGuard&&!previous500&&!previous500Shadow&&!previous500Scene&&!previous500Approved&&!previous500Content)throw new IOException("Unsupported recipe version");
+        byte[] bytes=verified(context,previous?FilmCorrectionProfiles.OLD_E100D_ASSET:previous250?FilmCorrectionProfiles.OLD_250D_ASSET:previous250Recovery?FilmCorrectionProfiles.OLD_250D_RECOVERY_ASSET:previous800?FilmCorrectionProfiles.OLD_800T_ASSET:previousScene?FilmCorrectionProfiles.OLD_800T_SCENE_ASSET:previousGuard?FilmCorrectionProfiles.OLD_800T_GUARD_ASSET:previous500?FilmCorrectionProfiles.OLD_500T_ASSET:previous500Shadow?FilmCorrectionProfiles.OLD_500T_SHADOW_ASSET:previous500Scene?FilmCorrectionProfiles.OLD_500T_SCENE_ASSET:previous500Approved?FilmCorrectionProfiles.OLD_500T_APPROVED_ASSET:previous500Content?FilmCorrectionProfiles.OLD_500T_CONTENT_ASSET:FilmCorrectionProfiles.ASSETS[index],
+                previous?FilmCorrectionProfiles.OLD_E100D_HASH:previous250?FilmCorrectionProfiles.OLD_250D_HASH:previous250Recovery?FilmCorrectionProfiles.OLD_250D_RECOVERY_HASH:previous800?FilmCorrectionProfiles.OLD_800T_HASH:previousScene?FilmCorrectionProfiles.OLD_800T_SCENE_HASH:previousGuard?FilmCorrectionProfiles.OLD_800T_GUARD_HASH:previous500?FilmCorrectionProfiles.OLD_500T_HASH:previous500Shadow?FilmCorrectionProfiles.OLD_500T_SHADOW_HASH:previous500Scene?FilmCorrectionProfiles.OLD_500T_SCENE_HASH:previous500Approved?FilmCorrectionProfiles.OLD_500T_APPROVED_HASH:previous500Content?FilmCorrectionProfiles.OLD_500T_CONTENT_HASH:FilmCorrectionProfiles.HASHES[index]);
         Context app=context.getApplicationContext();
         LearnedFilmProfile renderer=new LearnedFilmProfile(new String(bytes,StandardCharsets.UTF_8),asset -> {
             try {
@@ -102,6 +113,15 @@ final class FilmColorCorrection {
     static Bitmap apply(Context context,Bitmap original,String version,BooleanSupplier cancelled) throws Exception {
         return apply(context,original,version,cancelled,null);
     }
+    static Bitmap preview(Context context, Bitmap original, String version, BooleanSupplier cancelled, double hour) throws Exception {
+        if (E100D.equals(version)) return apply(context, original, cancelled);
+        if (FilmCorrectionProfiles.completePreview(version))
+            return apply(context, original, version, cancelled, null, hour);
+        int w=original.getWidth(), h=original.getHeight(); int[] pixels=new int[w*h];
+        original.getPixels(pixels,0,w,0,0,w,h);
+        learned(context,version).renderPreview(pixels,w,h,cancelled,hour);
+        return Bitmap.createBitmap(pixels,w,h,Bitmap.Config.ARGB_8888);
+    }
     static Bitmap analysisSource(Context context,File source,String version,BooleanSupplier cancelled) throws Exception {
         if(E100D.equals(version))return null;int edge=learned(context,version).analysisEdge();if(edge==0)return null;
         FilmRenderMath.check(cancelled);BitmapFactory.Options bounds=new BitmapFactory.Options();bounds.inJustDecodeBounds=true;BitmapFactory.decodeFile(source.getAbsolutePath(),bounds);
@@ -120,10 +140,6 @@ final class FilmColorCorrection {
         if(E100D.equals(version))return apply(context,original,cancelled);
         FilmRenderMath.check(cancelled);
         LearnedFilmProfile renderer=learned(context,version);
-        Runtime runtime=Runtime.getRuntime();
-        long available=runtime.maxMemory()-(runtime.totalMemory()-runtime.freeMemory());
-        int sample=ImageMemoryBudget.sampleSize(original.getWidth(),original.getHeight(),available,FilmCorrectionProfiles.workingBytes(version));
-        Bitmap working=original;
         Bitmap normalizedAnalysis=null;
         try {
             int[] analysisPixels=null;int aw=0,ah=0,edge=renderer.analysisEdge();
@@ -131,12 +147,12 @@ final class FilmColorCorrection {
                 Bitmap analysis=reference;if(longest!=edge){normalizedAnalysis=Bitmap.createScaledBitmap(reference,Math.max(1,(int)Math.rint(reference.getWidth()*edge/(double)longest)),Math.max(1,(int)Math.rint(reference.getHeight()*edge/(double)longest)),true);analysis=normalizedAnalysis;}
                 aw=analysis.getWidth();ah=analysis.getHeight();analysisPixels=new int[aw*ah];analysis.getPixels(analysisPixels,0,aw,0,0,aw,ah);
             }
-            if(sample>1)working=Bitmap.createScaledBitmap(original,Math.max(1,original.getWidth()/sample),Math.max(1,original.getHeight()/sample),true);
-            int w=working.getWidth(),h=working.getHeight();
-            int[] pixels=new int[w*h];working.getPixels(pixels,0,w,0,0,w,h);
+            // The caller chooses preview vs original size. Never shrink a render that may be saved.
+            int w=original.getWidth(),h=original.getHeight();
+            int[] pixels=new int[w*h];original.getPixels(pixels,0,w,0,0,w,h);
             if(FilmCorrectionProfiles.usesSceneTime(version))renderer.renderWithSceneTime(pixels,w,h,cancelled,analysisPixels,aw,ah,captureHour);
             else renderer.render(pixels,w,h,cancelled,analysisPixels,aw,ah);
             return Bitmap.createBitmap(pixels,w,h,Bitmap.Config.ARGB_8888);
-        } finally {if(working!=original)working.recycle();if(normalizedAnalysis!=null&&normalizedAnalysis!=original&&normalizedAnalysis!=opticalSource)normalizedAnalysis.recycle();}
+        } finally {if(normalizedAnalysis!=null&&normalizedAnalysis!=original&&normalizedAnalysis!=opticalSource)normalizedAnalysis.recycle();}
     }
 }

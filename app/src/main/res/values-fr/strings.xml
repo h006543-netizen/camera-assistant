@@ -1,4 +1,5 @@
 <resources>
+    <string name="correction_jobs_failed">Échec de la retouche pleine taille · Sélectionnez à nouveau le film</string>
     <string name="app_name">ShutterNote</string>
     <string name="distance_back">Retour</string>
     <string name="distance_reading">Distance : %1$s</string>

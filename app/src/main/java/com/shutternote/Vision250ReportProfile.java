@@ -11,6 +11,7 @@ final class Vision250ReportProfile {
     private final LearnedFilmProfile base;
     private final LearnedFilmGrain grain;
     private final double[] anchor,adjustment;
+    private final double[] anchorGain,adjustmentGain;
     private static final String[] PARAMETERS={"base_position","brightness","contrast","shadows","highlights","saturation","temperature","tint","red","green","blue"};
     private static final double[] LOW={0,-75,25,-75,-75,0,-150,-150,-75,-75,-75};
     private static final double[] HIGH={150,75,175,75,75,250,150,150,75,75,75};
@@ -26,6 +27,7 @@ final class Vision250ReportProfile {
         base=new LearnedFilmProfile(previous.toString(),noise);
         anchor=parameters(p.getJSONObject("anchor_parameters"));
         adjustment=parameters(p.getJSONObject("parameters"));
+        anchorGain=gains(anchor);adjustmentGain=gains(adjustment);
         if(p.getDouble("grain_percent")!=20 || p.getDouble("grain_rms_100_8bit")!=8)
             throw new JSONException("Unsupported 250D grain strength");
         grain=new LearnedFilmGrain(p.getJSONObject("grain"),p.getJSONObject("android_runtime"),noise);
@@ -48,11 +50,14 @@ final class Vision250ReportProfile {
         double t=clamp((v-lo)/(hi-lo));return t*t*(3-2*t);
     }
 
-    private static void grade(double r,double g,double b,double[] p,double[] out) {
+    private static double[] gains(double[] p) {
+        return new double[]{Math.exp(.11*p[6]/100+.05*p[7]/100+Math.log1p(p[8]/100)),
+                Math.exp(.008*p[6]/100-.10*p[7]/100+Math.log1p(p[9]/100)),
+                Math.exp(-.11*p[6]/100+.05*p[7]/100+Math.log1p(p[10]/100))};
+    }
+    private static void grade(double r,double g,double b,double[] p,double[] gain,double[] out) {
         double y=r*.2126+g*.7152+b*.0722;
-        double rr=r*Math.exp(.11*p[6]/100+.05*p[7]/100+Math.log1p(p[8]/100));
-        double gg=g*Math.exp(.008*p[6]/100-.10*p[7]/100+Math.log1p(p[9]/100));
-        double bb=b*Math.exp(-.11*p[6]/100+.05*p[7]/100+Math.log1p(p[10]/100));
+        double rr=r*gain[0],gg=g*gain[1],bb=b*gain[2];
         double ty=rr*.2126+gg*.7152+bb*.0722;
         double normalize=ty>0?y/ty:1;
         rr=(rr*normalize-y)*p[5]/100;gg=(gg*normalize-y)*p[5]/100;bb=(bb*normalize-y)*p[5]/100;
@@ -83,13 +88,13 @@ final class Vision250ReportProfile {
                 float old=((completed[i]>>>(16-c*8))&255)/255f;
                 rgb[c]=(float)(source+(float)(anchor[0]/100)*(old-source));
             }
-            grade(rgb[0],rgb[1],rgb[2],anchor,value);
+            grade(rgb[0],rgb[1],rgb[2],anchor,anchorGain,value);
             for(int c=0;c<3;c++) {
                 float source=((pixels[i]>>>(16-c*8))&255)/255f;
                 float frozen=(float)Math.rint(value[c]*255)/255f;
                 rgb[c]=Math.max(0f,Math.min(1f,source+(float)(adjustment[0]/100)*(frozen-source)));
             }
-            grade(rgb[0],rgb[1],rgb[2],adjustment,value);
+            grade(rgb[0],rgb[1],rgb[2],adjustment,adjustmentGain,value);
             completed[i]=(pixels[i]&0xff000000)|((int)Math.rint(value[0]*255)<<16)|
                     ((int)Math.rint(value[1]*255)<<8)|(int)Math.rint(value[2]*255);
         }

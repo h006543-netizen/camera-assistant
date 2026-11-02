@@ -5,6 +5,7 @@ import org.json.JSONObject;
 
 /** A saved cut. Exposure values are snapshots, independent of current camera settings. */
 final class FilmFrameRecord {
+    static final int NOTE_PREVIEW_EDGE = 1024;
     int number;
     int rotation;
     long capturedAt;
@@ -16,6 +17,11 @@ final class FilmFrameRecord {
     String correctionPhoto = "", correctionProfile = "";
     boolean correctionEnabled;
     long correctionRevision;
+    String correctionRequest = "", correctionRequestedProfile = "", correctionPreview = "";
+    int correctionPreviewEdge = NOTE_PREVIEW_EDGE;
+    long correctionQueuedAt;
+    boolean correctionFailed;
+    boolean correctionPreviewComplete;
     String photo = "", captureId = "", iso = "", aperture = "", shutter = "", fieldOfView = "", memo = "";
 
     JSONObject toJson() throws JSONException {
@@ -26,7 +32,11 @@ final class FilmFrameRecord {
                 .put("location", location == null ? JSONObject.NULL : location.toJson())
                 .put("locationRevision", locationRevision).put("scanPhoto", scanPhoto).put("scanRevision", scanRevision)
                 .put("correctionPhoto", correctionPhoto).put("correctionProfile", correctionProfile)
-                .put("correctionEnabled", correctionEnabled).put("correctionRevision", correctionRevision);
+                .put("correctionEnabled", correctionEnabled).put("correctionRevision", correctionRevision)
+                .put("correctionRequest", correctionRequest).put("correctionRequestedProfile", correctionRequestedProfile)
+                .put("correctionPreview", correctionPreview).put("correctionPreviewEdge", correctionPreviewEdge)
+                .put("correctionQueuedAt", correctionQueuedAt).put("correctionFailed", correctionFailed)
+                .put("correctionPreviewComplete", correctionPreviewComplete);
     }
 
     static FilmFrameRecord fromJson(JSONObject data) throws JSONException {
@@ -48,6 +58,16 @@ final class FilmFrameRecord {
         frame.correctionEnabled = data.optBoolean("correctionEnabled")
                 && (!frame.correctionProfile.isEmpty() || !frame.correctionPhoto.isEmpty());
         frame.correctionRevision = Math.max(0, data.optLong("correctionRevision"));
+        String request = data.optString("correctionRequest");
+        if (request.matches("[a-fA-F0-9-]{36}") && FilmCorrectionProfiles.supported(data.optString("correctionRequestedProfile"))) {
+            frame.correctionRequest = request; frame.correctionRequestedProfile = data.optString("correctionRequestedProfile");
+            String preview = data.optString("correctionPreview");
+            frame.correctionPreview = validCorrectionName(preview) ? preview : "";
+            frame.correctionPreviewEdge = Math.max(320, Math.min(1080, data.optInt("correctionPreviewEdge", NOTE_PREVIEW_EDGE)));
+            frame.correctionQueuedAt = data.optLong("correctionQueuedAt"); frame.correctionFailed = data.optBoolean("correctionFailed");
+            frame.correctionPreviewComplete=data.optBoolean("correctionPreviewComplete");
+            frame.correctionEnabled = data.optBoolean("correctionEnabled");
+        }
         frame.scanPhoto = FilmScanRules.validName(scan) ? scan : "";
         frame.scanRevision = Math.max(0, data.optLong("scanRevision", 0)); return frame;
     }
@@ -58,7 +78,10 @@ final class FilmFrameRecord {
         return name != null && name.matches("[A-Za-z0-9_-][A-Za-z0-9._-]*\\.jpg");
     }
     String displayPhotoName() { return correctionEnabled && validCorrectionName(correctionPhoto) ? correctionPhoto : photo; }
-    String imageKey() { return photo + ":" + correctionEnabled + ":" + correctionProfile + ":" + correctionRevision; }
+    boolean pendingCorrection() { return !correctionRequest.isEmpty(); }
+    boolean currentPreviewRenderer() { return !pendingCorrection() || !FilmCorrectionProfiles.completePreview(correctionRequestedProfile) || correctionPreviewComplete; }
+    String selectedProfile() { return pendingCorrection() ? correctionRequestedProfile : correctionProfile; }
+    String imageKey() { return photo + ":" + correctionPhoto + ":" + correctionEnabled + ":" + correctionProfile + ":" + correctionRevision + ":" + correctionRequest + ":" + correctionPreview; }
 
     static boolean rotate(FilmRollRecord roll, int cut, String capture) {
         FilmFrameRecord frame = roll.frame(cut);

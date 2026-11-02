@@ -92,14 +92,14 @@ public class FilmRecipeNoteUiTest {
             choose(detail,R.string.correction_original);photo(detail,R.id.noteDetailPhoto,originalPixel);
             main(()->detail.findViewById(R.id.noteDetailBack).performClick());
             photo(resumed(FilmRollFramesActivity.class),R.id.framePhoto,originalPixel);
-            FilmFrameRecord frame=store.find(id).frame(1);assertFalse(frame.correctionEnabled);assertFalse(cached.exists());
+            FilmFrameRecord frame=store.find(id).frame(1);assertFalse(frame.correctionEnabled);assertTrue(cached.exists());
             try(ActivityScenario<FilmScanComparisonActivity> comparison=ActivityScenario.launch(FilmScanComparisonActivity.intent(context,id,frame,false))) {
                 photo(resumed(FilmScanComparisonActivity.class),R.id.scanNoteImage,originalPixel);
             }
             assertTrue(store.photo(frame).isFile());
         }
     }
-    @Test public void originalChoiceStaysClearedAcrossRecreationAndReleasesCorrectedBitmap() throws Exception {
+    @Test public void originalChoiceRetainsPairAndRepeatedSelectionReusesBitmapAcrossRecreation() throws Exception {
         java.io.File cached=store.correction(store.find(id).frame(1));
         android.content.Intent intent=new android.content.Intent(context,FilmFrameDetailActivity.class)
                 .putExtra(FilmRollActivity.EXTRA_ROLL_ID,id).putExtra(FilmFrameCapture.NUMBER,1);
@@ -111,13 +111,22 @@ public class FilmRecipeNoteUiTest {
             choose(activity.get(),R.string.correction_original);photo(activity.get(),R.id.noteDetailPhoto,originalPixel);
             long deadline=SystemClock.uptimeMillis()+15000;
             while(store.find(id).frame(1).correctionEnabled&&SystemClock.uptimeMillis()<deadline)SystemClock.sleep(50);
-            assertFalse(store.find(id).frame(1).correctionEnabled);assertFalse(cached.exists());
+            assertFalse(store.find(id).frame(1).correctionEnabled);assertTrue(cached.exists());
+            assertFalse(old.get().isRecycled());
+            byte[] saved=java.nio.file.Files.readAllBytes(cached.toPath());long modified=cached.lastModified();
+            for(int repeat=0;repeat<3;repeat++) {
+                choose(activity.get(),R.string.correction_e100d);photo(activity.get(),R.id.noteDetailPhoto,correctedPixel);
+                main(()->assertSame(old.get(),((BitmapDrawable)((ImageView)activity.get().findViewById(R.id.noteDetailPhoto)).getDrawable()).getBitmap()));
+                assertEquals(cached,store.correction(store.find(id).frame(1)));assertEquals(modified,cached.lastModified());
+                assertArrayEquals(saved,java.nio.file.Files.readAllBytes(cached.toPath()));
+                choose(activity.get(),R.string.correction_original);photo(activity.get(),R.id.noteDetailPhoto,originalPixel);
+            }
             scenario.recreate();scenario.onActivity(activity::set);photo(activity.get(),R.id.noteDetailPhoto,originalPixel);
             assertTrue(old.get().isRecycled());
             main(()->assertEquals(activity.get().getString(R.string.correction_original),
                     ((android.widget.TextView)activity.get().findViewById(R.id.noteCorrectionCategory)).getText().toString()));
         }
-        assertTrue(old.get().isRecycled());assertFalse(cached.exists());
+        assertTrue(old.get().isRecycled());assertTrue(cached.exists());
     }
     @After public void cleanup() {
         if(id==null)return;

@@ -43,7 +43,7 @@ public class E100dCorrectionStorageTest {
     }
     private int countPhotos() { return Objects.requireNonNull(new File(context.getFilesDir(),"film_notes_photos").list()).length; }
 
-    @Test public void selectedCopyIsReusedAndClearingLeavesOnlyTheOriginal() throws Exception {
+    @Test public void originalSelectionKeepsBothFilesAndReselectionReusesSavedCorrection() throws Exception {
         save(7); FilmFrameRecord frame=frame(7); File raw=store.photo(frame);
         byte[] before=bytes(raw); File copy=store.correction(frame); assertTrue(copy.isFile()); assertEquals(2,countPhotos());
         byte[] cached=bytes(copy); long modified=copy.lastModified();
@@ -54,9 +54,10 @@ public class E100dCorrectionStorageTest {
         assertTrue(store.saveCorrection("roll",7,"shot-7",0,false,null));
         store=new FilmRollStore(context); frame=frame(7);
         assertFalse(frame.correctionEnabled); assertArrayEquals(before,bytes(raw));
-        assertFalse(copy.exists()); assertEquals(1,countPhotos());
+        assertTrue(copy.exists()); assertEquals(2,countPhotos());
         assertEquals("latest memo",frame.memo); assertEquals(270,frame.rotation);
-        assertTrue(store.saveCorrection("roll",7,"shot-7",1,true,FilmColorCorrection.E100D,corrected));
+        assertTrue(store.saveCorrection("roll",7,"shot-7",1,true,FilmColorCorrection.E100D));
+        assertEquals(copy,store.correction(frame(7)));assertEquals(modified,copy.lastModified());assertArrayEquals(cached,bytes(copy));
         assertTrue(frame(7).correctionEnabled); assertArrayEquals(before,bytes(raw)); assertEquals(2,countPhotos());
     }
     @Test public void staleOrFailedRecipeChangesKeepMetadataAndOriginal() throws Exception {
@@ -67,7 +68,7 @@ public class E100dCorrectionStorageTest {
         assertEquals(0,frame(1).correctionRevision); assertTrue(frame(1).correctionEnabled);
         assertTrue(store.correction(frame(1)).isFile()); assertEquals(2,countPhotos()); assertArrayEquals(before,bytes(raw));
         assertTrue(store.saveCorrection("roll",1,"shot-1",0,false,null));
-        assertFalse(store.saveCorrection("roll",1,"shot-1",0,true,FilmColorCorrection.E100D)); assertEquals(1,countPhotos());
+        assertFalse(store.saveCorrection("roll",1,"shot-1",0,true,FilmColorCorrection.E100D)); assertEquals(2,countPhotos());
     }
     @Test public void failedInitialSaveCleansOutputAndRetryDoesNotDuplicate() throws Exception {
         FilmFrameRecord frame=new FilmFrameRecord(); frame.number=1; frame.captureId="shot-1"; frame.correctionEnabled=true;
@@ -129,6 +130,94 @@ public class E100dCorrectionStorageTest {
         assertTrue(repaired.isFile()); assertTrue(store.photo(restored).isFile()); assertEquals(2,countPhotos());
         assertEquals(repaired,FilmNoteCorrectionCache.source(context,store,frame(1))); assertEquals(2,countPhotos());
     }
+    @Test public void reducedLegacyCopyIsDisplayedAndExportedWithoutRenderingOrReplacingIt() throws Exception {
+        // An unknown saved version proves no renderer is invoked to use an existing JPEG.
+        File copy=legacy("future-film-version");
+        Bitmap small=Bitmap.createScaledBitmap(corrected,48,32,true);
+        try(OutputStream out=new FileOutputStream(copy)) { assertTrue(small.compress(Bitmap.CompressFormat.JPEG,95,out)); }
+        finally {small.recycle();}
+        assertFalse(FilmRecipeImages.sameDimensions(store.photo(frame(1)),copy));
+        byte[] before=bytes(store.photo(frame(1))), saved=bytes(copy);
+        String metadata=store.find("roll").toJson().toString();
+        Bitmap preview=FilmNoteCorrectionCache.preview(context,store,frame(1),128,90,()->false);
+        try {assertEquals(32,preview.getWidth());assertEquals(48,preview.getHeight());}
+        finally {preview.recycle();}
+        assertEquals(copy,FilmNoteCorrectionCache.source(context,store,frame(1)));
+        File work=new File(context.getFilesDir(),"unchanged-export");
+        ByteArrayOutputStream out=new ByteArrayOutputStream();
+        FilmRollPhotoArchive.write(copy.getParentFile(),store.find("roll"),work,out,(file,degrees)->{},(done,total)->{},
+                (source,frame,output)->{throw new AssertionError("Existing copy must not be rendered");});
+        try(ZipInputStream zip=new ZipInputStream(new ByteArrayInputStream(out.toByteArray()))) {
+            assertNotNull(zip.getNextEntry());ByteArrayOutputStream jpeg=new ByteArrayOutputStream();
+            FilmRollPhotoArchive.copy(zip,jpeg);assertArrayEquals(saved,jpeg.toByteArray());
+        }
+        assertTrue(copy.isFile());assertEquals(2,countPhotos());
+        assertArrayEquals(before,bytes(store.photo(frame(1))));assertArrayEquals(saved,bytes(copy));
+        assertEquals(metadata,store.find("roll").toJson().toString());
+    }
+    @Test public void missingOrCancelledDisplayNeverCreatesOrChangesSavedPhotos() throws Exception {
+        File copy=legacy(FilmColorCorrection.E100D);
+        byte[] before=bytes(copy), raw=bytes(store.photo(frame(1)));
+        String metadata=store.find("roll").toJson().toString();
+        try {FilmNoteCorrectionCache.preview(context,store,frame(1),128,0,()->true);fail("Expected cancellation");}
+        catch(java.util.concurrent.CancellationException expected) { }
+        assertArrayEquals(before,bytes(copy));assertArrayEquals(raw,bytes(store.photo(frame(1))));
+        assertEquals(metadata,store.find("roll").toJson().toString());assertEquals(2,countPhotos());
+        assertTrue(copy.delete());
+        try {FilmNoteCorrectionCache.preview(context,store,frame(1),128,0,()->false);fail("Expected missing saved copy");}
+        catch(IOException expected) { }
+        assertFalse(copy.exists());assertEquals(1,countPhotos());
+        assertArrayEquals(raw,bytes(store.photo(frame(1))));assertEquals(metadata,store.find("roll").toJson().toString());
+    }
+    @Test public void displayDoesNotWaitForFullSizeSaveLock() throws Exception {
+        File copy=legacy("future-film-version");
+        java.util.concurrent.CountDownLatch held=new java.util.concurrent.CountDownLatch(1),release=new java.util.concurrent.CountDownLatch(1);
+        Thread saving=new Thread(()->{synchronized(FilmNoteCorrectionCache.class){held.countDown();
+            try {release.await();}catch(InterruptedException interrupted){Thread.currentThread().interrupt();}}});
+        java.util.concurrent.ExecutorService worker=java.util.concurrent.Executors.newSingleThreadExecutor();
+        saving.start();
+        try {
+            assertTrue(held.await(2,java.util.concurrent.TimeUnit.SECONDS));
+            java.util.concurrent.Future<Bitmap> display=worker.submit(()->FilmNoteCorrectionCache.preview(context,store,frame(1),128,0,()->false));
+            Bitmap preview=display.get(2,java.util.concurrent.TimeUnit.SECONDS);
+            try {assertEquals(96,preview.getWidth());}finally{preview.recycle();}
+            assertTrue(copy.isFile());assertEquals(2,countPhotos());
+        } finally {release.countDown();saving.join(2000);worker.shutdownNow();}
+    }
+    @Test public void storingReducedCorrectionIsRejectedWithoutChangingExistingPhoto() throws Exception {
+        save(1);File copy=store.correction(frame(1));byte[] before=bytes(copy);
+        String metadata=store.find("roll").toJson().toString();
+        Bitmap small=Bitmap.createScaledBitmap(corrected,48,32,true);
+        try {
+            assertFalse(store.saveCorrection("roll",1,"shot-1",0,true,FilmColorCorrection.E100D,small));
+            FilmFrameRecord added=new FilmFrameRecord();added.number=2;added.captureId="bad-size";
+            added.correctionEnabled=true;added.correctionProfile=FilmColorCorrection.E100D;
+            assertFalse(store.saveFrame("roll",added,original,small));assertNull(frame(2));
+        } finally {small.recycle();}
+        assertArrayEquals(before,bytes(copy));assertEquals(metadata,store.find("roll").toJson().toString());
+        assertEquals(2,countPhotos());
+    }
+    @Test public void originalSizeRenderAndExportPreserveLandscapeAndPortraitWhilePreviewShrinks() throws Exception {
+        for(int[] size:new int[][]{{2040,1360},{1360,2040}}) {
+            File source=new File(context.getFilesDir(),"dimensions-original.png");
+            File output=new File(context.getFilesDir(),"dimensions-export.jpg");
+            Bitmap full=Bitmap.createBitmap(size[0],size[1],Bitmap.Config.ARGB_8888);
+            full.eraseColor(Color.rgb(64,80,112));
+            try(OutputStream out=new FileOutputStream(source)) {assertTrue(full.compress(Bitmap.CompressFormat.PNG,100,out));}
+            finally {full.recycle();}
+            Bitmap preview=FilmRecipeImages.read(context,source,1024,0,"",()->false);
+            try {assertEquals(1020,Math.max(preview.getWidth(),preview.getHeight()));}
+            finally {preview.recycle();}
+            FilmFrameRecord recipe=new FilmFrameRecord();recipe.correctionEnabled=true;
+            recipe.correctionProfile=FilmCorrectionProfiles.latest("vision3-500t");recipe.sceneCaptureHour=12;
+            FilmRollExportViewModel.renderRecipe(context,source,recipe,output);
+            assertTrue(FilmRecipeImages.sameDimensions(source,output));
+            Bitmap rendered=FilmRecipeImages.read(context,source,Integer.MAX_VALUE,0,
+                    FilmCorrectionProfiles.latest("vision3-250d"),()->false);
+            try {assertEquals(size[0],rendered.getWidth());assertEquals(size[1],rendered.getHeight());}
+            finally {rendered.recycle();}
+        }
+    }
     @Test public void legacyReferenceToAnotherOriginalNeverDeletesThatPhoto() throws Exception {
         save(1); save(2); FilmRollRecord roll=store.find("roll");
         File other=store.photo(roll.frame(2)); byte[] before=bytes(other);
@@ -165,7 +254,8 @@ public class E100dCorrectionStorageTest {
         context.failNextCommit=true; assertFalse(FilmGalleryRecipeStore.select(context,capture,false));
         assertTrue(FilmGalleryRecipeStore.corrected(context,capture));
         assertTrue(FilmGalleryRecipeStore.select(context,capture,false)); assertFalse(FilmGalleryRecipeStore.corrected(context,capture));
-        assertFalse(cached.exists());
+        assertTrue(cached.exists());
+        assertTrue(FilmGalleryRecipeStore.select(context,capture,true));assertEquals(cached,FilmGalleryRecipeStore.correction(context,capture));
         assertFalse(new File(context.getFilesDir(),"film_notes_photos").exists());
     }
     @Test public void androidBitmapRendererMatchesSuppliedFixtureAndDoesNotChangeSourcePixels() throws Exception {

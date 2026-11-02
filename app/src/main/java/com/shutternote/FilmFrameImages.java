@@ -32,9 +32,11 @@ final class FilmFrameImages {
             Bitmap bitmap = null;
             try {
                 if (Thread.currentThread().isInterrupted() || !file.isFile()) return;
-                File selected = store == null ? file : FilmNoteCorrectionCache.source(target.getContext().getApplicationContext(), store, frame);
-                bitmap = FilmRecipeImages.read(target.getContext().getApplicationContext(), selected, edge, rotation,
-                        "", () -> Thread.currentThread().isInterrupted());
+                bitmap = store == null
+                        ? FilmRecipeImages.read(target.getContext().getApplicationContext(), file, edge, rotation,
+                                "", () -> Thread.currentThread().isInterrupted())
+                        : FilmNoteCorrectionCache.preview(target.getContext().getApplicationContext(), store, frame,
+                                edge, rotation, () -> Thread.currentThread().isInterrupted());
                 Bitmap result = bitmap;
                 if (Thread.currentThread().isInterrupted()) { if (result != null) result.recycle(); return; }
                 target.post(() -> {

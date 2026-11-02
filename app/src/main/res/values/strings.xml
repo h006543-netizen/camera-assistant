@@ -1,4 +1,5 @@
 <resources>
+    <string name="correction_jobs_failed">원본 크기 보정 실패 · 필름을 다시 선택해 재시도하세요</string>
     <string name="app_name">ShutterNote</string>
     <string name="distance_back">뒤로가기</string>
     <string name="distance_reading">대상까지 %1$s</string>

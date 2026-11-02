@@ -269,6 +269,8 @@ public class FilmResultActivity extends AppCompatActivity {
     }
 
     private Bitmap renderFilmCorrection(Bitmap source,String profile,double multiplier,java.util.function.BooleanSupplier cancelled) throws Exception {
+        if (FilmFrameCapture.isNote(getIntent())) return FilmColorCorrection.preview(getApplicationContext(),source,profile,cancelled,
+                FilmCorrectionProfiles.usesSceneTime(profile)?FilmSceneMetadata.captureHour(new File(imagePath),FilmFrameCapture.captureHour(getIntent())):Double.NaN);
         File file=new File(imagePath);Bitmap analysis=FilmColorCorrection.analysisSource(getApplicationContext(),file,profile,cancelled);
         try {
             if(analysis!=null){Bitmap oriented=rotateFromExif(analysis,file);if(oriented!=analysis){analysis.recycle();analysis=oriented;}
@@ -289,7 +291,7 @@ public class FilmResultActivity extends AppCompatActivity {
 
         Runtime runtime = Runtime.getRuntime();
         long available = runtime.maxMemory() - (runtime.totalMemory() - runtime.freeMemory());
-        int sampleSize = ImageMemoryBudget.sampleSize(bounds.outWidth, bounds.outHeight, available,
+        int sampleSize = maximumEdge == Integer.MAX_VALUE ? 1 : ImageMemoryBudget.sampleSize(bounds.outWidth, bounds.outHeight, available,
                 FilmFrameCapture.isNote(getIntent()) && maximumEdge!=Integer.MAX_VALUE?80:16);
         int largestEdge = Math.max(bounds.outWidth, bounds.outHeight);
         while (largestEdge / (sampleSize * 2) >= maximumEdge) {
@@ -329,7 +331,8 @@ public class FilmResultActivity extends AppCompatActivity {
                 getResources().getDisplayMetrics().widthPixels,
                 getResources().getDisplayMetrics().heightPixels
         );
-        return Math.max(1, Math.min(MAX_PREVIEW_EDGE, screenLargestEdge));
+        return FilmFrameCapture.isNote(getIntent()) ? FilmFrameRecord.NOTE_PREVIEW_EDGE
+                : Math.max(1, Math.min(MAX_PREVIEW_EDGE, screenLargestEdge));
     }
 
     private Bitmap rotateFromExif(Bitmap source, File file) throws IOException {
@@ -419,21 +422,23 @@ public class FilmResultActivity extends AppCompatActivity {
         correctionSelected = selected;
         if (!selected) displayBitmap(originalBitmap);
         setProcessing(true); int generation = processingGeneration.incrementAndGet();
+        Bitmap retained = correctedBitmap;
         processingExecutor.execute(() -> {
             Bitmap preview = null;
             boolean success = FilmGalleryRecipeStore.select(getApplicationContext(), imagePath, selected);
             if (success && selected) try {
-                preview = decodeScaledBitmap(FilmGalleryRecipeStore.correction(getApplicationContext(), imagePath), getPreviewMaximumEdge());
+                preview = retained != null && !retained.isRecycled() ? retained
+                        : decodeScaledBitmap(FilmGalleryRecipeStore.correction(getApplicationContext(), imagePath), getPreviewMaximumEdge());
             } catch (Exception | OutOfMemoryError ignored) { }
             Bitmap rendered = preview;
             runOnUiThread(() -> {
-                if (isDestroyed() || isFinishing() || generation != processingGeneration.get()) { recycleIfNeeded(rendered); return; }
+                if (isDestroyed() || isFinishing() || generation != processingGeneration.get()) { if(rendered!=retained)recycleIfNeeded(rendered); return; }
                 if (success) {
                     Bitmap previous = correctedBitmap;
                     viewingOriginal = !selected;
-                    correctionSelected = selected; correctedBitmap = rendered;
+                    correctionSelected = selected; correctedBitmap = selected ? rendered : previous;
                     displayBitmap(selected && !viewingOriginal && rendered != null ? rendered : originalBitmap);
-                    if (previous != rendered) recycleIfNeeded(previous);
+                    if (previous != correctedBitmap) recycleIfNeeded(previous);
                 } else {
                     correctionSelected = previousSelection;
                     displayBitmap(correctionSelected && !viewingOriginal ? correctedBitmap : originalBitmap);
@@ -545,7 +550,7 @@ public class FilmResultActivity extends AppCompatActivity {
                     rotated.recycle();
                 }
                 rotated = null;
-                if (applyCorrection) corrected = renderFilmCorrection(finalBitmap,profileToSave,multiplierToSave, () -> false);
+                if (applyCorrection && !FilmFrameCapture.isNote(getIntent())) corrected = renderFilmCorrection(finalBitmap,profileToSave,multiplierToSave, () -> false);
 
                 if (FilmFrameCapture.isNote(getIntent())) {
                     FilmFrameRecord frame = new FilmFrameRecord();
@@ -558,10 +563,15 @@ public class FilmResultActivity extends AppCompatActivity {
                     frame.iso = capturedIso; frame.aperture = capturedAperture;
                     frame.shutter = capturedShutter; frame.fieldOfView = capturedFieldOfView;
                     frame.correctionEnabled = applyCorrection;
-                    frame.correctionProfile = applyCorrection ? profileToSave : "";
+                    frame.correctionProfile = "";
+                    if (applyCorrection) {
+                        frame.correctionRequest=java.util.UUID.randomUUID().toString(); frame.correctionRequestedProfile=profileToSave;
+                        frame.correctionPreviewEdge=getPreviewMaximumEdge(); frame.correctionQueuedAt=System.currentTimeMillis();
+                    }
                     if (!new FilmRollStore(getApplicationContext()).saveFrame(
                             getIntent().getStringExtra(FilmFrameCapture.ROLL), frame, finalBitmap, corrected))
                         throw new IOException("Note cut could not be committed");
+                    if (applyCorrection) FilmCorrectionJobs.selectionChanged(getApplicationContext(),frame.captureId);
                     noteLocation.saved();
                 } else {
                     Uri output = writeToGallery(finalBitmap, "");

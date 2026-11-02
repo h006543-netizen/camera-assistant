@@ -22,6 +22,10 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static androidx.test.espresso.matcher.RootMatchers.isPlatformPopup;
 
 /** Generated notes and exact returned gallery URIs only; no user photos. */
 @RunWith(AndroidJUnit4.class)
@@ -61,8 +65,72 @@ public class FilmNoteGallerySaveTest {
     @Test public void originalCopyIsByteExactAndLeavesNoteUntouched() throws Exception {
         FilmFrameRecord frame = frame(); byte[] source = read(store.photo(frame)); String before = store.find(id).toJson().toString();
         Uri output = FilmNoteGallerySaver.save(context, frame); outputs.add(output);
+        try (Cursor cursor = context.getContentResolver().query(output,
+                new String[]{MediaStore.Images.Media.DISPLAY_NAME}, null, null, null)) {
+            assertNotNull(cursor); assertTrue(cursor.moveToFirst());
+            assertEquals(GalleryFileNameBuilder.buildNote(frame, ""), cursor.getString(0));
+        }
         assertArrayEquals(source, read(output)); assertArrayEquals(source, read(store.photo(frame)));
         assertEquals(before, store.find(id).toJson().toString());
+    }
+    @Test public void detailAndGalleryUseReducedSavedCopyWithoutRebuildingIt() throws Exception {
+        selectProfile(FilmCorrectionProfiles.IDS[0]);
+        File copy=store.correction(frame());
+        Bitmap small=Bitmap.createBitmap(80,48,Bitmap.Config.ARGB_8888);small.eraseColor(Color.rgb(110,75,45));
+        try(OutputStream out=new FileOutputStream(copy)){assertTrue(small.compress(Bitmap.CompressFormat.JPEG,95,out));}
+        finally{small.recycle();}
+        byte[] before=read(copy),raw=read(store.photo(frame()));String metadata=store.find(id).toJson().toString();
+        Intent intent=new Intent(context,FilmFrameDetailActivity.class).putExtra(FilmRollActivity.EXTRA_ROLL_ID,id)
+                .putExtra(FilmFrameCapture.NUMBER,1);
+        try(ActivityScenario<FilmFrameDetailActivity> scenario=ActivityScenario.launch(intent)) {
+            AtomicBoolean ready=new AtomicBoolean();long deadline=SystemClock.uptimeMillis()+10000;
+            while(!ready.get()&&SystemClock.uptimeMillis()<deadline) {
+                scenario.onActivity(activity->{
+                    android.graphics.drawable.Drawable drawable=((android.widget.ImageView)activity.findViewById(R.id.noteDetailPhoto)).getDrawable();
+                    ready.set(drawable instanceof android.graphics.drawable.BitmapDrawable
+                            && ((android.graphics.drawable.BitmapDrawable)drawable).getBitmap().getWidth()==80);
+                });SystemClock.sleep(25);
+            }
+            assertTrue("Stored reduced JPEG did not display directly",ready.get());
+        }
+        Uri output=FilmNoteGallerySaver.save(context,frame());outputs.add(output);
+        assertArrayEquals(before,read(output));assertArrayEquals(before,read(copy));assertArrayEquals(raw,read(store.photo(frame())));
+        assertEquals(metadata,store.find(id).toJson().toString());
+    }
+    @Test public void missingCopyShowsOriginalAndExplicitFilmSelectionRestoresIt() throws Exception {
+        selectProfile(FilmCorrectionProfiles.IDS[0]);File copy=store.correction(frame());assertTrue(copy.delete());
+        byte[] raw=read(store.photo(frame()));String metadata=store.find(id).toJson().toString();
+        Intent intent=new Intent(context,FilmFrameDetailActivity.class).putExtra(FilmRollActivity.EXTRA_ROLL_ID,id)
+                .putExtra(FilmFrameCapture.NUMBER,1);
+        try(ActivityScenario<FilmFrameDetailActivity> scenario=ActivityScenario.launch(intent)) {
+            AtomicBoolean ready=new AtomicBoolean();long deadline=SystemClock.uptimeMillis()+10000;
+            java.util.concurrent.atomic.AtomicReference<Bitmap> fallback=new java.util.concurrent.atomic.AtomicReference<>();
+            while(!ready.get()&&SystemClock.uptimeMillis()<deadline) {
+                scenario.onActivity(activity->{
+                    android.graphics.drawable.Drawable drawable=((android.widget.ImageView)activity.findViewById(R.id.noteDetailPhoto)).getDrawable();
+                    ready.set(drawable instanceof android.graphics.drawable.BitmapDrawable
+                            && ((android.graphics.drawable.BitmapDrawable)drawable).getBitmap().getWidth()==160
+                            && activity.findViewById(R.id.noteCorrectionCategory).isEnabled());
+                    if(ready.get())fallback.set(((android.graphics.drawable.BitmapDrawable)drawable).getBitmap());
+                });SystemClock.sleep(25);
+            }
+            assertTrue("Original fallback did not display",ready.get());
+            assertFalse(copy.exists());assertEquals(metadata,store.find(id).toJson().toString());
+            scenario.onActivity(activity->activity.findViewById(R.id.noteCorrectionCategory).performClick());
+            androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().waitForIdleSync();SystemClock.sleep(200);
+            onView(withText(R.string.correction_50d)).inRoot(isPlatformPopup()).perform(click());
+            ready.set(false);deadline=SystemClock.uptimeMillis()+20000;
+            while((!ready.get()||frame().pendingCorrection())&&SystemClock.uptimeMillis()<deadline){
+                scenario.onActivity(activity->{android.graphics.drawable.Drawable drawable=((android.widget.ImageView)activity.findViewById(R.id.noteDetailPhoto)).getDrawable();
+                    ready.set(drawable instanceof android.graphics.drawable.BitmapDrawable
+                            && ((android.graphics.drawable.BitmapDrawable)drawable).getBitmap()!=fallback.get()
+                            && activity.findViewById(R.id.noteCorrectionCategory).isEnabled());});SystemClock.sleep(25);
+            }
+            assertTrue("Explicit selection did not restore and refresh the saved correction",ready.get());
+            assertTrue(store.correction(frame()).isFile());assertNotEquals(copy,store.correction(frame()));
+        }
+        assertFalse(copy.exists());assertArrayEquals(raw,read(store.photo(frame())));
+        assertTrue(frame().correctionEnabled);assertTrue(FilmRecipeImages.sameDimensions(store.photo(frame()),store.correction(frame())));
     }
     @Test public void correctedCopyReusesJpegAndRotationOnlyChangesOutputExif() throws Exception {
         FilmFrameRecord frame = frame();
@@ -145,7 +213,7 @@ public class FilmNoteGallerySaveTest {
             // One explicit click group produces exactly one photo, even across recreation.
             try (Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                     new String[]{MediaStore.Images.Media._ID}, MediaStore.Images.Media.DISPLAY_NAME + " LIKE ?",
-                    new String[]{"ISO" + id + "%_Note_%"}, null)) { assertNotNull(cursor); assertEquals(1, cursor.getCount()); }
+                    new String[]{"ISO" + id + "%"}, null)) { assertNotNull(cursor); assertEquals(1, cursor.getCount()); }
             scenario.onActivity(activity -> activity.findViewById(R.id.noteDetailPhoto).performClick());
             scenario.onActivity(activity -> assertEquals(View.GONE, activity.findViewById(R.id.noteDetailHeader).getVisibility()));
             scenario.onActivity(activity -> activity.getOnBackPressedDispatcher().onBackPressed());

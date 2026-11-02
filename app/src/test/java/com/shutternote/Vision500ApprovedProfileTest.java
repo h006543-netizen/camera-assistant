@@ -24,7 +24,8 @@ public class Vision500ApprovedProfileTest {
         assertEquals("vision3-500t-"+p.getString("model_version"),FilmCorrectionProfiles.OLD_500T_APPROVED);
         assertTrue(FilmCorrectionProfiles.supported(FilmCorrectionProfiles.OLD_500T_SCENE));
         assertEquals("vision3-500t",FilmCorrectionProfiles.key(FilmCorrectionProfiles.OLD_500T_SCENE));
-        assertEquals(112,FilmCorrectionProfiles.workingBytes(FilmCorrectionProfiles.latest("vision3-500t")));
+        assertEquals(112,FilmCorrectionProfiles.workingBytes(FilmCorrectionProfiles.OLD_500T_APPROVED));
+        assertEquals(120,FilmCorrectionProfiles.workingBytes(FilmCorrectionProfiles.latest("vision3-500t")));
     }
     @Test public void calibratedNightDayAndMixedMatchPython() throws Exception {
         JSONObject fixture=new JSONObject(new String(getClass().getResourceAsStream("/vision500_approved_parity.json").readAllBytes(),java.nio.charset.StandardCharsets.UTF_8));

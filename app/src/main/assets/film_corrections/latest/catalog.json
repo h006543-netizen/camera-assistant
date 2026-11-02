@@ -99,27 +99,28 @@
     {
       "key": "vision3-500t",
       "label": "500T",
-      "id": "vision3-500t-47ff02b7-1ba1-55ce-b352-e7ddad32412b",
-      "default_recipe_id": "vision3-500t-47ff02b7-1ba1-55ce-b352-e7ddad32412b-scene-time-v1",
+      "id": "vision3-500t-33784b9c-6d9e-52ae-89d6-ec5e2f0d1b2e",
+      "default_recipe_id": "vision3-500t-33784b9c-6d9e-52ae-89d6-ec5e2f0d1b2e-scene-time-v1",
       "scene_policy": {
-        "method": "photo_similarity_weak_local_capture_time_v1",
+        "method": "independent_confidence_source_preservation_v1",
         "hard_mean_brightness_limits": false,
         "max_time_blend_weight": 0.1,
-        "time_weight": "0.1 * 4 * photo_day_weight * (1 - photo_day_weight)",
+        "time_weight": "within_supported_grade_weight_only; does_not_reduce_source_preservation",
         "clock_day_hint": "0.5 + 0.5 * cos((local_capture_hour - 12) * pi / 12)",
         "time_cannot_reverse_photo_majority": true,
         "missing_or_untrusted_capture_time": "photo_only",
-        "manual_scene_ui": false
+        "manual_scene_ui": false,
+        "uncertainty": "source_rgb"
       },
       "source_run_id": "afea45eb-458b-4c64-a391-3790e680e276",
-      "created_at": "2026-10-29T00:00:00+09:00",
-      "origin": "learned_content_scene_routing_over_approved_tuning",
-      "evaluation_scope": "held_out_targets_and_local_scene_group_diagnostics",
-      "asset": "film_corrections/latest/vision3-500t-content-v1.json",
-      "sha256": "492bd740de887883ae78d54161e12eb847c2c1d608bc9c5ca90abb73a70056a1",
+      "created_at": "2026-11-02T00:00:00+09:00",
+      "origin": "confidence_source_preservation_policy_no_retraining",
+      "evaluation_scope": "local_regression_not_independent_film_accuracy",
+      "asset": "film_corrections/latest/vision3-500t-confidence-v1.json",
+      "sha256": "dc4d2bfb745d4cd63a84203ac14c8be3e2cbe0d757b5dfa9111c4439a8d8d55e",
       "baseline_mean_delta_e00": 5.920962239119835,
       "baseline_id": "vision3-500t-afea45eb-458b-4c64-a391-3790e680e276",
-      "selection_basis": "user_approved_night_report_20261029_120227_preserve_day_B",
+      "selection_basis": "independent_day_night_confidence_remaining_weight_preserves_source",
       "night_baseline_id": "vision3-500t-7238369c-3982-5f1f-ab94-6bfa4569d791",
       "day_parameters": {
         "base_percent": 85,
@@ -147,9 +148,11 @@
       "grain_reference": "unpaired_500t_scan_luminance_texture_native_6774px_fine_synthetic",
       "previous_scene_id": "vision3-500t-552f290f-8336-53b0-bdbf-d9ce02ceb54b",
       "night_report": "outputs/500T_Night_Tuner/report-20261029-120227-16ecbc",
-      "transition": "continuous_blend_of_complete_day_and_approved_night_outputs",
+      "transition": "confidence_weighted_grade_to_source_no_uncertainty_to_day",
       "classifier_method": "source_spatial_colour_texture_rbf_v1",
-      "colour_tuning_changed": false
+      "colour_tuning_changed": false,
+      "previous_content_id": "vision3-500t-47ff02b7-1ba1-55ce-b352-e7ddad32412b",
+      "report": "outputs/analysis/500t-confidence-20261102/index.html"
     }
   ],
   "grain_atlases": [

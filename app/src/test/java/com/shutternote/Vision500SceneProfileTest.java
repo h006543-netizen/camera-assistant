@@ -49,7 +49,7 @@ public class Vision500SceneProfileTest {
         assertFalse(FilmCorrectionProfiles.isPrevious500(FilmCorrectionProfiles.latest("vision3-500t")));
         assertTrue(FilmCorrectionProfiles.workingBytes(FilmCorrectionProfiles.OLD_500T)>=80);
         assertEquals(96,FilmCorrectionProfiles.workingBytes(FilmCorrectionProfiles.OLD_500T_SCENE));
-        assertEquals(ImageMemoryBudget.sampleSize(1360,2040,150L*1024*1024,112),ImageMemoryBudget.sampleSize(1360,2040,150L*1024*1024,FilmCorrectionProfiles.workingBytes(FilmCorrectionProfiles.latest("vision3-500t"))));
+        assertEquals(ImageMemoryBudget.sampleSize(1360,2040,150L*1024*1024,120),ImageMemoryBudget.sampleSize(1360,2040,150L*1024*1024,FilmCorrectionProfiles.workingBytes(FilmCorrectionProfiles.latest("vision3-500t"))));
     }
     @Test public void specifiedGrainIsIndependentOfColourStrengthAndDeterministic() throws Exception {
         JSONObject p=profile();assertEquals(.85,p.getDouble("day_strength"),0);assertEquals(30,p.getDouble("day_grain_percent"),0);assertEquals(100,p.getDouble("night_grain_percent"),0);

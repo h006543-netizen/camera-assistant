@@ -84,9 +84,18 @@ final class E100dManualProfile {
         double a=smooth(lightGate[0],lightGate[1],Math.pow(light/n,.25)),b=smooth(blueGate[0],blueGate[1],blueArea/n);
         return 1-(1-a)*(1-b);
     }
-    private double[] smoothBase(double[] source) {
+    /** Scratch arrays are private to a render and reset for each uncached RGB value. */
+    private static final class Workspace {
+        final double[][] values=new double[32][5];int at;
+        double[] next(){return values[at++];}
+        double[] zeros(){double[] v=next();Arrays.fill(v,0);return v;}
+        double[] rgb(double r,double g,double b){double[] v=next();v[0]=r;v[1]=g;v[2]=b;return v;}
+        double[] copy(double[] source){return rgb(source[0],source[1],source[2]);}
+        double[] harmonics(double theta){double[] v=next();v[0]=1;v[1]=Math.cos(theta);v[2]=Math.sin(theta);v[3]=Math.cos(2*theta);v[4]=Math.sin(2*theta);return v;}
+    }
+    private double[] smoothBase(double[] source,Workspace work) {
         double[] hv=hsv(source[0],source[1],source[2]);double s=hv[1],v=hv[2],theta=hv[0]*Math.PI/180;
-        double[] harmonic={1,Math.cos(theta),Math.sin(theta),Math.cos(2*theta),Math.sin(2*theta)},weights=new double[5];
+        double[] harmonic=work.harmonics(theta),weights=work.zeros();
         double confidence=s*s/(s*s+.25*.25),total=0;
         weights[0]=1-confidence;
         for(int i=0;i<4;i++){weights[i+1]=Math.exp(2*Math.cos(theta-(45+90*i)*Math.PI/180));total+=weights[i+1];}
@@ -95,47 +104,47 @@ final class E100dManualProfile {
         double t=0;
         for(int j=0;j<6;j++){double slope=0;for(int i=0;i<5;i++)slope+=weights[i]*slopes[i*6+j];t+=basis[j]*slope;}
         double logit=0;for(int i=0;i<5;i++)logit+=harmonic[i]*q[i];double sig=1/(1+Math.exp(-Math.max(-30,Math.min(30,logit))));
-        double extra=saturation*sig*s*s/(s*s+.12*.12),multiplier=(1+extra)/(1+extra*s);double[] out=new double[3];
+        double extra=saturation*sig*s*s/(s*s+.12*.12),multiplier=(1+extra)/(1+extra*s);double[] out=work.next();
         for(int c=0;c<3;c++)out[c]=(float)clamp(t*(1-(1-(v>0?source[c]/v:1))*multiplier));return out;
     }
-    private double[] dense(double[] base,double black,double amount) {
+    private double[] dense(double[] base,double black,double amount,Workspace work) {
         double v=max(base),den=v+black*amount*(1-v)*(1-v),scale=v>0&&den>0?v/den:1;
-        double[] out={base[0]*scale,base[1]*scale,base[2]*scale};floats(out);return out;
+        double[] out=work.rgb(base[0]*scale,base[1]*scale,base[2]*scale);floats(out);return out;
     }
-    private double[] transmit(double[] base,double black,double red,double amount) {
-        double[] z=dense(base,black,amount);double v=max(z),depth=red*amount*v*v/(v*v+protection*protection);double[] out=new double[3];
+    private double[] transmit(double[] base,double black,double red,double amount,Workspace work) {
+        double[] z=dense(base,black,amount,work);double v=max(z),depth=red*amount*v*v/(v*v+protection*protection);double[] out=work.next();
         for(int c=0;c<3;c++){double gain=Math.exp(depth*(c==0?-1:c==1?-greenRatio:1));out[c]=(float)(z[c]*gain/(1+z[c]*(gain-1)));}return out;
     }
-    private double[] directGreen(double[] rgb,double gain,double amount) {
+    private double[] directGreen(double[] rgb,double gain,double amount,Workspace work) {
         double g=rgb[1],room=1-g,desired=g*gain*amount*smooth(.08,.25,max(rgb));
-        double[] result=rgb.clone();result[1]=(float)Math.min(g+(room>0?room*(-Math.expm1(-desired/room)):0),1);return result;
+        double[] result=work.copy(rgb);result[1]=(float)Math.min(g+(room>0?room*(-Math.expm1(-desired/room)):0),1);return result;
     }
-    private double[] legacy(double[] base,double amount) {
-        double[] original=transmit(base,density,attenuation,amount),dense=dense(base,density,amount),candidate=original.clone();
+    private double[] legacy(double[] base,double amount,Workspace work) {
+        double[] original=transmit(base,density,attenuation,amount,work),dense=dense(base,density,amount,work),candidate=work.copy(original);
         double gate=smooth(.08,.25,max(original)),blueDelta=Math.max(original[2]-dense[2],0);
         candidate[2]-=(1-blueScale)*gate*blueDelta;
         candidate[1]+=teal*amount*gate*original[1]*(1-original[1])+transfer*gate*blueDelta;floats(candidate);
-        double y=luma(original[0],original[1],original[2]),cy=luma(candidate[0],candidate[1],candidate[2]),scale=cy>0?y/cy:1,limit=1;double[] delta=new double[3],old=new double[3];
+        double y=luma(original[0],original[1],original[2]),cy=luma(candidate[0],candidate[1],candidate[2]),scale=cy>0?y/cy:1,limit=1;double[] delta=work.next(),old=work.next();
         for(int c=0;c<3;c++){delta[c]=(float)((float)(candidate[c]*scale)-original[c]);if(delta[c]>0)limit=Math.min(limit,(1-original[c])/delta[c]);else if(delta[c]<0)limit=Math.min(limit,original[c]/-delta[c]);}
         for(int c=0;c<3;c++)old[c]=gate==0?original[c]:(float)clamp(original[c]+clamp(limit)*delta[c]);
         double green=gate*(teal*amount*original[1]*(1-original[1])+transfer*blueDelta);
         double extra=(greenEffect-1)*green*smooth(.08,.25,max(old)),ratio=Y[1]/Y[0];extra=Math.min(extra,Math.min(1-old[1],old[0]/ratio));
         old[0]=(float)Math.max(old[0]-ratio*extra,0);old[1]=(float)Math.min(old[1]+extra,1);
-        return directGreen(old,legacyGreen,amount);
+        return directGreen(old,legacyGreen,amount,work);
     }
-    private double[] pixel(double[] source,double amount) {
-        double[] approved=legacy(smoothBase(source),amount),base=new double[3];
+    private double[] pixel(double[] source,double amount,Workspace work) {
+        double[] approved=legacy(smoothBase(source,work),amount,work),base=work.next();
         for(int c=0;c<3;c++)base[c]=(float)(source[c]+(float)(basePercent/100)*(float)(approved[c]-source[c]));
-        double[] value=bluePercent==0&&blackPercent==0?base:transmit(base,Math.min(blackPercent,50)/100,attenuation*bluePercent/100,amount);
-        if(blackPercent>50)value=dense(value,(blackPercent-50)/100,1);
-        return directGreen(value,greenPercent/100,amount);
+        double[] value=bluePercent==0&&blackPercent==0?base:transmit(base,Math.min(blackPercent,50)/100,attenuation*bluePercent/100,amount,work);
+        if(blackPercent>50)value=dense(value,(blackPercent-50)/100,1,work);
+        return directGreen(value,greenPercent/100,amount,work);
     }
     void render(int[] pixels,int w,int h,BooleanSupplier cancelled) {
         if(w<=0||h<=0||(long)w*h!=pixels.length)throw new IllegalArgumentException("Invalid image");
-        check(cancelled);double amount=strength(pixels,w,h,cancelled);int[] output=new int[pixels.length];FilmPixelCache.Packed cache=new FilmPixelCache.Packed(pixels.length);
+        check(cancelled);double amount=strength(pixels,w,h,cancelled);int[] output=new int[pixels.length];FilmPixelCache.Packed cache=new FilmPixelCache.Packed(pixels.length);Workspace work=new Workspace();
         for(int i=0;i<pixels.length;i++) {
             if((i&1023)==0)check(cancelled);int px=pixels[i],key=px&0xffffff,value=cache.get(key);
-            if(value<0){double[] source={((px>>>16)&255)/255f,((px>>>8)&255)/255f,(px&255)/255f};double[] rgb=pixel(source,amount);value=((int)Math.rint(clamp(rgb[0])*255)<<16)|((int)Math.rint(clamp(rgb[1])*255)<<8)|(int)Math.rint(clamp(rgb[2])*255);cache.put(key,value);}
+            if(value<0){work.at=0;double[] source=work.rgb(((px>>>16)&255)/255f,((px>>>8)&255)/255f,(px&255)/255f);double[] rgb=pixel(source,amount,work);value=((int)Math.rint(clamp(rgb[0])*255)<<16)|((int)Math.rint(clamp(rgb[1])*255)<<8)|(int)Math.rint(clamp(rgb[2])*255);cache.put(key,value);}
             output[i]=(px&0xff000000)|value;
         }
         check(cancelled);System.arraycopy(output,0,pixels,0,pixels.length);

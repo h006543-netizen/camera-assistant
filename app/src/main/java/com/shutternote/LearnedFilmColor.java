@@ -53,6 +53,12 @@ final class LearnedFilmColor {
     }
 
     float[] render(int[] source,int w,int h,BooleanSupplier cancelled) {
+        return render(source,w,h,cancelled,false);
+    }
+    float[] renderPreview(int[] source,int w,int h,BooleanSupplier cancelled) {
+        return render(source,w,h,cancelled,true);
+    }
+    private float[] render(int[] source,int w,int h,BooleanSupplier cancelled,boolean preview) {
         check(cancelled);
         double[] d=E100dColorProfile.descriptor(source,w,h), weights=new double[references];
         for(int i=0;i<references;i++) {
@@ -75,6 +81,21 @@ final class LearnedFilmColor {
             tint[i*3]=r-y; tint[i*3+1]=g-y; tint[i*3+2]=b-y;
         }
         tone=monotone(tone); for(int i=0;i<257;i++)tone[i]=clamp(tone[i]);
+        if(preview&&size==0) {
+            float[] output=new float[source.length*3];final double[] fixedTone=tone;
+            rows(w,h,cancelled,(first,last,stop)->{
+                double[] delta=new double[3];
+                for(int at=first*w;at<last*w;at++) {
+                    if((at&1023)==0)check(stop);int pixel=source[at],ri=(pixel>>>16)&255,gi=(pixel>>>8)&255,bi=pixel&255;
+                    float r=ri/255f,g=gi/255f,b=bi/255f,level=(float)luma(r,g,b);double t=curve(fixedTone,level,0,1);
+                    for(int c=0;c<3;c++) {
+                        double correction=((r-level)*color[c]+(b-level)*color[3+c])/.25;
+                        delta[c]=t+(c==0?r:c==1?g:b)-level+curve(tint,level,c,3)+correction;
+                    }
+                    gamut(delta[0],delta[1],delta[2],output,at*3);
+                }
+            });return output;
+        }
         // Exploit separability: source values are 8-bit, so the 125 RBF terms
         // reduce to a small blue-axis sum after two tensor contractions.
         float[] exponent=null,rg=null;

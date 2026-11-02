@@ -94,6 +94,12 @@ final class Cine800SceneProfile {
         }return out;
     }
     int analysisEdge(){return analysisEdge;}
+    void renderPreview(int[] pixels,int w,int h,BooleanSupplier cancel) throws IOException {
+        try {
+            Cine800Analysis.Image analysis=Cine800Analysis.normalize(pixels,w,h,Math.min(160,Math.max(w,h)),cancel);
+            renderBounded(pixels,w,h,analysis,dayWeight(analysis.pixels,analysis.w,analysis.h,cancel),cancel,true);
+        } catch (JSONException error) { throw new IOException("Invalid preview values",error); }
+    }
     void render(int[] pixels,int w,int h,BooleanSupplier cancel) throws IOException {render(pixels,w,h,cancel,null,0,0);}
     void render(int[] pixels,int w,int h,BooleanSupplier cancel,int[] evidence,int ew,int eh) throws IOException {
         if(w<=0||h<=0||(long)w*h!=pixels.length||pixels.length>Integer.MAX_VALUE/3)throw new IllegalArgumentException("Invalid image");
@@ -101,6 +107,7 @@ final class Cine800SceneProfile {
         try {
             Cine800Analysis.Image analysis=analysisEdge==0?new Cine800Analysis.Image(pixels,w,h):Cine800Analysis.normalize(evidence==null?pixels:evidence,evidence==null?w:ew,evidence==null?h:eh,analysisEdge,cancel);
             double weight=dayWeight(analysis.pixels,analysis.w,analysis.h,cancel);
+            if(analysisEdge>0){renderBounded(pixels,w,h,analysis,weight,cancel);return;}
             Cine800Lights.Fields dayFields=null,nightFields=null;
             if(analysisEdge>0){
                 if(weight>0)dayFields=Cine800Analysis.resize(Cine800Lights.paired(analysis.pixels,analysis.w,analysis.h,sourceProfile,day.getDouble("halo_width"),cancel),analysis.w,analysis.h,w,h,cancel);
@@ -115,5 +122,53 @@ final class Cine800SceneProfile {
             if(weight<1){Cine800Lights.Fields f=nightFields==null?Cine800Lights.paired(pixels,w,h,sourceProfile,night.getDouble("halo_width"),cancel):nightFields;float[] b=endpoint(original,clean,full,f,night);if(out==null)out=b;else for(int i=0;i<out.length;i++)out[i]=(float)(b[i]+weight*(out[i]-b[i]));}
             check(cancel);int[] completed=new int[pixels.length];for(int i=0;i<pixels.length;i++){if((i&1023)==0)check(cancel);int px=pixels[i]&0xff000000;for(int c=0;c<3;c++)px|=((int)Math.rint(clamp(out[i*3+c])*255))<<(16-c*8);completed[i]=px;}check(cancel);System.arraycopy(completed,0,pixels,0,pixels.length);
         }catch(JSONException e){throw new IOException("Invalid 800T correction values",e);}
+    }
+    private void renderBounded(int[] pixels,int w,int h,Cine800Analysis.Image analysis,double weight,BooleanSupplier cancel) throws JSONException,IOException {
+        renderBounded(pixels,w,h,analysis,weight,cancel,false);
+    }
+    private void renderBounded(int[] pixels,int w,int h,Cine800Analysis.Image analysis,double weight,BooleanSupplier cancel,boolean preview) throws JSONException,IOException {
+        long stage=System.nanoTime();
+        float[] clean=preview?color.renderPreview(pixels,w,h,cancel):color.render(pixels,w,h,cancel),levels=new float[pixels.length];
+        for(int i=0;i<levels.length;i++)levels[i]=(float)luma(clean[i*3],clean[i*3+1],clean[i*3+2]);
+        stage=trace("color",stage);
+        // Keep full-resolution selective scatter, but do not retain upscaled day/night fields alongside it.
+        if(preview) {
+            float[] small=color.renderPreview(analysis.pixels,analysis.w,analysis.h,cancel),before=small.clone();
+            Cine800Lights.selective(analysis.pixels,small,analysis.w,analysis.h,halation,reference,cancel);
+            for(int i=0;i<small.length;i++)small[i]-=before[i];
+            // Only the optical difference is enlarged; screen-size source detail and grain stay intact.
+            FilmRenderMath.rows(w,h,cancel,(first,last,stop)->{
+                for(int y=first;y<last;y++) {
+                    check(stop);double sy=(y+.5)*analysis.h/h-.5;int iy=(int)Math.floor(sy);double fy=sy-iy;
+                    int y0=Math.max(0,Math.min(analysis.h-1,iy)),y1=Math.max(0,Math.min(analysis.h-1,iy+1));
+                    for(int x=0;x<w;x++) {
+                        double sx=(x+.5)*analysis.w/w-.5;int ix=(int)Math.floor(sx);double fx=sx-ix;
+                        int x0=Math.max(0,Math.min(analysis.w-1,ix)),x1=Math.max(0,Math.min(analysis.w-1,ix+1));
+                        for(int c=0;c<3;c++) {
+                            double top=small[(y0*analysis.w+x0)*3+c]*(1-fx)+small[(y0*analysis.w+x1)*3+c]*fx;
+                            double bottom=small[(y1*analysis.w+x0)*3+c]*(1-fx)+small[(y1*analysis.w+x1)*3+c]*fx;
+                            clean[(y*w+x)*3+c]+=(float)(top*(1-fy)+bottom*fy);
+                        }
+                    }
+                }
+            });
+        } else Cine800Lights.selective(pixels,clean,w,h,halation,reference,cancel);
+        stage=trace("selective",stage);
+        float[] full=clean.clone();
+        if(grain.active()&&((weight>0&&day.getDouble("grain_percent")>0)||(weight<1&&night.getDouble("grain_percent")>0))){grain.apply(full,levels,w,h,cancel);for(int i=0;i<full.length;i++)full[i]=(float)clamp(full[i]);}
+        levels=null;
+        stage=trace("grain",stage);
+        Cine800Lights.Fields dayFields=weight>0?Cine800Lights.paired(analysis.pixels,analysis.w,analysis.h,sourceProfile,day.getDouble("halo_width"),cancel):null;
+        Cine800Lights.Fields nightFields=weight<1?Cine800Lights.paired(analysis.pixels,analysis.w,analysis.h,sourceProfile,night.getDouble("halo_width"),cancel):null;
+        double redGain=sourceProfile.getDouble("red_gain");
+        stage=trace("fields",stage);
+        Cine800PixelFinish.render(pixels,w,h,clean,full,dayFields,nightFields,analysis.w,analysis.h,
+                new Cine800PixelFinish.Preset(day,redGain),new Cine800PixelFinish.Preset(night,redGain),weight,cancel);
+        trace("finish",stage);
+    }
+    private static long trace(String stage,long started) {
+        long now=System.nanoTime();
+        if(Boolean.getBoolean("shutternote.render.trace")){Runtime runtime=Runtime.getRuntime();System.out.println("800_STAGE "+stage+" ms="+(now-started)/1e6+" used_bytes="+(runtime.totalMemory()-runtime.freeMemory()));}
+        return now;
     }
 }

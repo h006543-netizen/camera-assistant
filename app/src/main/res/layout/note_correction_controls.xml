@@ -1,6 +1,8 @@
-<androidx.appcompat.widget.AppCompatTextView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content" android:layout_height="48dp">
+<androidx.appcompat.widget.AppCompatTextView
     android:id="@+id/noteCorrectionCategory"
-    android:layout_width="wrap_content" android:layout_height="48dp"
+    android:layout_width="match_parent" android:layout_height="48dp"
     android:minWidth="64dp" android:maxWidth="180dp"
     android:paddingStart="10dp" android:paddingEnd="6dp"
     android:gravity="center_vertical" android:maxLines="1" android:ellipsize="end"
@@ -8,3 +10,8 @@
     android:drawableEnd="@drawable/ic_category_chevron" android:drawablePadding="2dp"
     android:background="@drawable/bg_correction_choice"
     android:clickable="true" android:focusable="true" />
+    <ProgressBar android:id="@+id/noteCorrectionLoading" style="?android:attr/progressBarStyleSmall"
+        android:layout_width="18dp" android:layout_height="18dp" android:layout_gravity="end|center_vertical"
+        android:layout_marginEnd="6dp" android:indeterminateTint="@color/note_gallery_text"
+        android:visibility="gone" android:importantForAccessibility="no" />
+</FrameLayout>

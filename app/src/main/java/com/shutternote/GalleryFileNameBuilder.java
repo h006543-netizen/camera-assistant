@@ -50,6 +50,33 @@ final class GalleryFileNameBuilder {
         return fileName.substring(0, fileName.length() - 4) + "(" + number + ").jpg";
     }
 
+    static String buildNote(FilmFrameRecord frame, String rollName) {
+        String base = build(frame.iso, frame.aperture, frame.shutter, frame.fieldOfView, new Date(frame.capturedAt));
+        String film = "원본";
+        if (frame.correctionEnabled) {
+            switch (FilmCorrectionProfiles.key(frame.selectedProfile())) {
+                case "vision3-50d": film = "비전3_50D"; break;
+                case "e100d": film = "엑타크롬_E100D"; break;
+                case "vision3-250d": film = "비전3_250D"; break;
+                case "cine800t": film = "씨네스틸_800T"; break;
+                case "vision3-500t": film = "비전3_500T"; break;
+                case "portra400": film = "포트라_400"; break;
+                default: film = "보정본";
+            }
+        }
+        String name = rollName == null ? "" : rollName.replaceAll("[\\p{Cntrl}<>:\"/\\\\|?*]", "_").trim();
+        // Leave room for the exposure, film, extension and collision suffix on UTF-8 filesystems.
+        StringBuilder safe = new StringBuilder();
+        int bytes = 0;
+        for (int offset = 0; offset < name.length();) {
+            int point = name.codePointAt(offset);
+            int length = point <= 0x7f ? 1 : point <= 0x7ff ? 2 : point <= 0xffff ? 3 : 4;
+            if (bytes + length > 120) break;
+            safe.appendCodePoint(point); bytes += length; offset += Character.charCount(point);
+        }
+        return base.substring(0, base.length() - 4) + "_" + safe + "_" + film + ".jpg";
+    }
+
     static String availableName(String fileName, java.util.Set<String> existing) {
         int number = 0;
         while (existing.contains(numberedName(fileName, number))) number++;

@@ -38,9 +38,9 @@ public class LatestFilmProfileTest {
                 assertEquals("report_reproduction_not_independent_film_accuracy",film.getString("evaluation_scope"));
             }
             else if(film.getString("key").equals("vision3-500t")) {
-                assertEquals("learned_content_scene_routing_over_approved_tuning",film.getString("origin"));
+                assertEquals("confidence_source_preservation_policy_no_retraining",film.getString("origin"));
                 assertFalse(film.has("mean_delta_e00"));
-                assertEquals("held_out_targets_and_local_scene_group_diagnostics",film.getString("evaluation_scope"));
+                assertEquals("local_regression_not_independent_film_accuracy",film.getString("evaluation_scope"));
             }
             else assertTrue(film.getDouble("mean_delta_e00")<6);
             assertEquals(FilmCorrectionProfiles.IDS[i],FilmCorrectionProfiles.assetId(FilmCorrectionProfiles.latest(film.getString("key"))));

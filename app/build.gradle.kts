@@ -41,6 +41,7 @@ android {
 }
 
 dependencies {
+    implementation("androidx.work:work-runtime:2.11.2")
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
