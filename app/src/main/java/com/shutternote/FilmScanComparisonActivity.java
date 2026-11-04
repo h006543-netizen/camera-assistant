@@ -1,5 +1,7 @@
 package com.shutternote;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -28,6 +30,7 @@ public class FilmScanComparisonActivity extends AppCompatActivity {
     private FilmScanViewModel model;
     private FilmComparisonImageView zoomImage;
     private boolean enlarged, showScan, initialPickerLaunched, restorePagePending;
+    private boolean switchingPhoto;
     private int pageScroll;
     private FilmRollRecord displayedRoll;
     private String displayedDraft;
@@ -133,8 +136,23 @@ public class FilmScanComparisonActivity extends AppCompatActivity {
     }
 
     private void switchPhoto(boolean scan) {
-        if ((scan ? model.scanBitmap : model.noteBitmap) == null) return;
-        showScan = scan; render();
+        if (switchingPhoto || scan == showScan || (scan ? model.scanBitmap : model.noteBitmap) == null) return;
+        switchingPhoto = true;
+        float travel = Math.max(zoomImage.getWidth() * .24f, 48 * getResources().getDisplayMetrics().density);
+        float direction = scan ? -1 : 1;
+        zoomImage.animate().cancel();
+        zoomImage.animate().translationX(direction * travel).setDuration(110).withEndAction(() -> {
+            showScan = scan;
+            render();
+            zoomImage.setTranslationX(-direction * travel);
+            zoomImage.animate().translationX(0).setDuration(150).setListener(new AnimatorListenerAdapter() {
+                @Override public void onAnimationEnd(Animator animation) {
+                    zoomImage.setTranslationX(0);
+                    zoomImage.animate().setListener(null);
+                    switchingPhoto = false;
+                }
+            }).start();
+        }).start();
     }
 
     private void showMenu(View anchor) {
