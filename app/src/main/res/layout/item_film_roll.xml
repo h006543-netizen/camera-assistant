@@ -21,7 +21,7 @@
     <TextView android:id="@+id/filmRollCardDetail" android:layout_width="match_parent" android:layout_height="wrap_content"
         android:layout_marginTop="0dp" android:textColor="@color/note_muted" android:textSize="12sp" />
     <TextView android:id="@+id/filmRollCardPeriod" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" android:textColor="@color/note_muted" android:textSize="13sp" />
+        android:layout_marginTop="0dp" android:textColor="@color/note_muted" android:textSize="12sp" />
     </LinearLayout>
     <com.shutternote.FilmRollReorderHandle
         android:id="@+id/filmRollReorder" style="@style/NoteIcon"

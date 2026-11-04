@@ -1,13 +1,13 @@
 package com.shutternote;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.View;
 import android.view.LayoutInflater;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -23,19 +23,24 @@ import androidx.core.view.OneShotPreDrawListener;
 import androidx.core.view.ViewCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.PagerSnapHelper;
+import androidx.recyclerview.widget.RecyclerView;
 
 /** One independent screen contains connection confirmation, paired comparison and enlarged switching. */
 public class FilmScanComparisonActivity extends AppCompatActivity {
     static final String CAPTURE = "scanCapture", PICK = "scanPick";
+    private static final int PAGER_BASE = 1_000_000_000;
     private FilmScanViewModel model;
-    private FilmComparisonImageView zoomImage;
+    private RecyclerView zoomPager;
+    private ScanPagerAdapter zoomAdapter;
+    private PagerSnapHelper zoomSnap;
     private boolean enlarged, showScan, initialPickerLaunched, restorePagePending;
-    private boolean switchingPhoto;
     private int pageScroll;
+    private int currentPagerPosition = PAGER_BASE;
     private FilmRollRecord displayedRoll;
     private String displayedDraft;
     private float restoredZoom = 1, restoredX = .5f, restoredY = .5f;
-    private Bitmap shownZoom;
     private final ActivityResultLauncher<PickVisualMediaRequest> picker = registerForActivityResult(
             new ActivityResultContracts.PickVisualMedia(), uri -> {
                 acceptPhoto(uri);
@@ -66,13 +71,36 @@ public class FilmScanComparisonActivity extends AppCompatActivity {
             pageScroll = saved.getInt("pageScroll"); restorePagePending = true;
             restoredZoom = saved.getFloat("zoom", 1); restoredX = saved.getFloat("centerX", .5f); restoredY = saved.getFloat("centerY", .5f);
         }
+        currentPagerPosition = saved == null ? PAGER_BASE + (showScan ? 1 : 0)
+                : saved.getInt("zoomPage", PAGER_BASE + (showScan ? 1 : 0));
         model = new ViewModelProvider(this).get(FilmScanViewModel.class);
         FilmCorrectionJobs.changes.observe(this, ignored -> model.refreshCorrection());
         displayedDraft = model.draftName();
-        zoomImage = findViewById(R.id.scanZoomImage);
-        zoomImage.restore(restoredZoom, restoredX, restoredY);
-        zoomImage.setChanged(this::updateZoomControls);
-        zoomImage.setPhotoSwipe(direction -> { if (!model.busy() && enlarged) switchPhoto(!showScan); });
+        zoomPager = findViewById(R.id.scanZoomPager);
+        zoomPager.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
+        zoomPager.setNestedScrollingEnabled(false);
+        zoomAdapter = new ScanPagerAdapter();
+        zoomPager.setAdapter(zoomAdapter);
+        zoomSnap = new PagerSnapHelper();
+        zoomSnap.attachToRecyclerView(zoomPager);
+        zoomPager.scrollToPosition(currentPagerPosition);
+        zoomPager.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override public void onScrollStateChanged(@NonNull RecyclerView view, int state) {
+                if (state != RecyclerView.SCROLL_STATE_IDLE || !enlarged) return;
+                View page = zoomSnap.findSnapView(zoomPager.getLayoutManager());
+                if (page == null) return;
+                int position = zoomPager.getChildAdapterPosition(page);
+                if (position == RecyclerView.NO_POSITION) return;
+                currentPagerPosition = position;
+                boolean selectedScan = (position & 1) != 0;
+                if (selectedScan != showScan) {
+                    showScan = selectedScan;
+                    FilmComparisonImageView photo = currentZoomPhoto();
+                    if (photo != null) photo.restore(restoredZoom, restoredX, restoredY);
+                    render();
+                }
+            }
+        });
         findViewById(R.id.scanBack).setOnClickListener(view -> goBack());
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override public void handleOnBackPressed() { goBack(); }
@@ -83,10 +111,10 @@ public class FilmScanComparisonActivity extends AppCompatActivity {
         findViewById(R.id.scanConfirm).setOnClickListener(view -> { enlarged = false; model.save(false); });
         findViewById(R.id.scanNoteImage).setOnClickListener(view -> enlarge(false));
         findViewById(R.id.scanFilmImage).setOnClickListener(view -> enlarge(true));
-        findViewById(R.id.scanShowNote).setOnClickListener(view -> switchPhoto(false));
-        findViewById(R.id.scanShowFilm).setOnClickListener(view -> switchPhoto(true));
-        findViewById(R.id.scanZoomIn).setOnClickListener(view -> zoomImage.stepZoom(true));
-        findViewById(R.id.scanZoomOut).setOnClickListener(view -> zoomImage.stepZoom(false));
+        findViewById(R.id.scanShowNote).setOnClickListener(view -> selectPhoto(false));
+        findViewById(R.id.scanShowFilm).setOnClickListener(view -> selectPhoto(true));
+        findViewById(R.id.scanZoomIn).setOnClickListener(view -> { FilmComparisonImageView photo = currentZoomPhoto(); if (photo != null) photo.stepZoom(true); });
+        findViewById(R.id.scanZoomOut).setOnClickListener(view -> { FilmComparisonImageView photo = currentZoomPhoto(); if (photo != null) photo.stepZoom(false); });
         model.message.observe(this, message -> { if (message != null) { Toast.makeText(this, message, Toast.LENGTH_LONG).show(); model.message.setValue(null); } });
         model.state.observe(this, state -> {
             if (state == FilmScanViewModel.State.MISSING) { Toast.makeText(this, R.string.note_frame_missing, Toast.LENGTH_LONG).show(); finish(); return; }
@@ -126,7 +154,10 @@ public class FilmScanComparisonActivity extends AppCompatActivity {
 
     private void enlarge(boolean scan) {
         if (model.busy() || model.noteBitmap == null || model.scanBitmap == null) return;
-        enlarged = true; showScan = scan; zoomImage.restore(1, .5f, .5f); render(); showPhotos();
+        enlarged = true; showScan = scan; restoredZoom = 1; restoredX = restoredY = .5f;
+        currentPagerPosition = PAGER_BASE + (scan ? 1 : 0);
+        zoomAdapter.notifyDataSetChanged(); zoomPager.scrollToPosition(currentPagerPosition);
+        render(); showPhotos();
     }
 
     private void showPhotos() {
@@ -135,24 +166,15 @@ public class FilmScanComparisonActivity extends AppCompatActivity {
         OneShotPreDrawListener.add(scroll, () -> scroll.scrollTo(0, 0));
     }
 
-    private void switchPhoto(boolean scan) {
-        if (switchingPhoto || scan == showScan || (scan ? model.scanBitmap : model.noteBitmap) == null) return;
-        switchingPhoto = true;
-        float travel = Math.max(zoomImage.getWidth() * .24f, 48 * getResources().getDisplayMetrics().density);
-        float direction = scan ? -1 : 1;
-        zoomImage.animate().cancel();
-        zoomImage.animate().translationX(direction * travel).setDuration(110).withEndAction(() -> {
-            showScan = scan;
-            render();
-            zoomImage.setTranslationX(-direction * travel);
-            zoomImage.animate().translationX(0).setDuration(150).setListener(new AnimatorListenerAdapter() {
-                @Override public void onAnimationEnd(Animator animation) {
-                    zoomImage.setTranslationX(0);
-                    zoomImage.animate().setListener(null);
-                    switchingPhoto = false;
-                }
-            }).start();
-        }).start();
+    private void selectPhoto(boolean scan) {
+        if (model.busy() || scan == showScan || (scan ? model.scanBitmap : model.noteBitmap) == null) return;
+        int target = currentPagerPosition + (scan ? 1 : -1);
+        zoomPager.smoothScrollToPosition(target);
+    }
+
+    private FilmComparisonImageView currentZoomPhoto() {
+        RecyclerView.ViewHolder holder = zoomPager.findViewHolderForAdapterPosition(currentPagerPosition);
+        return holder instanceof ScanPhotoHolder ? ((ScanPhotoHolder) holder).photo : null;
     }
 
     private void showMenu(View anchor) {
@@ -171,7 +193,7 @@ public class FilmScanComparisonActivity extends AppCompatActivity {
 
     private void render() {
         boolean busy = model.busy(), draft = model.hasDraft();
-        zoomImage.setEnabled(!busy);
+        zoomAdapter.setPhotos(model.noteBitmap, model.scanBitmap, busy);
         TextView title = findViewById(R.id.scanTitle);
         int cut = getIntent().getIntExtra(FilmFrameCapture.NUMBER, 0);
         title.setText(getString(enlarged ? R.string.scan_zoom_title : draft ? R.string.scan_confirm_title : R.string.scan_compare_title, cut));
@@ -192,7 +214,7 @@ public class FilmScanComparisonActivity extends AppCompatActivity {
         noteImage.setContentDescription(getString(R.string.scan_note_photo)+", "+getString(R.string.scan_enlarge));
         filmImage.setContentDescription(getString(R.string.scan_film_photo)+", "+getString(R.string.scan_enlarge));
         pair.setVisibility(enlarged ? View.GONE : View.VISIBLE);
-        zoomImage.setVisibility(enlarged ? View.VISIBLE : View.GONE);
+        zoomPager.setVisibility(enlarged ? View.VISIBLE : View.GONE);
         findViewById(R.id.scanZoomControls).setVisibility(enlarged ? View.VISIBLE : View.GONE);
         TextView progress = findViewById(R.id.scanProgress);
         progress.setVisibility(busy ? View.VISIBLE : View.GONE);
@@ -204,15 +226,13 @@ public class FilmScanComparisonActivity extends AppCompatActivity {
         int[] actions = {R.id.scanMenu, R.id.scanReselect, R.id.scanChoose, R.id.scanConfirm};
         for (int id : actions) findViewById(id).setEnabled(!busy);
         findViewById(R.id.scanConfirm).setEnabled(!busy && note != null && scan != null && draft);
-        if (enlarged) {
-            Bitmap selected = showScan ? scan : note;
-            if (selected != shownZoom) {
-                float scale = zoomImage.zoom(), x = zoomImage.centerX(), y = zoomImage.centerY();
-                zoomImage.setImageBitmap(selected); zoomImage.restore(scale, x, y); shownZoom = selected;
+        if (enlarged) zoomPager.post(() -> {
+            if (zoomPager.getScrollState() == RecyclerView.SCROLL_STATE_IDLE) {
+                View page = zoomSnap.findSnapView(zoomPager.getLayoutManager());
+                int visible = page == null ? RecyclerView.NO_POSITION : zoomPager.getChildAdapterPosition(page);
+                if (visible != currentPagerPosition) zoomPager.scrollToPosition(currentPagerPosition);
             }
-            zoomImage.setContentDescription(getString(showScan ? R.string.scan_film_photo : R.string.scan_note_photo));
-            zoomImage.post(zoomImage::refresh);
-        }
+        });
         Button showNote = findViewById(R.id.scanShowNote), showFilm = findViewById(R.id.scanShowFilm);
         showNote.setSelected(!showScan); showFilm.setSelected(showScan);
         showNote.setEnabled(note != null && !busy); showFilm.setEnabled(scan != null && !busy);
@@ -276,10 +296,49 @@ public class FilmScanComparisonActivity extends AppCompatActivity {
     }
 
     private void updateZoomControls() {
-        if (zoomImage == null) return;
-        ((TextView) findViewById(R.id.scanZoomScale)).setText(getString(R.string.scan_zoom_percent, Math.round(zoomImage.zoom() * 100)));
-        findViewById(R.id.scanZoomOut).setEnabled(!model.busy() && zoomImage.zoom() > 1);
-        findViewById(R.id.scanZoomIn).setEnabled(!model.busy() && zoomImage.zoom() < 5);
+        FilmComparisonImageView photo = currentZoomPhoto();
+        if (photo == null) return;
+        restoredZoom = photo.zoom(); restoredX = photo.centerX(); restoredY = photo.centerY();
+        ((TextView) findViewById(R.id.scanZoomScale)).setText(getString(R.string.scan_zoom_percent, Math.round(photo.zoom() * 100)));
+        findViewById(R.id.scanZoomOut).setEnabled(!model.busy() && photo.zoom() > 1);
+        findViewById(R.id.scanZoomIn).setEnabled(!model.busy() && photo.zoom() < 5);
+    }
+
+    private final class ScanPagerAdapter extends RecyclerView.Adapter<ScanPhotoHolder> {
+        private Bitmap note, scan;
+        private boolean busy;
+        void setPhotos(Bitmap note, Bitmap scan, boolean busy) {
+            if (this.note == note && this.scan == scan && this.busy == busy) return;
+            this.note = note; this.scan = scan; this.busy = busy; notifyDataSetChanged();
+        }
+        @NonNull @Override public ScanPhotoHolder onCreateViewHolder(@NonNull ViewGroup parent, int type) {
+            FrameLayout page = new FrameLayout(parent.getContext());
+            page.setLayoutParams(new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            FilmComparisonImageView photo = new FilmComparisonImageView(parent.getContext(), null);
+            photo.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            photo.setPhotoOnlyListener(new FilmComparisonImageView.PhotoOnlyListener() {
+                @Override public boolean isActive() { return true; }
+                @Override public void show() { }
+            });
+            photo.setChanged(() -> {
+                if (photo == currentZoomPhoto()) updateZoomControls();
+            });
+            page.addView(photo);
+            return new ScanPhotoHolder(page, photo);
+        }
+        @Override public void onBindViewHolder(@NonNull ScanPhotoHolder holder, int position) {
+            boolean film = (position & 1) != 0;
+            holder.photo.setImageBitmap(film ? scan : note);
+            holder.photo.setEnabled(!busy);
+            holder.photo.setContentDescription(getString(film ? R.string.scan_film_photo : R.string.scan_note_photo));
+            holder.photo.restore(restoredZoom, restoredX, restoredY);
+        }
+        @Override public int getItemCount() { return Integer.MAX_VALUE; }
+    }
+
+    private static final class ScanPhotoHolder extends RecyclerView.ViewHolder {
+        final FilmComparisonImageView photo;
+        ScanPhotoHolder(View itemView, FilmComparisonImageView photo) { super(itemView); this.photo = photo; }
     }
 
     @Override protected void onSaveInstanceState(@NonNull Bundle state) {
@@ -287,7 +346,8 @@ public class FilmScanComparisonActivity extends AppCompatActivity {
         state.putBoolean("pickerLaunched", initialPickerLaunched);
         state.putInt("pageScroll", restorePagePending ? pageScroll
                 : ((NestedScrollView) findViewById(R.id.scanPageScroll)).getScrollY());
-        state.putFloat("zoom", zoomImage.zoom()); state.putFloat("centerX", zoomImage.centerX()); state.putFloat("centerY", zoomImage.centerY());
+        state.putFloat("zoom", restoredZoom); state.putFloat("centerX", restoredX); state.putFloat("centerY", restoredY);
+        state.putInt("zoomPage", currentPagerPosition);
         super.onSaveInstanceState(state);
     }
 }

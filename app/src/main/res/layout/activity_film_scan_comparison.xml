@@ -20,7 +20,7 @@
                         <ImageView android:id="@+id/scanFilmImage" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:scaleType="fitCenter" android:clickable="true" android:focusable="true" android:contentDescription="@string/scan_film_photo" />
                     </LinearLayout>
                 </LinearLayout>
-                <com.shutternote.FilmComparisonImageView android:id="@+id/scanZoomImage" android:layout_width="match_parent" android:layout_height="match_parent" android:visibility="gone" android:contentDescription="@string/scan_note_photo" android:clickable="true" android:focusable="true" />
+                <androidx.recyclerview.widget.RecyclerView android:id="@+id/scanZoomPager" android:layout_width="match_parent" android:layout_height="match_parent" android:visibility="gone" android:overScrollMode="never" android:saveEnabled="false" />
                 <TextView android:id="@+id/scanProgress" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="center" android:gravity="center" android:padding="16dp" android:background="@color/note_gallery_background" android:textColor="@color/note_gallery_text" android:accessibilityLiveRegion="polite" android:visibility="gone" />
             </com.shutternote.FilmComparisonPhotoLayout>
             <LinearLayout android:id="@+id/scanZoomControls" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:visibility="gone">
