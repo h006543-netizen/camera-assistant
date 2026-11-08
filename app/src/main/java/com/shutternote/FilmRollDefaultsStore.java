@@ -21,7 +21,7 @@ final class FilmRollDefaultsStore {
         }
     }
     void recordFocal(String value) {
-        if(Arrays.asList("35","40","50").contains(value))preferences.edit().putString("focal",value).apply();
+        if(Arrays.asList("28","32","35","40","50").contains(value))preferences.edit().putString("focal",value).apply();
     }
     void recordCount(int count,int mode) {
         if(count<1||count>999)return;
@@ -30,7 +30,7 @@ final class FilmRollDefaultsStore {
     }
     void restore(FilmRollRecord draft) {
         String focal=preferences.getString("focal","35");
-        draft.focalLength=Arrays.asList("35","40","50").contains(focal)?focal:"35";
+        draft.focalLength=Arrays.asList("28","32","35","40","50").contains(focal)?focal:"35";
         int count=preferences.getInt("count",36),mode=preferences.getInt("mode",36);
         draft.plannedFrames=count>=1&&count<=999?count:36;
         draft.countMode=mode==24&&draft.plannedFrames==24?24:mode==36&&draft.plannedFrames==36?36:0;

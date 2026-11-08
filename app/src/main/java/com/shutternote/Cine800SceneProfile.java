@@ -14,6 +14,7 @@ final class Cine800SceneProfile {
     private final LearnedFilmGrain grain;
     private final double reference;
     private final int analysisEdge;
+    private final boolean afterColorHalation;
     Cine800SceneProfile(JSONObject profile,LearnedFilmGrain.Noise noise) throws JSONException {
         int schema=profile.getInt("schema_version");
         if((schema!=25&&schema!=26&&schema!=27)||!profile.getString("film_name").equals("씨네스틸 800t")||
@@ -21,6 +22,10 @@ final class Cine800SceneProfile {
         JSONObject effects=profile.getJSONObject("effects");scene=effects.getJSONObject("cine800t_scene");
         if(!effects.getString("effects_contract").equals("source_selective_lights_texture_v5")||!scene.getString("method").equals(schema==27?"cine800t_day_night_manual_v3":schema==26?"cine800t_day_night_manual_v2":"cine800t_day_night_manual_v1"))throw new JSONException("Unsupported 800T controls");
         analysisEdge=schema==27?scene.getInt("source_analysis_edge"):0;if(schema==27&&analysisEdge!=1024)throw new JSONException("Invalid optical analysis edge");
+        String opticalMethod=scene.optString("android_halation","");
+        afterColorHalation="after_color_bilateral_v1".equals(opticalMethod);
+        if(!opticalMethod.isEmpty()&&(!afterColorHalation||schema!=27))
+            throw new JSONException("Unsupported Android 800T halation");
         reference=effects.getDouble("reference_edge");sourceProfile=scene.getJSONObject("source_profile");
         if(!sourceProfile.getString("method").equals("paired_source_tungsten_v4"))throw new JSONException("Unsupported exterior response");
         if((schema>=26)!=sourceProfile.has("halo_detection_guard"))throw new JSONException("Version differs from halo guard");
@@ -95,6 +100,7 @@ final class Cine800SceneProfile {
     }
     int analysisEdge(){return analysisEdge;}
     void renderPreview(int[] pixels,int w,int h,BooleanSupplier cancel) throws IOException {
+        if(afterColorHalation){render(pixels,w,h,cancel);return;}
         try {
             Cine800Analysis.Image analysis=Cine800Analysis.normalize(pixels,w,h,Math.min(160,Math.max(w,h)),cancel);
             renderBounded(pixels,w,h,analysis,dayWeight(analysis.pixels,analysis.w,analysis.h,cancel),cancel,true);
@@ -107,6 +113,7 @@ final class Cine800SceneProfile {
         try {
             Cine800Analysis.Image analysis=analysisEdge==0?new Cine800Analysis.Image(pixels,w,h):Cine800Analysis.normalize(evidence==null?pixels:evidence,evidence==null?w:ew,evidence==null?h:eh,analysisEdge,cancel);
             double weight=dayWeight(analysis.pixels,analysis.w,analysis.h,cancel);
+            if(afterColorHalation){renderAfterColor(pixels,w,h,analysis,weight,cancel);return;}
             if(analysisEdge>0){renderBounded(pixels,w,h,analysis,weight,cancel);return;}
             Cine800Lights.Fields dayFields=null,nightFields=null;
             if(analysisEdge>0){
@@ -123,6 +130,38 @@ final class Cine800SceneProfile {
             check(cancel);int[] completed=new int[pixels.length];for(int i=0;i<pixels.length;i++){if((i&1023)==0)check(cancel);int px=pixels[i]&0xff000000;for(int c=0;c<3;c++)px|=((int)Math.rint(clamp(out[i*3+c])*255))<<(16-c*8);completed[i]=px;}check(cancel);System.arraycopy(completed,0,pixels,0,pixels.length);
         }catch(JSONException e){throw new IOException("Invalid 800T correction values",e);}
     }
+    private void renderAfterColor(int[] pixels,int w,int h,Cine800Analysis.Image analysis,
+                                  double weight,BooleanSupplier cancel) throws JSONException,IOException {
+        Cine800PixelFinish.Preset dayPreset=new Cine800PixelFinish.Preset(day,0);
+        Cine800PixelFinish.Preset nightPreset=new Cine800PixelFinish.Preset(night,0);
+        float[] field=afterColorField(analysis,weight,dayPreset,nightPreset,cancel);
+        float[] clean=color.render(pixels,w,h,cancel),full=clean;
+        if(grain.active()&&((weight>0&&dayPreset.actual>0)||(weight<1&&nightPreset.actual>0))){
+            float[] levels=new float[pixels.length];
+            for(int i=0;i<levels.length;i++){
+                if((i&4095)==0)check(cancel);
+                levels[i]=(float)luma(clean[i*3],clean[i*3+1],clean[i*3+2]);
+            }
+            full=clean.clone();
+            grain.apply(full,levels,w,h,cancel);
+            for(int i=0;i<full.length;i++){
+                if((i&4095)==0)check(cancel);
+                full[i]=(float)clamp(full[i]);
+            }
+        }
+        Cine800PixelFinish.renderAfterColor(pixels,w,h,clean,full,field,analysis.w,analysis.h,
+                dayPreset,nightPreset,weight,cancel);
+    }
+
+    private float[] afterColorField(Cine800Analysis.Image analysis,double weight,
+                                    Cine800PixelFinish.Preset dayPreset,Cine800PixelFinish.Preset nightPreset,
+                                    BooleanSupplier cancel) {
+        float[] clean=color.render(analysis.pixels,analysis.w,analysis.h,cancel);
+        float[] graded=Cine800PixelFinish.cleanGrade(analysis.pixels,analysis.w,analysis.h,clean,
+                dayPreset,nightPreset,weight,cancel);
+        return Cine800AfterColor.field(analysis.pixels,graded,analysis.w,analysis.h,cancel);
+    }
+
     private void renderBounded(int[] pixels,int w,int h,Cine800Analysis.Image analysis,double weight,BooleanSupplier cancel) throws JSONException,IOException {
         renderBounded(pixels,w,h,analysis,weight,cancel,false);
     }

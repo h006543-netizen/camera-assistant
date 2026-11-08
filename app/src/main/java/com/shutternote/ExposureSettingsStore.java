@@ -15,6 +15,8 @@ public final class ExposureSettingsStore {
     public static final String DEFAULT_APERTURE = "f/2.8";
     public static final String DEFAULT_SHUTTER = "1/125";
     public static final String FIELD_OF_VIEW_DEFAULT = "기본";
+    public static final String FIELD_OF_VIEW_28_MM = "28mm";
+    public static final String FIELD_OF_VIEW_32_MM = "32mm";
     public static final String FIELD_OF_VIEW_35_MM = "35mm";
     public static final String FIELD_OF_VIEW_40_MM = "40mm";
     public static final String FIELD_OF_VIEW_50_MM = "50mm";
@@ -42,6 +44,8 @@ public final class ExposureSettingsStore {
 
     private static final String[] FIELD_OF_VIEW_VALUES = {
             FIELD_OF_VIEW_DEFAULT,
+            FIELD_OF_VIEW_28_MM,
+            FIELD_OF_VIEW_32_MM,
             FIELD_OF_VIEW_35_MM,
             FIELD_OF_VIEW_40_MM,
             FIELD_OF_VIEW_50_MM

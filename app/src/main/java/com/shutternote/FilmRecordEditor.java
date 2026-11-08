@@ -195,7 +195,7 @@ final class FilmRecordEditor {
     }
     private String[] focalOptions() {
         String old = model.draft.getStringArray("values")[0];
-        return old.isEmpty() || Arrays.asList("35", "40", "50").contains(old) ? new String[]{"", "35", "40", "50"} : new String[]{old, "35", "40", "50", ""};
+        return old.isEmpty() || Arrays.asList("28", "32", "35", "40", "50").contains(old) ? new String[]{"", "28", "32", "35", "40", "50"} : new String[]{old, "28", "32", "35", "40", "50", ""};
     }
     private void periodInput(LinearLayout panel) {
         Bundle target = model.draft;

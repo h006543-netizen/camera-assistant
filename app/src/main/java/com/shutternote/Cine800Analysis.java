@@ -43,4 +43,25 @@ final class Cine800Analysis {
         }
         out[0]=(float)sum[0];out[1]=(float)sum[1];for(int c=0;c<3;c++)out[c+2]=(float)(sum[1]>1e-9?sum[2+c]/sum[1]:0);
     }
+
+    static float sampleScalar(float[] field,int sw,int sh,int w,int h,int x,int y) {
+        if(sw==w&&sh==h)return field[y*w+x];
+        if(w<=sw&&h<=sh){
+            double x0=x*sw/(double)w,x1=(x+1)*sw/(double)w;
+            double y0=y*sh/(double)h,y1=(y+1)*sh/(double)h;
+            double area=(x1-x0)*(y1-y0),sum=0;
+            for(int yy=(int)y0;yy<Math.ceil(y1)&&yy<sh;yy++)
+                for(int xx=(int)x0;xx<Math.ceil(x1)&&xx<sw;xx++)
+                    sum+=field[yy*sw+xx]*(Math.min(xx+1,x1)-Math.max(xx,x0))
+                            *(Math.min(yy+1,y1)-Math.max(yy,y0));
+            return (float)(sum/area);
+        }
+        double sx=(x+.5)*sw/w-.5,sy=(y+.5)*sh/h-.5;
+        int ix=(int)Math.floor(sx),iy=(int)Math.floor(sy);
+        double fx=sx-ix,fy=sy-iy;
+        int x0=Math.max(0,Math.min(sw-1,ix)),x1=Math.max(0,Math.min(sw-1,ix+1));
+        int y0=Math.max(0,Math.min(sh-1,iy)),y1=Math.max(0,Math.min(sh-1,iy+1));
+        return (float)((field[y0*sw+x0]*(1-fx)+field[y0*sw+x1]*fx)*(1-fy)
+                +(field[y1*sw+x0]*(1-fx)+field[y1*sw+x1]*fx)*fy);
+    }
 }

@@ -31,16 +31,27 @@ public class LatestFilmProfileTest {
         for(int i=0;i<5;i++) {
             JSONObject film=films.getJSONObject(i);
             if(film.getString("key").equals("e100d"))assertEquals("user_approved_manual_settings",film.getString("origin"));
-            else if(film.getString("key").equals("cine800t"))assertEquals("user_approved_day_night_settings",film.getString("origin"));
+            else if(film.getString("key").equals("cine800t")) {
+                assertEquals("user_approved_after_color_bilateral_halation",film.getString("origin"));
+                assertEquals(FilmCorrectionProfiles.latest("cine800t"),film.getString("default_recipe_id"));
+                assertEquals(FilmCorrectionProfiles.OLD_800T_GRAIN,film.getString("previous_version_id"));
+                assertTrue(FilmCorrectionProfiles.supported(FilmCorrectionProfiles.OLD_800T_GRAIN));
+                assertTrue(FilmCorrectionProfiles.upgradeOnReselect(FilmCorrectionProfiles.OLD_800T_GRAIN));
+                assertEquals(FilmCorrectionProfiles.OLD_800T_GRAIN_HASH,
+                        hash(ASSETS.resolve(FilmCorrectionProfiles.OLD_800T_GRAIN_ASSET)));
+                JSONObject model=new JSONObject(Files.readString(ASSETS.resolve(film.getString("asset"))));
+                assertEquals("after_color_bilateral_v1",model.getJSONObject("effects")
+                        .getJSONObject("cine800t_scene").getString("android_halation"));
+            }
             else if(film.getString("key").equals("vision3-250d")) {
                 assertEquals("user_approved_report_grade_grain20",film.getString("origin"));
                 assertFalse(film.has("mean_delta_e00"));
                 assertEquals("report_reproduction_not_independent_film_accuracy",film.getString("evaluation_scope"));
             }
             else if(film.getString("key").equals("vision3-500t")) {
-                assertEquals("confidence_source_preservation_policy_no_retraining",film.getString("origin"));
+                assertEquals("user_requested_report_tuning_applied",film.getString("origin"));
                 assertFalse(film.has("mean_delta_e00"));
-                assertEquals("local_regression_not_independent_film_accuracy",film.getString("evaluation_scope"));
+                assertEquals("visual_simulation_report_only_no_independent_film_accuracy",film.getString("evaluation_scope"));
             }
             else assertTrue(film.getDouble("mean_delta_e00")<6);
             assertEquals(FilmCorrectionProfiles.IDS[i],FilmCorrectionProfiles.assetId(FilmCorrectionProfiles.latest(film.getString("key"))));

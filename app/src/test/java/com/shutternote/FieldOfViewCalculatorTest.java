@@ -83,8 +83,8 @@ public class FieldOfViewCalculatorTest {
 
     @Test
     public void zoomRatio_correctsEverySelectionForBothSensorOrientationsWithoutAccumulating() {
-        String[] selections = {"기본", "35mm", "40mm", "50mm"};
-        float[] expected = {1.03f, 1.442f, 1.648f, 2.06f};
+        String[] selections = {"기본", "28mm", "32mm", "35mm", "40mm", "50mm"};
+        float[] expected = {1.03f, 1.1536f, 1.3184f, 1.442f, 1.648f, 2.06f};
         for (double[] sensor : new double[][]{{7.2, 5.4}, {5.4, 7.2}}) {
             double base = FieldOfViewCalculator.calculateEquivalentFocalLength(
                     5.0, sensor[0], sensor[1]);

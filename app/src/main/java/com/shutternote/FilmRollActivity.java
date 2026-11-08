@@ -289,8 +289,8 @@ public class FilmRollActivity extends AppCompatActivity {
     }
 
     private void showFocalLengthPicker() {
-        String[] values = {"35", "40", "50"};
-        String[] labels = {"35mm", "40mm", "50mm"};
+        String[] values = {"28", "32", "35", "40", "50"};
+        String[] labels = {"28mm", "32mm", "35mm", "40mm", "50mm"};
         new AlertDialog.Builder(this).setTitle(R.string.fov_label)
                 .setSingleChoiceItems(labels, java.util.Arrays.asList(values).indexOf(record.focalLength), (dialog, which) -> {
                     record.focalLength = values[which]; updateFocalLength(); dialog.dismiss();

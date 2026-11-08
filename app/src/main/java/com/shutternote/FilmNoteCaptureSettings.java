@@ -7,6 +7,8 @@ final class FilmNoteCaptureSettings {
         if (focalLength != null) {
             try {
                 double mm = Double.parseDouble(focalLength.trim().replace(',', '.'));
+                if (mm == 28) return ExposureSettingsStore.FIELD_OF_VIEW_28_MM;
+                if (mm == 32) return ExposureSettingsStore.FIELD_OF_VIEW_32_MM;
                 if (mm == 35) return ExposureSettingsStore.FIELD_OF_VIEW_35_MM;
                 if (mm == 40) return ExposureSettingsStore.FIELD_OF_VIEW_40_MM;
                 if (mm == 50) return ExposureSettingsStore.FIELD_OF_VIEW_50_MM;

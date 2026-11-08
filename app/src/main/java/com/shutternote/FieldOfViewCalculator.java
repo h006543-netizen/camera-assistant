@@ -114,6 +114,12 @@ public final class FieldOfViewCalculator {
 
         double targetEquivalentFocalLengthMm;
         switch (selectedFieldOfView) {
+            case ExposureSettingsStore.FIELD_OF_VIEW_28_MM:
+                targetEquivalentFocalLengthMm = 28.0;
+                break;
+            case ExposureSettingsStore.FIELD_OF_VIEW_32_MM:
+                targetEquivalentFocalLengthMm = 32.0;
+                break;
             case ExposureSettingsStore.FIELD_OF_VIEW_35_MM:
                 targetEquivalentFocalLengthMm = 35.0;
                 break;
