@@ -87,6 +87,13 @@ final class LearnedFilmProfile {
             pixels[i]=(pixels[i]&0xff000000)|(r<<16)|(g<<8)|b;
         }
     }
+    int[] renderCopy(int[] pixels,int w,int h,BooleanSupplier cancelled) throws IOException {
+        if(shadow!=null)return shadow.renderCopy(pixels,w,h,cancelled);
+        int[] copy=pixels.clone();
+        render(copy,w,h,cancelled);
+        return copy;
+    }
+
     /** Keeps the original math/order; versioned finishes may run before the single quantization. */
     float[] renderLegacyFloat(int[] pixels,int w,int h,BooleanSupplier cancelled) throws IOException {
         if(color==null)throw new IllegalStateException("Float baseline requires a legacy profile");
@@ -116,6 +123,12 @@ final class LearnedFilmProfile {
         if(approved500!=null){approved500.render(pixels,w,h,cancelled,analysis,aw,ah);return;}
         if(vision500!=null){vision500.render(pixels,w,h,cancelled,analysis,aw,ah);return;}
         if(scene!=null){scene.render(pixels,w,h,cancelled,analysis,aw,ah);return;}render(pixels,w,h,cancelled);
+    }
+    void renderWithMinimum500Grade(int[] pixels,int w,int h,BooleanSupplier cancelled,int[] analysis,int aw,int ah,double hour) throws IOException {
+        confidence500.render(pixels,w,h,cancelled,analysis,aw,ah,hour,true,true);
+    }
+    void renderWithNightLights(int[] pixels,int w,int h,BooleanSupplier cancelled,int[] analysis,int aw,int ah,double hour) throws IOException {
+        confidence500.render(pixels,w,h,cancelled,analysis,aw,ah,hour,true);
     }
     void renderWithSceneTime(int[] pixels,int w,int h,BooleanSupplier cancelled,int[] analysis,int aw,int ah,double captureHour) throws IOException {
         if(confidence500!=null){confidence500.render(pixels,w,h,cancelled,analysis,aw,ah,captureHour);return;}

@@ -29,6 +29,8 @@ final class FilmRecipeImages {
         while (Math.max(bounds.outWidth, bounds.outHeight) / (options.inSampleSize * 2L) >= edge)
             options.inSampleSize *= 2;
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        boolean fullCorrection = edge == Integer.MAX_VALUE && profile != null && !profile.isEmpty();
+        options.inMutable = fullCorrection;
         Bitmap image = BitmapFactory.decodeFile(source.getAbsolutePath(), options);
         if (image == null) throw new IOException("Cannot decode original");
         try {
@@ -46,7 +48,8 @@ final class FilmRecipeImages {
                 Bitmap optical=FilmColorCorrection.analysisSource(context,source,profile,cancelled);
                 Bitmap rendered;
                 try {rendered=FilmColorCorrection.apply(context,image,profile,cancelled,optical,
-                        FilmCorrectionProfiles.usesSceneTime(profile)?FilmSceneMetadata.captureHour(source,captureHour):Double.NaN);}
+                        FilmCorrectionProfiles.usesSceneTime(profile)?FilmSceneMetadata.captureHour(source,captureHour):Double.NaN,
+                        fullCorrection);}
                 finally {if(optical!=null)optical.recycle();}
                 if (rendered != image) image.recycle();
                 image = rendered;
@@ -69,13 +72,14 @@ final class FilmRecipeImages {
     static Bitmap fastPreview(Context context, File source, int edge, String profile, BooleanSupplier cancelled, double hour) throws Exception {
         Bitmap original = read(context, source, edge, 0, "", cancelled);
         try {
-            if(FilmCorrectionProfiles.completePreview(profile)) {
+            boolean sceneTime = FilmCorrectionProfiles.usesSceneTime(profile);
+            if (sceneTime || FilmCorrectionProfiles.completePreview(profile)) {
                 Bitmap optical=FilmColorCorrection.analysisSource(context,source,profile,cancelled);
-                try {return FilmColorCorrection.apply(context,original,profile,cancelled,optical,hour);}
+                double captureHour = sceneTime ? FilmSceneMetadata.captureHour(source, hour) : Double.NaN;
+                try {return FilmColorCorrection.apply(context,original,profile,cancelled,optical,captureHour);}
                 finally {if(optical!=null)optical.recycle();}
             }
-            return FilmColorCorrection.preview(context, original, profile, cancelled,
-                    FilmCorrectionProfiles.usesSceneTime(profile) ? FilmSceneMetadata.captureHour(source, hour) : Double.NaN);
+            return FilmColorCorrection.preview(context, original, profile, cancelled, Double.NaN);
         } finally { original.recycle(); }
     }
     /** Compare encoded dimensions before the note's separate display rotation. No pixel allocation. */

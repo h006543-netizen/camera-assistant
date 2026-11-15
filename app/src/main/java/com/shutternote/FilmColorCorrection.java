@@ -56,6 +56,8 @@ final class FilmColorCorrection {
         boolean previousScene=FilmCorrectionProfiles.OLD_800T_SCENE.equals(id);
         boolean previousGuard=FilmCorrectionProfiles.OLD_800T_GUARD.equals(id);
         boolean previous800Grain=FilmCorrectionProfiles.OLD_800T_GRAIN.equals(id);
+        boolean previous800Continuous=FilmCorrectionProfiles.OLD_800T_CONTINUOUS.equals(id);
+        boolean previous800Bilateral=FilmCorrectionProfiles.OLD_800T_BILATERAL.equals(id);
         boolean previous800Current=FilmCorrectionProfiles.OLD_800T_CURRENT.equals(id);
         boolean previous500=FilmCorrectionProfiles.OLD_500T.equals(id);
         boolean previous500Shadow=FilmCorrectionProfiles.OLD_500T_SHADOW.equals(id);
@@ -63,9 +65,9 @@ final class FilmColorCorrection {
         boolean previous500Approved=FilmCorrectionProfiles.OLD_500T_APPROVED.equals(id);
         boolean previous500Content=FilmCorrectionProfiles.OLD_500T_CONTENT.equals(id);
         boolean previous500Confidence=FilmCorrectionProfiles.OLD_500T_CONFIDENCE.equals(id);
-        if(index<0&&!previous&&!previous250&&!previous250Recovery&&!previous800&&!previousScene&&!previousGuard&&!previous800Current&&!previous800Grain&&!previous500&&!previous500Shadow&&!previous500Scene&&!previous500Approved&&!previous500Content&&!previous500Confidence)throw new IOException("Unsupported recipe version");
-        byte[] bytes=verified(context,previous?FilmCorrectionProfiles.OLD_E100D_ASSET:previous250?FilmCorrectionProfiles.OLD_250D_ASSET:previous250Recovery?FilmCorrectionProfiles.OLD_250D_RECOVERY_ASSET:previous800?FilmCorrectionProfiles.OLD_800T_ASSET:previousScene?FilmCorrectionProfiles.OLD_800T_SCENE_ASSET:previousGuard?FilmCorrectionProfiles.OLD_800T_GUARD_ASSET:previous800Grain?FilmCorrectionProfiles.OLD_800T_GRAIN_ASSET:previous800Current?FilmCorrectionProfiles.OLD_800T_CURRENT_ASSET:previous500?FilmCorrectionProfiles.OLD_500T_ASSET:previous500Shadow?FilmCorrectionProfiles.OLD_500T_SHADOW_ASSET:previous500Scene?FilmCorrectionProfiles.OLD_500T_SCENE_ASSET:previous500Approved?FilmCorrectionProfiles.OLD_500T_APPROVED_ASSET:previous500Content?FilmCorrectionProfiles.OLD_500T_CONTENT_ASSET:previous500Confidence?FilmCorrectionProfiles.OLD_500T_CONFIDENCE_ASSET:FilmCorrectionProfiles.ASSETS[index],
-                previous?FilmCorrectionProfiles.OLD_E100D_HASH:previous250?FilmCorrectionProfiles.OLD_250D_HASH:previous250Recovery?FilmCorrectionProfiles.OLD_250D_RECOVERY_HASH:previous800?FilmCorrectionProfiles.OLD_800T_HASH:previousScene?FilmCorrectionProfiles.OLD_800T_SCENE_HASH:previousGuard?FilmCorrectionProfiles.OLD_800T_GUARD_HASH:previous800Grain?FilmCorrectionProfiles.OLD_800T_GRAIN_HASH:previous800Current?FilmCorrectionProfiles.OLD_800T_CURRENT_HASH:previous500?FilmCorrectionProfiles.OLD_500T_HASH:previous500Shadow?FilmCorrectionProfiles.OLD_500T_SHADOW_HASH:previous500Scene?FilmCorrectionProfiles.OLD_500T_SCENE_HASH:previous500Approved?FilmCorrectionProfiles.OLD_500T_APPROVED_HASH:previous500Content?FilmCorrectionProfiles.OLD_500T_CONTENT_HASH:previous500Confidence?FilmCorrectionProfiles.OLD_500T_CONFIDENCE_HASH:FilmCorrectionProfiles.HASHES[index]);
+        if(index<0&&!previous&&!previous250&&!previous250Recovery&&!previous800&&!previousScene&&!previousGuard&&!previous800Continuous&&!previous800Bilateral&&!previous800Current&&!previous800Grain&&!previous500&&!previous500Shadow&&!previous500Scene&&!previous500Approved&&!previous500Content&&!previous500Confidence)throw new IOException("Unsupported recipe version");
+        byte[] bytes=verified(context,previous?FilmCorrectionProfiles.OLD_E100D_ASSET:previous250?FilmCorrectionProfiles.OLD_250D_ASSET:previous250Recovery?FilmCorrectionProfiles.OLD_250D_RECOVERY_ASSET:previous800?FilmCorrectionProfiles.OLD_800T_ASSET:previousScene?FilmCorrectionProfiles.OLD_800T_SCENE_ASSET:previousGuard?FilmCorrectionProfiles.OLD_800T_GUARD_ASSET:previous800Grain?FilmCorrectionProfiles.OLD_800T_GRAIN_ASSET:previous800Continuous?FilmCorrectionProfiles.OLD_800T_CONTINUOUS_ASSET:previous800Bilateral?FilmCorrectionProfiles.OLD_800T_BILATERAL_ASSET:previous800Current?FilmCorrectionProfiles.OLD_800T_CURRENT_ASSET:previous500?FilmCorrectionProfiles.OLD_500T_ASSET:previous500Shadow?FilmCorrectionProfiles.OLD_500T_SHADOW_ASSET:previous500Scene?FilmCorrectionProfiles.OLD_500T_SCENE_ASSET:previous500Approved?FilmCorrectionProfiles.OLD_500T_APPROVED_ASSET:previous500Content?FilmCorrectionProfiles.OLD_500T_CONTENT_ASSET:previous500Confidence?FilmCorrectionProfiles.OLD_500T_CONFIDENCE_ASSET:FilmCorrectionProfiles.ASSETS[index],
+                previous?FilmCorrectionProfiles.OLD_E100D_HASH:previous250?FilmCorrectionProfiles.OLD_250D_HASH:previous250Recovery?FilmCorrectionProfiles.OLD_250D_RECOVERY_HASH:previous800?FilmCorrectionProfiles.OLD_800T_HASH:previousScene?FilmCorrectionProfiles.OLD_800T_SCENE_HASH:previousGuard?FilmCorrectionProfiles.OLD_800T_GUARD_HASH:previous800Grain?FilmCorrectionProfiles.OLD_800T_GRAIN_HASH:previous800Continuous?FilmCorrectionProfiles.OLD_800T_CONTINUOUS_HASH:previous800Bilateral?FilmCorrectionProfiles.OLD_800T_BILATERAL_HASH:previous800Current?FilmCorrectionProfiles.OLD_800T_CURRENT_HASH:previous500?FilmCorrectionProfiles.OLD_500T_HASH:previous500Shadow?FilmCorrectionProfiles.OLD_500T_SHADOW_HASH:previous500Scene?FilmCorrectionProfiles.OLD_500T_SCENE_HASH:previous500Approved?FilmCorrectionProfiles.OLD_500T_APPROVED_HASH:previous500Content?FilmCorrectionProfiles.OLD_500T_CONTENT_HASH:previous500Confidence?FilmCorrectionProfiles.OLD_500T_CONFIDENCE_HASH:FilmCorrectionProfiles.HASHES[index]);
         Context app=context.getApplicationContext();
         LearnedFilmProfile renderer=new LearnedFilmProfile(new String(bytes,StandardCharsets.UTF_8),asset -> {
             try {
@@ -107,10 +109,24 @@ final class FilmColorCorrection {
         }
     }
     static Bitmap apply(Context context, Bitmap original, BooleanSupplier cancelled) throws Exception {
+        return applyE100d(context, original, cancelled, false);
+    }
+
+    private static Bitmap applyE100d(Context context, Bitmap original, BooleanSupplier cancelled,
+                                     boolean reuseInput) throws Exception {
         E100dColorProfile renderer = profile(context);
         int w = original.getWidth(), h = original.getHeight();
         int[] pixels = new int[w*h]; original.getPixels(pixels, 0, w, 0, 0, w, h);
         renderer.render(pixels, w, h, cancelled);
+        return outputBitmap(original, pixels, reuseInput);
+    }
+
+    private static Bitmap outputBitmap(Bitmap original, int[] pixels, boolean reuseInput) {
+        int w = original.getWidth(), h = original.getHeight();
+        if (reuseInput && original.isMutable()) {
+            original.setPixels(pixels, 0, w, 0, 0, w, h);
+            return original;
+        }
         return Bitmap.createBitmap(pixels, w, h, Bitmap.Config.ARGB_8888);
     }
     static Bitmap apply(Context context,Bitmap original,String version,BooleanSupplier cancelled) throws Exception {
@@ -140,7 +156,13 @@ final class FilmColorCorrection {
         return apply(context,original,version,cancelled,opticalSource,Double.NaN);
     }
     static Bitmap apply(Context context,Bitmap original,String version,BooleanSupplier cancelled,Bitmap opticalSource,double captureHour) throws Exception {
-        if(E100D.equals(version))return apply(context,original,cancelled);
+        return apply(context, original, version, cancelled, opticalSource, captureHour, false);
+    }
+
+    // The caller owns this decoded bitmap and can replace its pixels once rendering succeeds.
+    static Bitmap apply(Context context, Bitmap original, String version, BooleanSupplier cancelled,
+                        Bitmap opticalSource, double captureHour, boolean reuseInput) throws Exception {
+        if(E100D.equals(version))return applyE100d(context,original,cancelled,reuseInput);
         FilmRenderMath.check(cancelled);
         LearnedFilmProfile renderer=learned(context,version);
         Bitmap normalizedAnalysis=null;
@@ -153,9 +175,13 @@ final class FilmColorCorrection {
             // The caller chooses preview vs original size. Never shrink a render that may be saved.
             int w=original.getWidth(),h=original.getHeight();
             int[] pixels=new int[w*h];original.getPixels(pixels,0,w,0,0,w,h);
-            if(FilmCorrectionProfiles.usesSceneTime(version))renderer.renderWithSceneTime(pixels,w,h,cancelled,analysisPixels,aw,ah,captureHour);
+            if(FilmCorrectionProfiles.usesMinimum500Grade(version))
+                renderer.renderWithMinimum500Grade(pixels,w,h,cancelled,analysisPixels,aw,ah,captureHour);
+            else if(FilmCorrectionProfiles.usesNightLights(version))
+                renderer.renderWithNightLights(pixels,w,h,cancelled,analysisPixels,aw,ah,captureHour);
+            else if(FilmCorrectionProfiles.usesSceneTime(version))renderer.renderWithSceneTime(pixels,w,h,cancelled,analysisPixels,aw,ah,captureHour);
             else renderer.render(pixels,w,h,cancelled,analysisPixels,aw,ah);
-            return Bitmap.createBitmap(pixels,w,h,Bitmap.Config.ARGB_8888);
+            return outputBitmap(original, pixels, reuseInput);
         } finally {if(normalizedAnalysis!=null&&normalizedAnalysis!=original&&normalizedAnalysis!=opticalSource)normalizedAnalysis.recycle();}
     }
 }

@@ -32,15 +32,19 @@ public class LatestFilmProfileTest {
             JSONObject film=films.getJSONObject(i);
             if(film.getString("key").equals("e100d"))assertEquals("user_approved_manual_settings",film.getString("origin"));
             else if(film.getString("key").equals("cine800t")) {
-                assertEquals("user_approved_after_color_bilateral_halation",film.getString("origin"));
+                assertEquals("user_approved_red_color_report",film.getString("origin"));
                 assertEquals(FilmCorrectionProfiles.latest("cine800t"),film.getString("default_recipe_id"));
-                assertEquals(FilmCorrectionProfiles.OLD_800T_GRAIN,film.getString("previous_version_id"));
+                assertEquals(FilmCorrectionProfiles.OLD_800T_CONTINUOUS,film.getString("previous_version_id"));
+                assertTrue(FilmCorrectionProfiles.supported(FilmCorrectionProfiles.OLD_800T_CONTINUOUS));
+                assertTrue(FilmCorrectionProfiles.upgradeOnReselect(FilmCorrectionProfiles.OLD_800T_CONTINUOUS));
+                assertEquals(FilmCorrectionProfiles.OLD_800T_CONTINUOUS_HASH,
+                        hash(ASSETS.resolve(FilmCorrectionProfiles.OLD_800T_CONTINUOUS_ASSET)));
                 assertTrue(FilmCorrectionProfiles.supported(FilmCorrectionProfiles.OLD_800T_GRAIN));
                 assertTrue(FilmCorrectionProfiles.upgradeOnReselect(FilmCorrectionProfiles.OLD_800T_GRAIN));
                 assertEquals(FilmCorrectionProfiles.OLD_800T_GRAIN_HASH,
                         hash(ASSETS.resolve(FilmCorrectionProfiles.OLD_800T_GRAIN_ASSET)));
                 JSONObject model=new JSONObject(Files.readString(ASSETS.resolve(film.getString("asset"))));
-                assertEquals("after_color_bilateral_v1",model.getJSONObject("effects")
+                assertEquals("after_color_red_emitters_v1",model.getJSONObject("effects")
                         .getJSONObject("cine800t_scene").getString("android_halation"));
             }
             else if(film.getString("key").equals("vision3-250d")) {

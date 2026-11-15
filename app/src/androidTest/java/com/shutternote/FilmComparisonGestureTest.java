@@ -142,7 +142,7 @@ public class FilmComparisonGestureTest {
             assertTrue(scroll.canScrollVertically(1));
             scroll.scrollTo(0, records.getTop()); assertTrue(scroll.getScrollY() > 0);
             screen.findViewById(R.id.scanPair).setVisibility(View.GONE);
-            screen.findViewById(R.id.scanZoomImage).setVisibility(View.VISIBLE);
+            screen.findViewById(R.id.scanZoomPager).setVisibility(View.VISIBLE);
             screen.findViewById(R.id.scanZoomControls).setVisibility(View.VISIBLE);
             screen.findViewById(R.id.scanSwitchActions).setVisibility(View.VISIBLE);
             measurePage(screen, width, height);

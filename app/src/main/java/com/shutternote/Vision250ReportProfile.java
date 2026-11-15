@@ -78,8 +78,7 @@ final class Vision250ReportProfile {
         if(w<=0||h<=0||(long)w*h!=pixels.length||pixels.length>Integer.MAX_VALUE/3)
             throw new IllegalArgumentException("Invalid image");
         check(cancelled);
-        int[] completed=pixels.clone();
-        base.render(completed,w,h,cancelled);
+        int[] completed=base.renderCopy(pixels,w,h,cancelled);
         double[] value=new double[3],rgb=new double[3];
         for(int i=0;i<pixels.length;i++) {
             if((i&1023)==0)check(cancelled);

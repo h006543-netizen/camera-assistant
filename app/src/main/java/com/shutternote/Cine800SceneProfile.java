@@ -14,7 +14,7 @@ final class Cine800SceneProfile {
     private final LearnedFilmGrain grain;
     private final double reference;
     private final int analysisEdge;
-    private final boolean afterColorHalation;
+    private final boolean afterColorHalation, continuousHalation, reportHalation;
     Cine800SceneProfile(JSONObject profile,LearnedFilmGrain.Noise noise) throws JSONException {
         int schema=profile.getInt("schema_version");
         if((schema!=25&&schema!=26&&schema!=27)||!profile.getString("film_name").equals("씨네스틸 800t")||
@@ -23,7 +23,9 @@ final class Cine800SceneProfile {
         if(!effects.getString("effects_contract").equals("source_selective_lights_texture_v5")||!scene.getString("method").equals(schema==27?"cine800t_day_night_manual_v3":schema==26?"cine800t_day_night_manual_v2":"cine800t_day_night_manual_v1"))throw new JSONException("Unsupported 800T controls");
         analysisEdge=schema==27?scene.getInt("source_analysis_edge"):0;if(schema==27&&analysisEdge!=1024)throw new JSONException("Invalid optical analysis edge");
         String opticalMethod=scene.optString("android_halation","");
-        afterColorHalation="after_color_bilateral_v1".equals(opticalMethod);
+        continuousHalation="after_color_continuous_v2".equals(opticalMethod);
+        reportHalation="after_color_red_emitters_v1".equals(opticalMethod);
+        afterColorHalation=continuousHalation || reportHalation || "after_color_bilateral_v1".equals(opticalMethod);
         if(!opticalMethod.isEmpty()&&(!afterColorHalation||schema!=27))
             throw new JSONException("Unsupported Android 800T halation");
         reference=effects.getDouble("reference_edge");sourceProfile=scene.getJSONObject("source_profile");
@@ -134,7 +136,9 @@ final class Cine800SceneProfile {
                                   double weight,BooleanSupplier cancel) throws JSONException,IOException {
         Cine800PixelFinish.Preset dayPreset=new Cine800PixelFinish.Preset(day,0);
         Cine800PixelFinish.Preset nightPreset=new Cine800PixelFinish.Preset(night,0);
-        float[] field=afterColorField(analysis,weight,dayPreset,nightPreset,cancel);
+        float[] field=continuousHalation
+                ? Cine800ContinuousHalation.field(analysis.pixels,analysis.w,analysis.h,cancel)
+                : afterColorField(analysis,weight,dayPreset,nightPreset,cancel);
         float[] clean=color.render(pixels,w,h,cancel),full=clean;
         if(grain.active()&&((weight>0&&dayPreset.actual>0)||(weight<1&&nightPreset.actual>0))){
             float[] levels=new float[pixels.length];
@@ -150,7 +154,7 @@ final class Cine800SceneProfile {
             }
         }
         Cine800PixelFinish.renderAfterColor(pixels,w,h,clean,full,field,analysis.w,analysis.h,
-                dayPreset,nightPreset,weight,cancel);
+                dayPreset,nightPreset,weight,continuousHalation,cancel);
     }
 
     private float[] afterColorField(Cine800Analysis.Image analysis,double weight,
@@ -159,7 +163,9 @@ final class Cine800SceneProfile {
         float[] clean=color.render(analysis.pixels,analysis.w,analysis.h,cancel);
         float[] graded=Cine800PixelFinish.cleanGrade(analysis.pixels,analysis.w,analysis.h,clean,
                 dayPreset,nightPreset,weight,cancel);
-        return Cine800AfterColor.field(analysis.pixels,graded,analysis.w,analysis.h,cancel);
+        return reportHalation
+                ? Cine800ReportHalation.field(analysis.pixels,graded,analysis.w,analysis.h,cancel)
+                : Cine800AfterColor.field(analysis.pixels,graded,analysis.w,analysis.h,cancel);
     }
 
     private void renderBounded(int[] pixels,int w,int h,Cine800Analysis.Image analysis,double weight,BooleanSupplier cancel) throws JSONException,IOException {

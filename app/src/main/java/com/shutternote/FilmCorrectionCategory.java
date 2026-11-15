@@ -37,14 +37,18 @@ final class FilmCorrectionCategory {
         anchor.setOnClickListener(view -> show());
     }
     void bind(String key, boolean enabled, boolean busy, Predicate<String> available, Consumer<String> select) {
-        if (!selected.equals(key) || !enabled || busy) dismiss();
+        bind(key, enabled, busy, busy, available, select);
+    }
+    void bind(String key, boolean enabled, boolean busy, boolean locked,
+              Predicate<String> available, Consumer<String> select) {
+        if (!selected.equals(key) || !enabled || locked) dismiss();
         selected=key; this.available=available; this.select=select;
         Choice current=CHOICES.get(0);
         for (Choice choice:CHOICES) if (choice.key.equals(key)) current=choice;
         anchor.setText(current.label);
-        anchor.setEnabled(enabled && !busy); anchor.setAlpha(enabled && !busy ? 1f : .45f);
+        anchor.setEnabled(enabled && !locked); anchor.setAlpha(enabled && !locked ? 1f : .45f);
         android.graphics.drawable.Drawable arrow = anchor.getCompoundDrawablesRelative()[2];
-        if (arrow != null) arrow.mutate().setAlpha(busy ? 0 : 255);
+        if (arrow != null) arrow.mutate().setAlpha(locked ? 0 : 255);
         android.view.View loading = ((android.view.View) anchor.getParent()).findViewById(R.id.noteCorrectionLoading);
         if (loading != null) loading.setVisibility(busy ? android.view.View.VISIBLE : android.view.View.GONE);
         anchor.setContentDescription(anchor.getContext().getString(R.string.correction_category, anchor.getText()));

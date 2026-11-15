@@ -50,14 +50,14 @@
     {
       "key": "cine800t",
       "label": "800T",
-      "id": "cine800t-bilateral-halation-20261108-v1",
+      "id": "cine800t-red-color-20261115-v1",
       "source_run_id": "0d28547e-18ab-57a9-bb8b-c07907444868",
       "created_at": "2026-11-03T18:28:34+09:00",
-      "origin": "user_approved_after_color_bilateral_halation",
+      "origin": "user_approved_red_color_report",
       "evaluation_scope": "reviewed_visual_report_no_independent_film_accuracy",
-      "asset": "film_corrections/latest/cine800t-bilateral-halation-20261108-v1.json",
-      "sha256": "0e028396b4427eb63ce71092082c081ae07b67b281ba1438985ddd8395cc65b5",
-      "selection_basis": "explicit_user_request_to_apply_800t_bilateral_halation",
+      "asset": "film_corrections/latest/cine800t-red-color-20261115-v1.json",
+      "sha256": "4966684ac12987b2c7b3561b53b7a0b71d1397bba995f2d0d51ded7c6d37b4b9",
+      "selection_basis": "explicit_user_request_to_apply_red_color_report",
       "day_parameters": {
         "base_percent": 25.0,
         "grain_percent": 41.6,
@@ -94,20 +94,20 @@
         "full_margin": 0.04
       },
       "source_analysis_edge": 1024,
-      "default_recipe_id": "cine800t-bilateral-halation-20261108-v1",
-      "previous_version_id": "cine800t-grain150-20261103-v1",
-      "previous_version_asset": "film_corrections/latest/cine800t-grain150-20261103-v1.json",
-      "previous_version_sha256": "4f42fe84e62f58a6f1117c5a17bcf6e436e9ff887b694763b0393bb52e51433d",
+      "default_recipe_id": "cine800t-red-color-20261115-v1",
+      "previous_version_id": "cine800t-continuous-halation-20261114-v1",
+      "previous_version_asset": "film_corrections/latest/cine800t-continuous-halation-20261114-v1.json",
+      "previous_version_sha256": "dcd7f20e298a6ca15eda7e26dc82eb91350a969ae177456c2d71287a9bcae679",
       "grain_transform_multiplier": 1.5,
       "grain_transform_coefficients_scaled": 108,
-      "android_halation": "after_color_bilateral_v1",
-      "studio_review_id": "afa7d26f-5419-5f03-b5c1-cef3b2813da2"
+      "android_halation": "after_color_red_emitters_v1",
+      "previous_halation_recipe_id": "cine800t-bilateral-halation-20261108-v1"
     },
     {
       "key": "vision3-500t",
       "label": "500T",
       "id": "vision3-500t-blue81-grain300-20261103-v1",
-      "default_recipe_id": "vision3-500t-blue81-grain300-20261103-v1-scene-time-v1",
+      "default_recipe_id": "vision3-500t-blue81-grain300-20261103-v1-night-lights-v2",
       "scene_policy": {
         "method": "independent_confidence_source_preservation_v1",
         "hard_mean_brightness_limits": false,
@@ -117,7 +117,7 @@
         "time_cannot_reverse_photo_majority": true,
         "missing_or_untrusted_capture_time": "photo_only",
         "manual_scene_ui": false,
-        "uncertainty": "source_rgb"
+        "uncertainty": "source_rgb_with_low_key_bright_light_night_fallback"
       },
       "source_run_id": "afea45eb-458b-4c64-a391-3790e680e276",
       "created_at": "2026-11-03T18:19:42+09:00",

@@ -40,10 +40,11 @@ final class LearnedFilmLights {
         }
         if(bright==0 || bright==n)return;
         check(cancelled);
-        int[] labels=new int[n]; int components=label(signal,labels,w,h,threshold,cancelled);
+        int[] labels=new int[n];
+        int components=label(signal,labels,w,h,bright,threshold,cancelled);
         double scale=Math.max(w,h)/reference;
-        float[] spread=new float[n],scratch=new float[n],energy=new float[n];
-        filter(signal,w,h,gaussian(Math.max(1,12*scale)),spread,scratch,cancelled);
+        float[] spread=new float[n],energy=new float[n];
+        filterWithRowBuffer(signal,w,h,gaussian(Math.max(1,12*scale)),spread,cancelled);
         double[] stats=new double[(components+1)*8];
         for(int i=0;i<n;i++) {
             double contrast=clamp((signal[i]-spread[i])/.25);
@@ -74,18 +75,30 @@ final class LearnedFilmLights {
             }
             for(int k=0;k<prototypeCount;k++)weights[id*prototypeCount+k]*=max/Math.max(sum,1e-12);
         }
-        float[] inner=new float[n];
-        for(int i=0;i<n;i++)inner[i]=energy[i]>0?1e10f:0;
-        distance(inner,w,h);
+        // Only source pixels with positive energy contribute a core value.
+        int cores=0;
+        for(int i=0;i<n;i++) {
+            if((i&4095)==0)check(cancelled);
+            boolean hasEnergy=energy[i]>0;
+            spread[i]=hasEnergy?1e10f:0;
+            if(hasEnergy)cores++;
+        }
+        distance(spread,w,h,cancelled);
         double innerWidth=Math.max(2*scale,.1);
-        for(int i=0;i<n;i++)inner[i]=energy[i]>0?(float)Math.exp(-.5*Math.pow(inner[i]/innerWidth,2)):0;
+        float[] inner=new float[cores];
+        for(int i=0,core=0;i<n;i++) {
+            if((i&4095)==0)check(cancelled);
+            if(energy[i]>0)inner[core++]=(float)Math.exp(-.5*Math.pow(spread[i]/innerWidth,2));
+        }
         for(int i=0;i<color.length;i++)color[i]=(float)linear(color[i]);
         // Process one source membership at a time, reusing three scalar images.
         for(int k=0;k<prototypeCount;k++) {
             check(cancelled);
-            for(int i=0;i<n;i++) {
+            for(int i=0,core=0;i<n;i++) {
+                if((i&4095)==0)check(cancelled);
                 signal[i]=(float)(energy[i]*weights[labels[i]*prototypeCount+k]);
-                float a=boundaryOnly?0:signal[i]*(1-inner[i]),b=signal[i]*inner[i];
+                float inside=energy[i]>0?inner[core++]:0;
+                float a=boundaryOnly?0:signal[i]*(1-inside),b=signal[i]*inside;
                 for(int c=0;c<3;c++)color[i*3+c]+=a*(float)gains[k*18+c]+b*(float)gains[k*18+3+c];
             }
             for(int band=0;band<4;band++) {
@@ -96,7 +109,7 @@ final class LearnedFilmLights {
                     total+=kernel[x+edge];
                 }
                 for(int x=0;x<kernel.length;x++)kernel[x]/=total;
-                filter(signal,w,h,kernel,spread,scratch,cancelled);
+                filterWithRowBuffer(signal,w,h,kernel,spread,cancelled);
                 for(int i=0;i<n;i++) {
                     float field=Math.max(spread[i]-signal[i],0);
                     for(int c=0;c<3;c++)color[i*3+c]+=field*(float)gains[k*18+(band+2)*3+c];
@@ -106,8 +119,8 @@ final class LearnedFilmLights {
         for(int i=0;i<color.length;i++)color[i]=(float)clamp(srgb(clamp(color[i])));
     }
 
-    private static int label(float[] signal,int[] labels,int w,int h,double threshold,BooleanSupplier cancelled) {
-        int[] queue=new int[signal.length];int count=0;
+    private static int label(float[] signal,int[] labels,int w,int h,int bright,double threshold,BooleanSupplier cancelled) {
+        int[] queue=new int[bright];int count=0;
         for(int i=0;i<signal.length;i++) {
             if((i&4095)==0)check(cancelled);
             if(labels[i]!=0 || signal[i]<=threshold)continue;
@@ -123,10 +136,11 @@ final class LearnedFilmLights {
         return count;
     }
     /** OpenCV mask-5 L2 chamfer transform; image boundaries are not artificial zeros. */
-    private static void distance(float[] d,int w,int h) {
+    private static void distance(float[] d,int w,int h,BooleanSupplier cancelled) {
         // Explicit nearest and knight neighbors, evaluated in both scan directions.
         int[][] offsets={{-1,0},{0,-1},{-1,-1},{1,-1},{-2,-1},{2,-1},{-1,-2},{1,-2}};
         for(int pass=0;pass<2;pass++)for(int yy=0;yy<h;yy++)for(int xx=0;xx<w;xx++) {
+            if(xx==0)check(cancelled);
             int x=pass==0?xx:w-1-xx,y=pass==0?yy:h-1-yy,at=y*w+x;
             if(d[at]==0)continue;
             for(int[] offset:offsets) {

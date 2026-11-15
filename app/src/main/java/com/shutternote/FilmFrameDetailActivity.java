@@ -473,10 +473,11 @@ public class FilmFrameDetailActivity extends AppCompatActivity {
         boolean enabled=!FilmCorrectionCategory.ORIGINAL.equals(key);
         java.io.File copy=frame==null?null:new FilmRollStore(this).correction(frame);
         boolean saved=copy!=null&&copy.isFile()&&copy.length()>0;
-        boolean upgrade500=frame!=null && "vision3-500t".equals(key)
-                && FilmCorrectionProfiles.upgradeOnReselect(frame.selectedProfile());
-        String profile=!upgrade500 && frame!=null && frame.pendingCorrection() && FilmCorrectionProfiles.key(frame.selectedProfile()).equals(key)
-                ?frame.selectedProfile():!upgrade500 && saved && FilmCorrectionProfiles.key(frame.correctionProfile).equals(key)
+        boolean upgradeRecipe=frame!=null && ("vision3-500t".equals(key) || "cine800t".equals(key))
+                && (FilmCorrectionProfiles.upgradeOnReselect(frame.selectedProfile())
+                    || FilmCorrectionProfiles.upgradeOnReselect(frame.correctionProfile));
+        String profile=!upgradeRecipe && frame!=null && frame.pendingCorrection() && FilmCorrectionProfiles.key(frame.selectedProfile()).equals(key)
+                ?frame.selectedProfile():!upgradeRecipe && saved && FilmCorrectionProfiles.key(frame.correctionProfile).equals(key)
                 ?frame.correctionProfile:FilmCorrectionProfiles.latest(key);
         selectCorrection(cut,enabled,profile);
     }
@@ -484,11 +485,15 @@ public class FilmFrameDetailActivity extends AppCompatActivity {
         if (roll == null) return;
         FilmFrameRecord frame = roll.frame(cut);
         if (frame == null) return;
-        if (correctionPreviewBusy(cut)) return;
+        if (correctionSelectionSaving()) return;
         java.io.File copy=new FilmRollStore(this).correction(frame);
         boolean saved=copy!=null&&copy.isFile()&&copy.length()>0;
         if (!frame.correctionFailed && frame.correctionEnabled == enabled && (!enabled || frame.pendingCorrection()&&profile.equals(frame.selectedProfile()) || saved&&profile.equals(frame.correctionProfile)&&!frame.pendingCorrection())) {
-            for (FeedHolder holder : adapter.holders) if (holder.cut == cut) holder.preview.show(!enabled);
+            if (enabled && frame.pendingCorrection() && correctionPreviewBusy(cut)) {
+                FilmCorrectionJobs.selectionChanged(this, frame.captureId);
+            } else {
+                for (FeedHolder holder : adapter.holders) if (holder.cut == cut) holder.preview.show(!enabled);
+            }
             updateCorrectionCategory(); return;
         }
         if (!enabled) {
@@ -501,8 +506,12 @@ public class FilmFrameDetailActivity extends AppCompatActivity {
         correctionSaving.select(rollId, cut, frame.captureId, frame.correctionRevision, enabled,profile,edge);
     }
 
+    private boolean correctionSelectionSaving() {
+        return correctionSaving != null && correctionSaving.state.getValue() == FilmFrameCorrectionViewModel.State.SAVING;
+    }
+
     private boolean correctionPreviewBusy(int cut) {
-        if (correctionSaving != null && correctionSaving.state.getValue() == FilmFrameCorrectionViewModel.State.SAVING) return true;
+        if (correctionSelectionSaving()) return true;
         FilmFrameRecord frame = roll == null ? null : roll.frame(cut);
         if (frame == null || !frame.correctionEnabled || frame.correctionFailed) return false;
         for (FeedHolder holder : adapter.holders) if (holder.cut == cut)
@@ -525,7 +534,7 @@ public class FilmFrameDetailActivity extends AppCompatActivity {
         int cut = number;
         correctionCategory.bind(enabled && clearingCut != cut ? FilmCorrectionProfiles.key(frame.selectedProfile()) : FilmCorrectionCategory.ORIGINAL,
                 previewReady && !showingNextRoll && pager.getScrollState() == RecyclerView.SCROLL_STATE_IDLE, busy,
-                key -> true, key -> selectCorrection(cut,key));
+                correctionSelectionSaving(), key -> true, key -> selectCorrection(cut,key));
     }
 
     private void updateGalleryButton() {

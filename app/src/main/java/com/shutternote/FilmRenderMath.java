@@ -132,6 +132,60 @@ final class FilmRenderMath {
         }
         });
     }
+    /** Bounded horizontal workspace. Each stripe reads its halo from the full source. */
+    static void filterWithRowBuffer(float[] source, int w, int h, double[] kernel, float[] out,
+                                    BooleanSupplier cancelled) {
+        int radius = kernel.length / 2;
+        int stripeHeight = 64;
+        rows(w, h, cancelled, (first, last, stop) -> {
+            float[] horizontal = new float[(Math.min(stripeHeight, last - first) + 2 * radius) * w];
+            for (int start = first; start < last; start += stripeHeight) {
+                int count = Math.min(stripeHeight, last - start);
+                for (int y = 0; y < count + 2 * radius; y++) {
+                    check(stop);
+                    int src = reflect(start + y - radius, h) * w;
+                    int dst = y * w;
+                    int firstNonzero = 0;
+                    while (firstNonzero < w && source[src + firstNonzero] == 0) firstNonzero++;
+                    if (firstNonzero == w) {
+                        java.util.Arrays.fill(horizontal, dst, dst + w, 0f);
+                        continue;
+                    }
+                    for (int x = 0; x < w; x++) {
+                        double sum = 0;
+                        if (x >= radius && x < w - radius) {
+                            int offset = src + x - radius;
+                            for (int j = 0; j < kernel.length; j++) sum += source[offset + j] * kernel[j];
+                        } else {
+                            for (int j = 0; j < kernel.length; j++)
+                                sum += source[src + reflect(x + j - radius, w)] * kernel[j];
+                        }
+                        horizontal[dst + x] = (float) sum;
+                    }
+                }
+                int[] active = new int[w];
+                for (int j = 0; j < kernel.length; j++)
+                    for (int x = 0; x < w; x++) if (horizontal[j * w + x] != 0) active[x]++;
+                for (int y = 0; y < count; y++) {
+                    check(stop);
+                    int dst = (start + y) * w;
+                    for (int x = 0; x < w; x++) {
+                        double sum = 0;
+                        if (active[x] != 0) {
+                            for (int j = 0; j < kernel.length; j++)
+                                sum += horizontal[(y + j) * w + x] * kernel[j];
+                        }
+                        out[dst + x] = (float) sum;
+                        if (y + 1 < count) {
+                            if (horizontal[y * w + x] != 0) active[x]--;
+                            if (horizontal[(y + kernel.length) * w + x] != 0) active[x]++;
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     /** Exact sparse convolution: omit zero products, retaining increasing tap order and reflection. */
     static void sparseFilter(float[] source,int w,int h,double[] kernel,float[] out,float[] scratch,BooleanSupplier cancelled) {
         for(double value:kernel)if(!Double.isFinite(value)){filter(source,w,h,kernel,out,scratch,cancelled);return;}

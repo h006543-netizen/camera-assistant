@@ -56,6 +56,11 @@ final class Vision500ShadowProfile {
     }
 
     void render(int[] pixels,int w,int h,BooleanSupplier cancelled) throws IOException {
+        int[] completed=renderCopy(pixels,w,h,cancelled);
+        check(cancelled);System.arraycopy(completed,0,pixels,0,pixels.length);
+    }
+
+    int[] renderCopy(int[] pixels,int w,int h,BooleanSupplier cancelled) throws IOException {
         if(w<=0||h<=0||(long)w*h!=pixels.length||pixels.length>Integer.MAX_VALUE/3)
             throw new IllegalArgumentException("Invalid image");
         check(cancelled);
@@ -74,6 +79,7 @@ final class Vision500ShadowProfile {
             completed[i]=(p&0xff000000)|((int)Math.rint(fr*multiplier*255)<<16)|
                     ((int)Math.rint(fg*multiplier*255)<<8)|(int)Math.rint(fb*multiplier*255);
         }
-        check(cancelled);System.arraycopy(completed,0,pixels,0,pixels.length);
+        check(cancelled);
+        return completed;
     }
 }

@@ -50,11 +50,11 @@ final class Vision500ApprovedProfile {
 
     /** A complete tuner night branch. Source is read-only until the wrapper commits. */
     int[] renderNight(int[] source,int w,int h,BooleanSupplier cancelled) throws IOException {
-        int[] clean=source.clone();night.render(clean,w,h,cancelled);
+        int[] clean=night.renderCopy(source,w,h,cancelled);
         float[] residual=new float[source.length*3],levels=new float[source.length];
         for(int i=0;i<clean.length;i++)levels[i]=(float)luma(((clean[i]>>>16)&255)/255f,((clean[i]>>>8)&255)/255f,(clean[i]&255)/255f);
         if(nativeGrain>0&&grain.active())grain.apply(residual,levels,w,h,cancelled);
-        int[] completed=new int[source.length];double[] sample=new double[3],graded=new double[3];
+        double[] sample=new double[3],graded=new double[3];
         double blend=Math.min(position/50,1);
         for(int i=0;i<source.length;i++) {
             if((i&1023)==0)check(cancelled);
@@ -70,9 +70,9 @@ final class Vision500ApprovedProfile {
             grade(sample[0],sample[1],sample[2],graded);
             int packed=source[i]&0xff000000;
             for(int c=0;c<3;c++)packed|=((int)Math.rint(clamp(graded[c])*255))<<(16-c*8);
-            completed[i]=packed;
+            clean[i]=packed;
         }
-        check(cancelled);return completed;
+        check(cancelled);return clean;
     }
 
     void grade(double r,double g,double b,double[] out) {
@@ -100,6 +100,10 @@ final class Vision500ApprovedProfile {
                 boolean sceneTime,double captureHour) throws IOException {
         render(pixels,w,h,cancelled,evidence,ew,eh,sceneTime,captureHour,Double.NaN);
     }
+    int[] renderBranch(int[] pixels,int w,int h,BooleanSupplier cancelled,boolean day) throws IOException {
+        return day ? previous.renderDayComplete(pixels,w,h,cancelled) : renderNight(pixels,w,h,cancelled);
+    }
+
     void renderWithDayWeight(int[] pixels,int w,int h,BooleanSupplier cancelled,int[] evidence,int ew,int eh,double dayWeight) throws IOException {
         if(!Double.isFinite(dayWeight)||dayWeight<0||dayWeight>1)throw new IllegalArgumentException("Invalid external scene weight");
         render(pixels,w,h,cancelled,evidence,ew,eh,false,Double.NaN,dayWeight);
