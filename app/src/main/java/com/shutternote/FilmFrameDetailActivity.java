@@ -485,15 +485,11 @@ public class FilmFrameDetailActivity extends AppCompatActivity {
         if (roll == null) return;
         FilmFrameRecord frame = roll.frame(cut);
         if (frame == null) return;
-        if (correctionSelectionSaving()) return;
+        if (correctionPreviewBusy(cut)) return;
         java.io.File copy=new FilmRollStore(this).correction(frame);
         boolean saved=copy!=null&&copy.isFile()&&copy.length()>0;
         if (!frame.correctionFailed && frame.correctionEnabled == enabled && (!enabled || frame.pendingCorrection()&&profile.equals(frame.selectedProfile()) || saved&&profile.equals(frame.correctionProfile)&&!frame.pendingCorrection())) {
-            if (enabled && frame.pendingCorrection() && correctionPreviewBusy(cut)) {
-                FilmCorrectionJobs.selectionChanged(this, frame.captureId);
-            } else {
-                for (FeedHolder holder : adapter.holders) if (holder.cut == cut) holder.preview.show(!enabled);
-            }
+            for (FeedHolder holder : adapter.holders) if (holder.cut == cut) holder.preview.show(!enabled);
             updateCorrectionCategory(); return;
         }
         if (!enabled) {
@@ -506,12 +502,8 @@ public class FilmFrameDetailActivity extends AppCompatActivity {
         correctionSaving.select(rollId, cut, frame.captureId, frame.correctionRevision, enabled,profile,edge);
     }
 
-    private boolean correctionSelectionSaving() {
-        return correctionSaving != null && correctionSaving.state.getValue() == FilmFrameCorrectionViewModel.State.SAVING;
-    }
-
     private boolean correctionPreviewBusy(int cut) {
-        if (correctionSelectionSaving()) return true;
+        if (correctionSaving != null && correctionSaving.state.getValue() == FilmFrameCorrectionViewModel.State.SAVING) return true;
         FilmFrameRecord frame = roll == null ? null : roll.frame(cut);
         if (frame == null || !frame.correctionEnabled || frame.correctionFailed) return false;
         for (FeedHolder holder : adapter.holders) if (holder.cut == cut)
@@ -534,7 +526,7 @@ public class FilmFrameDetailActivity extends AppCompatActivity {
         int cut = number;
         correctionCategory.bind(enabled && clearingCut != cut ? FilmCorrectionProfiles.key(frame.selectedProfile()) : FilmCorrectionCategory.ORIGINAL,
                 previewReady && !showingNextRoll && pager.getScrollState() == RecyclerView.SCROLL_STATE_IDLE, busy,
-                correctionSelectionSaving(), key -> true, key -> selectCorrection(cut,key));
+                key -> true, key -> selectCorrection(cut,key));
     }
 
     private void updateGalleryButton() {

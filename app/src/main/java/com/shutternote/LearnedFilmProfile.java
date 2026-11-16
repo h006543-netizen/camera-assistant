@@ -125,10 +125,13 @@ final class LearnedFilmProfile {
         if(scene!=null){scene.render(pixels,w,h,cancelled,analysis,aw,ah);return;}render(pixels,w,h,cancelled);
     }
     void renderWithMinimum500Grade(int[] pixels,int w,int h,BooleanSupplier cancelled,int[] analysis,int aw,int ah,double hour) throws IOException {
-        confidence500.render(pixels,w,h,cancelled,analysis,aw,ah,hour,true,true);
+        confidence500.render(pixels,w,h,cancelled,analysis,aw,ah,hour,Vision500ConfidenceProfile.NightLights.SPARSE,true);
     }
     void renderWithNightLights(int[] pixels,int w,int h,BooleanSupplier cancelled,int[] analysis,int aw,int ah,double hour) throws IOException {
-        confidence500.render(pixels,w,h,cancelled,analysis,aw,ah,hour,true);
+        confidence500.render(pixels,w,h,cancelled,analysis,aw,ah,hour,Vision500ConfidenceProfile.NightLights.SPARSE,false);
+    }
+    void renderWithDistributedNightLights(int[] pixels,int w,int h,BooleanSupplier cancelled,int[] analysis,int aw,int ah,double hour) throws IOException {
+        confidence500.render(pixels,w,h,cancelled,analysis,aw,ah,hour,Vision500ConfidenceProfile.NightLights.DISTRIBUTED,false);
     }
     void renderWithSceneTime(int[] pixels,int w,int h,BooleanSupplier cancelled,int[] analysis,int aw,int ah,double captureHour) throws IOException {
         if(confidence500!=null){confidence500.render(pixels,w,h,cancelled,analysis,aw,ah,captureHour);return;}

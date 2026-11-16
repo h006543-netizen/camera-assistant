@@ -177,6 +177,8 @@ final class FilmColorCorrection {
             int[] pixels=new int[w*h];original.getPixels(pixels,0,w,0,0,w,h);
             if(FilmCorrectionProfiles.usesMinimum500Grade(version))
                 renderer.renderWithMinimum500Grade(pixels,w,h,cancelled,analysisPixels,aw,ah,captureHour);
+            else if(FilmCorrectionProfiles.usesDistributedNightLights(version))
+                renderer.renderWithDistributedNightLights(pixels,w,h,cancelled,analysisPixels,aw,ah,captureHour);
             else if(FilmCorrectionProfiles.usesNightLights(version))
                 renderer.renderWithNightLights(pixels,w,h,cancelled,analysisPixels,aw,ah,captureHour);
             else if(FilmCorrectionProfiles.usesSceneTime(version))renderer.renderWithSceneTime(pixels,w,h,cancelled,analysisPixels,aw,ah,captureHour);

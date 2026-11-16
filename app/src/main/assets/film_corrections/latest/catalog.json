@@ -107,7 +107,7 @@
       "key": "vision3-500t",
       "label": "500T",
       "id": "vision3-500t-blue81-grain300-20261103-v1",
-      "default_recipe_id": "vision3-500t-blue81-grain300-20261103-v1-night-lights-v2",
+      "default_recipe_id": "vision3-500t-blue81-grain300-20261103-v1-night-lights-v4",
       "scene_policy": {
         "method": "independent_confidence_source_preservation_v1",
         "hard_mean_brightness_limits": false,

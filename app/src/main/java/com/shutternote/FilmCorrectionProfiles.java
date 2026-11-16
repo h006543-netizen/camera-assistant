@@ -62,15 +62,17 @@ final class FilmCorrectionProfiles {
     static final String[] HASHES = {"8a1f68c2557a02f3f5464b26b53517450cff56e6d31015b6766de0816d06568d","6e31d3bea94eb3cdaec5a401062f6bfec7d15a81ca56d711c6d8e8e007fe2242","c33241e9a46474d1bacc1ac1bc78190402bf6092049f6e422a43b3138f90ad92","4966684ac12987b2c7b3561b53b7a0b71d1397bba995f2d0d51ded7c6d37b4b9","66c87c3a422db27e39cf035ce268187724c9077fe61c08ee107695fe896818bf","e5c3fecc34c22466050ce4a08b8d60524ad711bbebf33c3f4df718d8ce004bf5"};
     static final String[] GRAIN_ASSETS = {"film_corrections/latest/grain_0.dat","film_corrections/latest/grain_1.dat","film_corrections/latest/grain_2.dat"};
     static final String[] GRAIN_HASHES = {"d4e7887c1860d0c45c0213c8b649c77f3078d32bf03d01afe5c8fa70718014d2","ea602a2e04b2883cc832ea49f3e52805e31c125f895cb35ab155568817f86e28","f860ee192959061a043121e6e655c8541262a2dd21000fccd8083bebbc7b25fc"};
+    private static final String DISTRIBUTED_NIGHT_LIGHTS_SUFFIX = "-night-lights-v4";
     private static final String NIGHT_LIGHTS_SUFFIX = "-night-lights-v2";
     private static final String GUARDED_GRADE_SUFFIX = "-minimum-grade-v3";
     static boolean usesMinimum500Grade(String id) { return (IDS[4]+GUARDED_GRADE_SUFFIX).equals(id); }
     static boolean usesNightLights(String id) { return (IDS[4]+NIGHT_LIGHTS_SUFFIX).equals(id); }
+    static boolean usesDistributedNightLights(String id) { return (IDS[4]+DISTRIBUTED_NIGHT_LIGHTS_SUFFIX).equals(id); }
     static String latest(String key) {
-        for(int i=0;i<KEYS.length;i++)if(KEYS[i].equals(key))return IDS[i]+(i==4?NIGHT_LIGHTS_SUFFIX:"");
+        for(int i=0;i<KEYS.length;i++)if(KEYS[i].equals(key))return IDS[i]+(i==4?DISTRIBUTED_NIGHT_LIGHTS_SUFFIX:"");
         return "";
     }
-    static boolean usesSceneTime(String id) { return usesMinimum500Grade(id)||usesNightLights(id)||(IDS[4]+Vision500SceneTime.RECIPE_SUFFIX).equals(id)||OLD_500T_TIME.equals(id)||OLD_500T_CONTENT_TIME.equals(id)||OLD_500T_CONFIDENCE_TIME.equals(id); }
+    static boolean usesSceneTime(String id) { return usesMinimum500Grade(id)||usesDistributedNightLights(id)||usesNightLights(id)||(IDS[4]+Vision500SceneTime.RECIPE_SUFFIX).equals(id)||OLD_500T_TIME.equals(id)||OLD_500T_CONTENT_TIME.equals(id)||OLD_500T_CONFIDENCE_TIME.equals(id); }
     static String assetId(String id) { return OLD_500T_TIME.equals(id)?OLD_500T_APPROVED:OLD_500T_CONTENT_TIME.equals(id)?OLD_500T_CONTENT:OLD_500T_CONFIDENCE_TIME.equals(id)?OLD_500T_CONFIDENCE:usesSceneTime(id)?IDS[4]:id; }
     static int workingBytes(String id) {
         if(IDS[4].equals(assetId(id)))return 120;
@@ -83,7 +85,7 @@ final class FilmCorrectionProfiles {
         return index(id)>=0||OLD_250D.equals(id)||OLD_800T.equals(id)||OLD_500T.equals(id)?80:16;
     }
     static boolean supported(String id) { return FilmColorCorrection.E100D.equals(id) || OLD_250D.equals(id) || OLD_250D_RECOVERY.equals(id) || OLD_E100D.equals(id) || OLD_800T.equals(id) || OLD_800T_SCENE.equals(id) || OLD_800T_GUARD.equals(id) || OLD_800T_CONTINUOUS.equals(id)||OLD_800T_BILATERAL.equals(id)||OLD_800T_CURRENT.equals(id)||OLD_800T_GRAIN.equals(id) || isPrevious500(id) || index(id)>=0; }
-    static boolean isPrevious500(String id) { return OLD_500T.equals(id)||OLD_500T_SHADOW.equals(id)||OLD_500T_SCENE.equals(id)||OLD_500T_APPROVED.equals(id)||OLD_500T_TIME.equals(id)||OLD_500T_CONTENT.equals(id)||OLD_500T_CONTENT_TIME.equals(id)||OLD_500T_CONFIDENCE.equals(id)||OLD_500T_CONFIDENCE_TIME.equals(id)||usesMinimum500Grade(id)||IDS[4].equals(id)||(IDS[4]+Vision500SceneTime.RECIPE_SUFFIX).equals(id); }
+    static boolean isPrevious500(String id) { return OLD_500T.equals(id)||OLD_500T_SHADOW.equals(id)||OLD_500T_SCENE.equals(id)||OLD_500T_APPROVED.equals(id)||OLD_500T_TIME.equals(id)||OLD_500T_CONTENT.equals(id)||OLD_500T_CONTENT_TIME.equals(id)||OLD_500T_CONFIDENCE.equals(id)||OLD_500T_CONFIDENCE_TIME.equals(id)||usesMinimum500Grade(id)||usesNightLights(id)||IDS[4].equals(id)||(IDS[4]+Vision500SceneTime.RECIPE_SUFFIX).equals(id); }
     static boolean upgradeOnReselect(String id) { return OLD_250D.equals(id)||OLD_250D_RECOVERY.equals(id)||OLD_800T_CONTINUOUS.equals(id)||OLD_800T_BILATERAL.equals(id)||OLD_800T_CURRENT.equals(id)||OLD_800T_GRAIN.equals(id)||isPrevious500(id); }
     static int index(String id) { id=assetId(id);for(int i=0;i<IDS.length;i++)if(IDS[i].equals(id))return i;return -1; }
     static String key(String id) {
