@@ -77,6 +77,78 @@ final class LearnedFilmGrain {
             });
         }
     }
+    interface GrainRow {
+        void apply(int y, float[] row);
+    }
+
+    /** Render bounded stripes in full-image coordinates, retaining the component summation order. */
+    void applyByRow(int w, int h, BooleanSupplier cancelled, FloatInput levels, float[] initial,
+                    GrainRow finish) throws IOException {
+        int nw = Math.max(2, (int) Math.rint(w * nativeEdge / Math.max(w, h)));
+        int nh = Math.max(2, (int) Math.rint(h * nativeEdge / Math.max(w, h)));
+        double rx = nw / (double) w, ry = nh / (double) h;
+        int period = edge * 2, stride = period + 1;
+        BoxSampler box = rx >= 1 || ry >= 1 ? new BoxSampler(w, h, rx, ry, period) : null;
+        BilinearSampler bilinear = box == null ? new BilinearSampler(w, h, rx, ry, edge) : null;
+        float[][] atlases = new float[parts][];
+        float[][][] integrals = new float[parts][][];
+        for (int part = 0; part < parts; part++) {
+            check(cancelled);
+            boolean measured = false;
+            for (int i = part * 36; i < (part + 1) * 36; i++) measured |= transforms[i] != 0;
+            if (!measured) continue;
+            float[] atlas = noise.load(assets[part]);
+            if (atlas.length != edge * edge * 3) throw new IOException("Invalid grain atlas");
+            for (float value : atlas) if (!Float.isFinite(value)) throw new IOException("Nonfinite grain atlas");
+            if (box == null) {
+                atlases[part] = atlas;
+                continue;
+            }
+            float[][] integral = new float[3][stride * stride];
+            integrals[part] = integral;
+            for (int c = 0; c < 3; c++) for (int y = 0; y < period; y++) {
+                if ((y & 31) == 0) check(cancelled);
+                double sum = 0;
+                int sy = y < edge ? y : period - 1 - y;
+                for (int x = 0; x < period; x++) {
+                    int sx = x < edge ? x : period - 1 - x;
+                    sum += atlas[(sy * edge + sx) * 3 + c];
+                    integral[c][(y + 1) * stride + x + 1] = (float) (sum + integral[c][y * stride + x + 1]);
+                }
+            }
+        }
+        rows(w, h, cancelled, (first, last, stop) -> {
+            float[] row = new float[w * 3];
+            for (int y = first; y < last; y++) {
+                check(stop);
+                if (initial == null) java.util.Arrays.fill(row, 0);
+                else System.arraycopy(initial, y * row.length, row, 0, row.length);
+                for (int x = 0; x < w; x++) {
+                    double level = levels.get(y * w + x);
+                    int lo = 0;
+                    while (lo < 2 && level > centers[lo + 1]) lo++;
+                    double fraction = clamp((level - centers[lo]) / (centers[lo + 1] - centers[lo]));
+                    for (int part = 0; part < parts; part++) {
+                        float[] atlas = atlases[part];
+                        float[][] integral = integrals[part];
+                        if (atlas == null && integral == null) continue;
+                        double a = box == null ? bilinear.sample(atlas, 0, x, y) : box.sample(integral[0], x, y);
+                        double b = box == null ? bilinear.sample(atlas, 1, x, y) : box.sample(integral[1], x, y);
+                        double c = box == null ? bilinear.sample(atlas, 2, x, y) : box.sample(integral[2], x, y);
+                        for (int channel = 0; channel < 3; channel++) {
+                            int at = part * 36 + lo * 9 + channel * 3;
+                            double m0 = transforms[at] * (1 - fraction) + transforms[at + 9] * fraction;
+                            double m1 = transforms[at + 1] * (1 - fraction) + transforms[at + 10] * fraction;
+                            double m2 = transforms[at + 2] * (1 - fraction) + transforms[at + 11] * fraction;
+                            row[x * 3 + channel] += (float) (a * m0 + b * m1 + c * m2);
+                        }
+                    }
+                }
+                finish.apply(y, row);
+            }
+        });
+    }
+
     private static final class BoxSampler {
         final double[] qx,xx,qy,yy;final int period;final double area;
         BoxSampler(int w,int h,double rx,double ry,int period){this.period=period;area=rx*ry;qx=new double[w+1];xx=new double[w+1];qy=new double[h+1];yy=new double[h+1];

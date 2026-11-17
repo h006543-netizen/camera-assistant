@@ -165,13 +165,13 @@ public class FilmFrameDetailActivity extends AppCompatActivity {
         });
         FilmCorrectionJobs.changes.observe(this, ignored -> { if (ready) reload(false); });
         gallerySaving = new androidx.lifecycle.ViewModelProvider(this).get(FilmNoteGalleryViewModel.class);
+        FilmNoteGalleryViewModel.queueChanges.observe(this, value -> updateGalleryButton());
         gallerySaving.state.observe(this, value -> {
             updateGalleryButton();
-            int message = value == FilmNoteGalleryViewModel.State.SAVED ? R.string.save_success
-                    : value == FilmNoteGalleryViewModel.State.FAILED ? R.string.save_error
-                    : value == FilmNoteGalleryViewModel.State.PARTIAL ? R.string.correction_save_partial
-                    : value == FilmNoteGalleryViewModel.State.DENIED ? R.string.storage_permission : 0;
-            if (message != 0) { Toast.makeText(this, message, Toast.LENGTH_LONG).show(); gallerySaving.acknowledge(); }
+            if (value == FilmNoteGalleryViewModel.State.DENIED)
+                Toast.makeText(this, R.string.storage_permission, Toast.LENGTH_LONG).show();
+            if (!gallerySaving.busy() && value != FilmNoteGalleryViewModel.State.IDLE)
+                gallerySaving.acknowledge();
         });
         getOnBackPressedDispatcher().addCallback(this, photoBack);
         applyPhotoChrome();
@@ -531,8 +531,8 @@ public class FilmFrameDetailActivity extends AppCompatActivity {
 
     private void updateGalleryButton() {
         if (gallerySaving == null || pager == null) return;
-        boolean busy = gallerySaving.busy();
-        boolean saving = gallerySaving.state.getValue() == FilmNoteGalleryViewModel.State.SAVING;
+        boolean saving = !showingNextRoll && roll != null && gallerySaving.saving(roll.frame(number));
+        boolean busy = saving || gallerySaving.requestingPermission();
         boolean ready = roll != null && roll.frame(number) != null && !showingNextRoll
                 && pager.getScrollState() == RecyclerView.SCROLL_STATE_IDLE
                 && correctionSaving != null && correctionSaving.state.getValue() != FilmFrameCorrectionViewModel.State.SAVING
@@ -546,7 +546,7 @@ public class FilmFrameDetailActivity extends AppCompatActivity {
     }
 
     private void saveToGallery() {
-        if (gallerySaving == null || gallerySaving.busy() || roll == null || showingNextRoll) return;
+        if (gallerySaving == null || gallerySaving.requestingPermission() || roll == null || showingNextRoll) return;
         FilmFrameRecord frame = roll.frame(number);
         if (frame == null) return;
         boolean needsPermission = android.os.Build.VERSION.SDK_INT < 29

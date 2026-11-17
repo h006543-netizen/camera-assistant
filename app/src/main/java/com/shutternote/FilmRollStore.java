@@ -390,14 +390,32 @@ final class FilmRollStore {
             return false;
         }
     }
-    void failCorrection(String token) {
+    boolean failCorrection(String token) {
         synchronized (LOCK) {
             try {
                 List<FilmRollRecord> records = load();
                 for (FilmRollRecord roll : records) for (FilmFrameRecord frame : roll.frames) if (token.equals(frame.correctionRequest)) {
-                    frame.correctionFailed = true; commit(records); return;
+                    frame.correctionFailed = true;
+                    return commit(records);
                 }
-            } catch (JSONException ignored) { }
+                return true;
+            } catch (JSONException ignored) { return false; }
+        }
+    }
+
+    boolean retryFailedCorrection(FilmFrameRecord snapshot) throws JSONException {
+        synchronized (LOCK) {
+            List<FilmRollRecord> records = load();
+            for (FilmRollRecord roll : records) for (FilmFrameRecord frame : roll.frames) {
+                if (!frame.photo.equals(snapshot.photo) || frame.number != snapshot.number
+                        || !frame.captureId.equals(snapshot.captureId) || !frame.correctionEnabled
+                        || !frame.pendingCorrection() || !frame.correctionRequest.equals(snapshot.correctionRequest)
+                        || !frame.correctionFailed) continue;
+                frame.correctionFailed = false;
+                frame.correctionRevision++;
+                return commit(records);
+            }
+            return false;
         }
     }
 

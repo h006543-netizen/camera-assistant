@@ -21,6 +21,10 @@ final class FilmNoteGallerySaver {
             if (frame.photo.equals(snapshot.photo) && frame.number == snapshot.number && frame.captureId.equals(snapshot.captureId))
                 rollName = roll.name;
         String name = GalleryFileNameBuilder.buildNote(snapshot, rollName);
+        if (snapshot.correctionEnabled && snapshot.pendingCorrection() && store.retryFailedCorrection(snapshot)) {
+            FilmCorrectionJobs.changed();
+            FilmCorrectionJobs.enqueue(context);
+        }
         File source = FilmNoteCorrectionCache.source(context, store, snapshot);
         File copy = File.createTempFile("note-gallery-", ".jpg", context.getCacheDir());
         try {

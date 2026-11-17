@@ -10,7 +10,7 @@ import static com.shutternote.Cine800Geometry.smooth;
 /** User-approved night tuner settings, with the exact previous daylight branch. */
 final class Vision500ApprovedProfile {
     private final Vision500SceneProfile previous;
-    private final LearnedFilmProfile night;
+    private final Vision500ShadowProfile night;
     private final LearnedFilmGrain grain;
     private final double nativeGrain,position,grainPercent,brightness,contrast,shadows,highlights,tungsten,temperature,tint,saturation;
     private final double[] channelGain=new double[3];
@@ -27,7 +27,7 @@ final class Vision500ApprovedProfile {
         JSONObject base=p.getJSONObject("base_profile");
         if(base.getInt("schema_version")!=30||!base.getString("model_version").equals("552f290f-8336-53b0-bdbf-d9ce02ceb54b"))
             throw new JSONException("Unsupported approved 500T baseline");
-        previous=new Vision500SceneProfile(base,noise);night=new LearnedFilmProfile(base.getJSONObject("night_profile").toString(),noise);
+        previous=new Vision500SceneProfile(base,noise);night=new Vision500ShadowProfile(base.getJSONObject("night_profile"),noise);
         grain=new LearnedFilmGrain(base.getJSONObject("grain_profile"),base.getJSONObject("android_runtime"),noise);
         nativeGrain=bounded(base,"night_grain_percent",0,200)/100;
         JSONObject values=p.getJSONObject("night_tuning");
@@ -51,28 +51,67 @@ final class Vision500ApprovedProfile {
     /** A complete tuner night branch. Source is read-only until the wrapper commits. */
     int[] renderNight(int[] source,int w,int h,BooleanSupplier cancelled) throws IOException {
         int[] clean=night.renderCopy(source,w,h,cancelled);
-        float[] residual=new float[source.length*3],levels=new float[source.length];
-        for(int i=0;i<clean.length;i++)levels[i]=(float)luma(((clean[i]>>>16)&255)/255f,((clean[i]>>>8)&255)/255f,(clean[i]&255)/255f);
-        if(nativeGrain>0&&grain.active())grain.apply(residual,levels,w,h,cancelled);
-        double[] sample=new double[3],graded=new double[3];
-        double blend=Math.min(position/50,1);
-        for(int i=0;i<source.length;i++) {
-            if((i&1023)==0)check(cancelled);
-            double visibility=smooth(0,.04,levels[i])*smooth(0,.04,1-levels[i]);
-            for(int c=0;c<3;c++) {
-                int shift=16-c*8,old=(clean[i]>>>shift)&255,original=(source[i]>>>shift)&255;
-                float noisy=(float)clamp(old/255f+residual[i*3+c]*(nativeGrain*visibility));
-                int full=(int)Math.rint(noisy*255f);
-                // Protection=0 makes the middle anchor identical to the native anchor.
-                double value=original/255.+blend*(old/255.-original/255.);
-                sample[c]=clamp(value+grainPercent*(full-old)/255.);
+        finishNight(source, i -> clean[i], (i, rgb) -> clean[i] = rgb, w, h, 1, cancelled);
+        return clean;
+    }
+
+    void renderNightInPlace(int[] pixels, int w, int h, double strength, BooleanSupplier cancelled) throws IOException {
+        float[] clean = night.renderCompact(pixels, w, h, cancelled);
+        finishNight(pixels, i -> (int) clean[i], (i, rgb) -> clean[i] = rgb & 0xffffff, w, h, strength, cancelled);
+        // Commit only after all rows have finished and passed cancellation checks.
+        for (int i = 0; i < pixels.length; i++) pixels[i] = (pixels[i] & 0xff000000) | (int) clean[i];
+    }
+
+    private interface PackedOutput { void set(int index, int pixel); }
+
+    private void finishNight(int[] source, java.util.function.IntUnaryOperator clean, PackedOutput output,
+                             int w, int h, double strength, BooleanSupplier cancelled) throws IOException {
+        double blend = Math.min(position / 50, 1);
+        LearnedFilmGrain.GrainRow finish = (y, residual) -> {
+            double[] sample = new double[3], graded = new double[3];
+            for (int x = 0; x < w; x++) {
+                int i = y * w + x;
+                int dry = clean.applyAsInt(i);
+                int originalPixel = source[i];
+                float level = packedLevel(dry);
+                double visibility = smooth(0, .04, level) * smooth(0, .04, 1 - level);
+                for (int c = 0; c < 3; c++) {
+                    int shift = 16 - c * 8, old = (dry >>> shift) & 255;
+                    int original = (originalPixel >>> shift) & 255;
+                    float noise = residual == null ? 0 : residual[x * 3 + c];
+                    float noisy = (float) clamp(old / 255f + noise * (nativeGrain * visibility));
+                    int full = (int) Math.rint(noisy * 255f);
+                    double value = original / 255. + blend * (old / 255. - original / 255.);
+                    sample[c] = clamp(value + grainPercent * (full - old) / 255.);
+                }
+                grade(sample[0], sample[1], sample[2], graded);
+                int packed = originalPixel & 0xff000000;
+                for (int c = 0; c < 3; c++) packed |= ((int) Math.rint(clamp(graded[c]) * 255)) << (16 - c * 8);
+                output.set(i, strength == 1 ? packed : blendWithSource(originalPixel, packed, strength));
             }
-            grade(sample[0],sample[1],sample[2],graded);
-            int packed=source[i]&0xff000000;
-            for(int c=0;c<3;c++)packed|=((int)Math.rint(clamp(graded[c])*255))<<(16-c*8);
-            clean[i]=packed;
+        };
+        if (nativeGrain > 0 && grain.active()) {
+            grain.applyByRow(w, h, cancelled, i -> packedLevel(clean.applyAsInt(i)), null, finish);
+        } else {
+            for (int y = 0; y < h; y++) {
+                check(cancelled);
+                finish.apply(y, null);
+            }
         }
-        check(cancelled);return clean;
+        check(cancelled);
+    }
+
+    static int blendWithSource(int source, int graded, double strength) {
+        int packed = source & 0xff000000;
+        for (int shift = 16; shift >= 0; shift -= 8) {
+            int from = (source >>> shift) & 255, to = (graded >>> shift) & 255;
+            packed |= ((int) Math.rint(from + strength * (to - from))) << shift;
+        }
+        return packed;
+    }
+
+    private static float packedLevel(int pixel) {
+        return (float) luma(((pixel >>> 16) & 255) / 255f, ((pixel >>> 8) & 255) / 255f, (pixel & 255) / 255f);
     }
 
     void grade(double r,double g,double b,double[] out) {

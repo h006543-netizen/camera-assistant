@@ -132,58 +132,86 @@ final class FilmRenderMath {
         }
         });
     }
-    /** Bounded horizontal workspace. Each stripe reads its halo from the full source. */
+    /** Reuse horizontal rows in a ring. Each worker reads its halo from the full source. */
     static void filterWithRowBuffer(float[] source, int w, int h, double[] kernel, float[] out,
                                     BooleanSupplier cancelled) {
+        filterWithRowBuffer(i -> source[i], w, h, kernel, (i, value) -> out[i] = value, cancelled);
+    }
+
+    interface FloatInput { float get(int index); }
+    interface FloatRowInput { void read(int offset, float[] row); }
+    interface FloatOutput { void set(int index, float value); }
+
+    static void filterWithRowBuffer(FloatInput source, int w, int h, double[] kernel, FloatOutput out,
+                                    BooleanSupplier cancelled) {
+        filterWithRowBuffer((offset, row) -> {
+            for (int x = 0; x < row.length; x++) row[x] = source.get(offset + x);
+        }, w, h, kernel, out, cancelled);
+    }
+
+    static void filterWithRowBuffer(FloatRowInput source, int w, int h, double[] kernel, FloatOutput out,
+                                    BooleanSupplier cancelled) {
         int radius = kernel.length / 2;
-        int stripeHeight = 64;
+        int taps = kernel.length;
         rows(w, h, cancelled, (first, last, stop) -> {
-            float[] horizontal = new float[(Math.min(stripeHeight, last - first) + 2 * radius) * w];
-            for (int start = first; start < last; start += stripeHeight) {
-                int count = Math.min(stripeHeight, last - start);
-                for (int y = 0; y < count + 2 * radius; y++) {
-                    check(stop);
-                    int src = reflect(start + y - radius, h) * w;
-                    int dst = y * w;
-                    int firstNonzero = 0;
-                    while (firstNonzero < w && source[src + firstNonzero] == 0) firstNonzero++;
-                    if (firstNonzero == w) {
-                        java.util.Arrays.fill(horizontal, dst, dst + w, 0f);
-                        continue;
+            float[] horizontal = new float[taps * w];
+            float[] sourcePixels = new float[w];
+            int[] positions = new int[w + 2 * radius];
+            float[] values = new float[positions.length];
+            int[] active = new int[w];
+            int[] offsets = new int[taps];
+            for (int j = 0; j < taps; j++) {
+                check(stop);
+                offsets[j] = j * w;
+                int sourceRow = reflect(first + j - radius, h) * w;
+                source.read(sourceRow, sourcePixels);
+                filterHorizontalRow(sourcePixels, horizontal, offsets[j], kernel, positions, values);
+                for (int x = 0; x < w; x++) if (horizontal[offsets[j] + x] != 0) active[x]++;
+            }
+            for (int y = first; y < last; y++) {
+                check(stop);
+                for (int x = 0; x < w; x++) {
+                    double sum = 0;
+                    if (active[x] != 0) {
+                        for (int j = 0; j < taps; j++)
+                            sum += horizontal[offsets[j] + x] * kernel[j];
                     }
-                    for (int x = 0; x < w; x++) {
-                        double sum = 0;
-                        if (x >= radius && x < w - radius) {
-                            int offset = src + x - radius;
-                            for (int j = 0; j < kernel.length; j++) sum += source[offset + j] * kernel[j];
-                        } else {
-                            for (int j = 0; j < kernel.length; j++)
-                                sum += source[src + reflect(x + j - radius, w)] * kernel[j];
-                        }
-                        horizontal[dst + x] = (float) sum;
-                    }
+                    out.set(y * w + x, (float) sum);
                 }
-                int[] active = new int[w];
-                for (int j = 0; j < kernel.length; j++)
-                    for (int x = 0; x < w; x++) if (horizontal[j * w + x] != 0) active[x]++;
-                for (int y = 0; y < count; y++) {
-                    check(stop);
-                    int dst = (start + y) * w;
-                    for (int x = 0; x < w; x++) {
-                        double sum = 0;
-                        if (active[x] != 0) {
-                            for (int j = 0; j < kernel.length; j++)
-                                sum += horizontal[(y + j) * w + x] * kernel[j];
-                        }
-                        out[dst + x] = (float) sum;
-                        if (y + 1 < count) {
-                            if (horizontal[y * w + x] != 0) active[x]--;
-                            if (horizontal[(y + kernel.length) * w + x] != 0) active[x]++;
-                        }
-                    }
-                }
+                if (y + 1 == last) break;
+                int recycled = offsets[0];
+                for (int x = 0; x < w; x++) if (horizontal[recycled + x] != 0) active[x]--;
+                int sourceRow = reflect(y + 1 + radius, h) * w;
+                source.read(sourceRow, sourcePixels);
+                filterHorizontalRow(sourcePixels, horizontal, recycled, kernel, positions, values);
+                for (int x = 0; x < w; x++) if (horizontal[recycled + x] != 0) active[x]++;
+                System.arraycopy(offsets, 1, offsets, 0, taps - 1);
+                offsets[taps - 1] = recycled;
             }
         });
+    }
+
+    private static void filterHorizontalRow(float[] source, float[] target, int offset,
+                                            double[] kernel, int[] positions, float[] values) {
+        int w = source.length;
+        int radius = kernel.length / 2;
+        int nonzero = 0;
+        for (int x = -radius; x < w + radius; x++) {
+            float value = source[x >= 0 && x < w ? x : reflect(x, w)];
+            if (value != 0) {
+                positions[nonzero] = x;
+                values[nonzero++] = value;
+            }
+        }
+        int left = 0, right = 0;
+        for (int x = 0; x < w; x++) {
+            while (left < nonzero && positions[left] < x - radius) left++;
+            while (right < nonzero && positions[right] <= x + radius) right++;
+            double sum = 0;
+            for (int j = left; j < right; j++)
+                sum += values[j] * kernel[positions[j] - x + radius];
+            target[offset + x] = (float) sum;
+        }
     }
 
     /** Exact sparse convolution: omit zero products, retaining increasing tap order and reflection. */

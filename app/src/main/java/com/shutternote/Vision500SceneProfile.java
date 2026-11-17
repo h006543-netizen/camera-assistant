@@ -104,13 +104,18 @@ final class Vision500SceneProfile {
     int[] renderDayComplete(int[] pixels,int w,int h,BooleanSupplier cancel) throws IOException {
         float[] color=daylight(pixels,w,h,cancel);
         if(dayGrain>0 && grain.active()) {
-            float[] levels=new float[pixels.length],noisy=color.clone();
-            for(int i=0;i<levels.length;i++)levels[i]=(float)luma(color[i*3],color[i*3+1],color[i*3+2]);
-            grain.apply(noisy,levels,w,h,cancel);
-            for(int i=0;i<levels.length;i++) {
-                if((i&1023)==0)check(cancel);double visibility=smooth(0,.04,levels[i])*smooth(0,.04,1-levels[i]);
-                for(int c=0;c<3;c++){int at=i*3+c;color[at]=(float)clamp(color[at]+dayGrain*visibility*(noisy[at]-color[at]));}
-            }
+            grain.applyByRow(w, h, cancel, i -> (float) luma(color[i * 3], color[i * 3 + 1], color[i * 3 + 2]),
+                    color, (y, noisy) -> {
+                        for (int x = 0; x < w; x++) {
+                            int at = (y * w + x) * 3;
+                            float level = (float) luma(color[at], color[at + 1], color[at + 2]);
+                            double visibility = smooth(0, .04, level) * smooth(0, .04, 1 - level);
+                            for (int c = 0; c < 3; c++) {
+                                float clean = color[at + c];
+                                color[at + c] = (float) clamp(clean + dayGrain * visibility * (noisy[x * 3 + c] - clean));
+                            }
+                        }
+                    });
         }
         int[] completed=new int[pixels.length];
         for(int i=0;i<pixels.length;i++) {

@@ -61,25 +61,37 @@ final class Vision500ShadowProfile {
     }
 
     int[] renderCopy(int[] pixels,int w,int h,BooleanSupplier cancelled) throws IOException {
+        float[] color = renderCompact(pixels, w, h, cancelled);
+        int[] completed = new int[pixels.length];
+        for (int i = 0; i < pixels.length; i++) {
+            if ((i & 1023) == 0) check(cancelled);
+            completed[i] = (pixels[i] & 0xff000000) | (int) color[i];
+        }
+        return completed;
+    }
+
+    /** Reuse the color buffer for exact 24-bit RGB values before the approved night finish. */
+    float[] renderCompact(int[] pixels, int w, int h, BooleanSupplier cancelled) throws IOException {
         if(w<=0||h<=0||(long)w*h!=pixels.length||pixels.length>Integer.MAX_VALUE/3)
             throw new IllegalArgumentException("Invalid image");
         check(cancelled);
         double black=base.blackLevel(pixels,w,h,cancelled);
         double a=shape(black,target,cutoff,maxShape)*activation(black,activationStart,activationFull);
         float[] color=base.renderLegacyFloat(pixels,w,h,cancelled);
-        int[] completed=new int[pixels.length];
-        for(int i=0;i<completed.length;i++) {
+        for(int i=0;i<pixels.length;i++) {
             if((i&1023)==0)check(cancelled);
             double fr=clamp(color[i*3]),fg=clamp(color[i*3+1]),fb=clamp(color[i*3+2]);
             int r=(int)Math.rint(fr*255),g=(int)Math.rint(fg*255),b=(int)Math.rint(fb*255);
-            int p=(pixels[i]&0xff000000)|(r<<16)|(g<<8)|b;completed[i]=p;
+            int rgb=(r<<16)|(g<<8)|b;
             double y=luma(r/255.,g/255.,b/255.);
-            if(y>=cutoff || a==0)continue;
-            double multiplier=gain(luma(fr,fg,fb),cutoff,a);
-            completed[i]=(p&0xff000000)|((int)Math.rint(fr*multiplier*255)<<16)|
-                    ((int)Math.rint(fg*multiplier*255)<<8)|(int)Math.rint(fb*multiplier*255);
+            if (y < cutoff && a != 0) {
+                double multiplier=gain(luma(fr,fg,fb),cutoff,a);
+                rgb=((int)Math.rint(fr*multiplier*255)<<16)|
+                        ((int)Math.rint(fg*multiplier*255)<<8)|(int)Math.rint(fb*multiplier*255);
+            }
+            color[i] = rgb;
         }
         check(cancelled);
-        return completed;
+        return color;
     }
 }

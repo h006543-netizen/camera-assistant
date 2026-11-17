@@ -33,30 +33,46 @@ final class LearnedFilmLights {
         boolean active=false;for(double gain:gains)active|=gain!=0;
         if(!active)return;
         int n=original.length;
-        float[] signal=new float[n]; int bright=0; double scene=0;
-        for(int i=0;i<n;i++) {
-            int p=original[i]; signal[i]=Math.max(LINEAR[(p>>>16)&255],Math.max(LINEAR[(p>>>8)&255],LINEAR[p&255]));
-            if(signal[i]>threshold)bright++; scene+=signal[i];
+        int bright = 0;
+        double scene = 0;
+        for (int i = 0; i < n; i++) {
+            if ((i & 4095) == 0) check(cancelled);
+            float value = signal(original[i]);
+            if (value > threshold) bright++;
+            scene += value;
         }
-        if(bright==0 || bright==n)return;
-        check(cancelled);
-        int[] labels=new int[n];
-        int components=label(signal,labels,w,h,bright,threshold,cancelled);
-        double scale=Math.max(w,h)/reference;
-        float[] spread=new float[n],energy=new float[n];
-        filterWithRowBuffer(signal,w,h,gaussian(Math.max(1,12*scale)),spread,cancelled);
-        double[] stats=new double[(components+1)*8];
-        for(int i=0;i<n;i++) {
-            double contrast=clamp((signal[i]-spread[i])/.25);
-            energy[i]=(float)(Math.max(signal[i]-threshold,0)/(1-threshold)*contrast);
-            int id=labels[i];if(id==0)continue;
-            int x=i%w,y=i/w,p=original[i],at=id*8;
+        if (bright == 0 || bright == n) return;
+        int[] positions = new int[bright];
+        for (int i = 0, index = 0; i < n; i++) {
+            if ((i & 4095) == 0) check(cancelled);
+            if (signal(original[i]) > threshold) positions[index++] = i;
+        }
+        int[] labels = new int[bright];
+        int components = label(positions, labels, w, h, cancelled);
+        double scale = Math.max(w, h) / reference;
+        float[] local = new float[bright];
+        localLightLevels(original, positions, local, w, h, gaussian(Math.max(1, 12 * scale)), cancelled);
+        float[] energy = new float[bright];
+        double[] stats = new double[(components + 1) * 8];
+        for (int index = 0; index < bright; index++) {
+            if ((index & 4095) == 0) check(cancelled);
+            int i = positions[index], id = labels[index];
+            int x = i % w, y = i / w, p = original[i], at = id * 8;
+            float signal = signal(p);
+            double contrast = clamp((signal - local[index]) / .25);
+            energy[index] = (float) (Math.max(signal - threshold, 0) / (1 - threshold) * contrast);
             stats[at]++;
-            stats[at+1]+=signal[i];
-            stats[at+2]+=LINEAR[(p>>>16)&255];stats[at+3]+=LINEAR[(p>>>8)&255];stats[at+4]+=LINEAR[p&255];
-            stats[at+5]+=contrast;stats[at+6]+=spread[i];
-            stats[at+7]+=(x==0||labels[i-1]!=id?1:0)+(x==w-1||labels[i+1]!=id?1:0)
-                    +(y==0||labels[i-w]!=id?1:0)+(y==h-1||labels[i+w]!=id?1:0);
+            stats[at + 1] += signal;
+            stats[at + 2] += LINEAR[(p >>> 16) & 255];
+            stats[at + 3] += LINEAR[(p >>> 8) & 255];
+            stats[at + 4] += LINEAR[p & 255];
+            stats[at + 5] += contrast;
+            stats[at + 6] += local[index];
+            // Adjacent above-threshold pixels belong to the same component.
+            stats[at + 7] += (x == 0 || signal(original[i - 1]) <= threshold ? 1 : 0)
+                    + (x == w - 1 || signal(original[i + 1]) <= threshold ? 1 : 0)
+                    + (y == 0 || signal(original[i - w]) <= threshold ? 1 : 0)
+                    + (y == h - 1 || signal(original[i + w]) <= threshold ? 1 : 0);
         }
         double[] weights=new double[(components+1)*prototypeCount],d=new double[8];
         for(int id=1;id<=components;id++) {
@@ -75,31 +91,29 @@ final class LearnedFilmLights {
             }
             for(int k=0;k<prototypeCount;k++)weights[id*prototypeCount+k]*=max/Math.max(sum,1e-12);
         }
-        // Only source pixels with positive energy contribute a core value.
-        int cores=0;
-        for(int i=0;i<n;i++) {
-            if((i&4095)==0)check(cancelled);
-            boolean hasEnergy=energy[i]>0;
-            spread[i]=hasEnergy?1e10f:0;
-            if(hasEnergy)cores++;
-        }
-        distance(spread,w,h,cancelled);
-        double innerWidth=Math.max(2*scale,.1);
-        float[] inner=new float[cores];
-        for(int i=0,core=0;i<n;i++) {
-            if((i&4095)==0)check(cancelled);
-            if(energy[i]>0)inner[core++]=(float)Math.exp(-.5*Math.pow(spread[i]/innerWidth,2));
-        }
-        for(int i=0;i<color.length;i++)color[i]=(float)linear(color[i]);
-        // Process one source membership at a time, reusing three scalar images.
-        for(int k=0;k<prototypeCount;k++) {
+        readCoreDistances(positions, energy, local, w, h, Math.max(2 * scale, .1), cancelled);
+        float[] emission = new float[bright];
+        FloatInput field = i -> signal(original[i]) <= threshold ? 0
+                : emission[java.util.Arrays.binarySearch(positions, i)];
+        FloatRowInput fieldRows = (offset, row) -> {
+            java.util.Arrays.fill(row, 0);
+            int start = java.util.Arrays.binarySearch(positions, offset);
+            if (start < 0) start = -start - 1;
+            int end = offset + row.length;
+            for (int i = start; i < positions.length && positions[i] < end; i++)
+                row[positions[i] - offset] = emission[i];
+        };
+        for (int i = 0; i < color.length; i++) color[i] = (float) linear(color[i]);
+        for (int k = 0; k < prototypeCount; k++) {
             check(cancelled);
-            for(int i=0,core=0;i<n;i++) {
-                if((i&4095)==0)check(cancelled);
-                signal[i]=(float)(energy[i]*weights[labels[i]*prototypeCount+k]);
-                float inside=energy[i]>0?inner[core++]:0;
-                float a=boundaryOnly?0:signal[i]*(1-inside),b=signal[i]*inside;
-                for(int c=0;c<3;c++)color[i*3+c]+=a*(float)gains[k*18+c]+b*(float)gains[k*18+3+c];
+            for (int index = 0; index < bright; index++) {
+                if ((index & 4095) == 0) check(cancelled);
+                int i = positions[index];
+                float value = (float) (energy[index] * weights[labels[index] * prototypeCount + k]);
+                emission[index] = value;
+                float a = boundaryOnly ? 0 : value * (1 - local[index]), b = value * local[index];
+                for (int c = 0; c < 3; c++)
+                    color[i * 3 + c] += a * (float) gains[k * 18 + c] + b * (float) gains[k * 18 + 3 + c];
             }
             for(int band=0;band<4;band++) {
                 double sigma=Math.max(widths[band]*scale,.1),radius=Math.max(.75,Math.min(4*sigma,56*scale/Math.sqrt(2)));
@@ -109,46 +123,117 @@ final class LearnedFilmLights {
                     total+=kernel[x+edge];
                 }
                 for(int x=0;x<kernel.length;x++)kernel[x]/=total;
-                filterWithRowBuffer(signal,w,h,kernel,spread,cancelled);
-                for(int i=0;i<n;i++) {
-                    float field=Math.max(spread[i]-signal[i],0);
-                    for(int c=0;c<3;c++)color[i*3+c]+=field*(float)gains[k*18+(band+2)*3+c];
+                int gainOffset = k * 18 + (band + 2) * 3;
+                filterWithRowBuffer(fieldRows, w, h, kernel, (i, spread) -> {
+                    if (spread <= 0) return;
+                    float value = Math.max(spread - field.get(i), 0);
+                    for (int c = 0; c < 3; c++) color[i * 3 + c] += value * (float) gains[gainOffset + c];
+                }, cancelled);
+            }
+        }
+        for (int i = 0; i < color.length; i++) color[i] = (float) clamp(srgb(clamp(color[i])));
+    }
+
+    private static float signal(int pixel) {
+        return Math.max(LINEAR[(pixel >>> 16) & 255], Math.max(LINEAR[(pixel >>> 8) & 255], LINEAR[pixel & 255]));
+    }
+
+    private void localLightLevels(int[] original, int[] positions, float[] levels, int w, int h,
+                                  double[] kernel, BooleanSupplier cancelled) {
+        if (positions.length > original.length / 20) {
+            filterWithRowBuffer(i -> signal(original[i]), w, h, kernel, (i, value) -> {
+                if (signal(original[i]) > threshold)
+                    levels[java.util.Arrays.binarySearch(positions, i)] = value;
+            }, cancelled);
+            return;
+        }
+        // Local contrast is sampled only at bright pixels. Reuse horizontal taps within each column.
+        int[] head = new int[w], next = new int[positions.length];
+        java.util.Arrays.fill(head, -1);
+        for (int i = positions.length - 1; i >= 0; i--) {
+            int x = positions[i] % w;
+            next[i] = head[x];
+            head[x] = i;
+        }
+        int radius = kernel.length / 2;
+        rows(h, w, cancelled, (first, last, stop) -> {
+            float[] horizontal = new float[h];
+            int[] column = new int[h];
+            int[] taps = new int[kernel.length];
+            for (int x = first; x < last; x++) {
+                check(stop);
+                if (head[x] < 0) continue;
+                for (int k = 0; k < kernel.length; k++) taps[k] = reflect(x + k - radius, w);
+                for (int i = head[x]; i >= 0; i = next[i]) {
+                    int y = positions[i] / w;
+                    double sum = 0;
+                    for (int j = 0; j < kernel.length; j++) {
+                        int row = reflect(y + j - radius, h);
+                        if (column[row] != x + 1) {
+                            double total = 0;
+                            int offset = row * w;
+                            for (int k = 0; k < kernel.length; k++)
+                                total += signal(original[offset + taps[k]]) * kernel[k];
+                            horizontal[row] = (float) total;
+                            column[row] = x + 1;
+                        }
+                        sum += horizontal[row] * kernel[j];
+                    }
+                    levels[i] = (float) sum;
+                }
+            }
+        });
+    }
+
+    private static void readCoreDistances(int[] positions, float[] energy, float[] core, int w, int h,
+                                          double innerWidth, BooleanSupplier cancelled) {
+        // Nonemitting pixels have zero distance and can stay implicit during both chamfer scans.
+        for (int i = 0; i < positions.length; i++) core[i] = energy[i] > 0 ? 1e10f : 0;
+        int[][] offsets = {{-1,0},{0,-1},{-1,-1},{1,-1},{-2,-1},{2,-1},{-1,-2},{1,-2}};
+        for (int direction : new int[]{1, -1}) {
+            for (int step = 0; step < positions.length; step++) {
+                if ((step & 4095) == 0) check(cancelled);
+                int at = direction == 1 ? step : positions.length - 1 - step;
+                if (core[at] == 0) continue;
+                int x = positions[at] % w, y = positions[at] / w;
+                for (int[] offset : offsets) {
+                    int nx = x + direction * offset[0], ny = y + direction * offset[1];
+                    if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+                    int neighbor = java.util.Arrays.binarySearch(positions, ny * w + nx);
+                    int span = Math.abs(offset[0]) + Math.abs(offset[1]);
+                    float cost = span == 1 ? 1 : span == 2 ? 1.4f : 2.1969f;
+                    core[at] = Math.min(core[at], (neighbor < 0 ? 0 : core[neighbor]) + cost);
                 }
             }
         }
-        for(int i=0;i<color.length;i++)color[i]=(float)clamp(srgb(clamp(color[i])));
+        for (int i = 0; i < positions.length; i++)
+            if (energy[i] > 0) core[i] = (float) Math.exp(-.5 * Math.pow(core[i] / innerWidth, 2));
     }
 
-    private static int label(float[] signal,int[] labels,int w,int h,int bright,double threshold,BooleanSupplier cancelled) {
-        int[] queue=new int[bright];int count=0;
-        for(int i=0;i<signal.length;i++) {
-            if((i&4095)==0)check(cancelled);
-            if(labels[i]!=0 || signal[i]<=threshold)continue;
-            count++;int head=0,tail=1;queue[0]=i;labels[i]=count;
-            while(head<tail) {
-                int p=queue[head++],x=p%w,y=p/w;
-                for(int dy=-1;dy<=1;dy++)for(int dx=-1;dx<=1;dx++) {
-                    int xx=x+dx,yy=y+dy;if(xx<0||xx>=w||yy<0||yy>=h)continue;
-                    int at=yy*w+xx;if(labels[at]==0 && signal[at]>threshold) {labels[at]=count;queue[tail++]=at;}
+    private static int label(int[] positions, int[] labels, int w, int h, BooleanSupplier cancelled) {
+        int[] queue = new int[positions.length];
+        int count = 0;
+        for (int i = 0; i < positions.length; i++) {
+            if ((i & 4095) == 0) check(cancelled);
+            if (labels[i] != 0) continue;
+            labels[i] = ++count;
+            int head = 0, tail = 1;
+            queue[0] = i;
+            while (head < tail) {
+                if ((head & 4095) == 0) check(cancelled);
+                int p = positions[queue[head++]], x = p % w, y = p / w;
+                for (int yy = Math.max(0, y - 1); yy <= Math.min(y + 1, h - 1); yy++) {
+                    for (int xx = Math.max(0, x - 1); xx <= Math.min(x + 1, w - 1); xx++) {
+                        int next = java.util.Arrays.binarySearch(positions, yy * w + xx);
+                        if (next >= 0 && labels[next] == 0) {
+                            labels[next] = count;
+                            queue[tail++] = next;
+                        }
+                    }
                 }
             }
         }
         return count;
     }
-    /** OpenCV mask-5 L2 chamfer transform; image boundaries are not artificial zeros. */
-    private static void distance(float[] d,int w,int h,BooleanSupplier cancelled) {
-        // Explicit nearest and knight neighbors, evaluated in both scan directions.
-        int[][] offsets={{-1,0},{0,-1},{-1,-1},{1,-1},{-2,-1},{2,-1},{-1,-2},{1,-2}};
-        for(int pass=0;pass<2;pass++)for(int yy=0;yy<h;yy++)for(int xx=0;xx<w;xx++) {
-            if(xx==0)check(cancelled);
-            int x=pass==0?xx:w-1-xx,y=pass==0?yy:h-1-yy,at=y*w+x;
-            if(d[at]==0)continue;
-            for(int[] offset:offsets) {
-                int ox=pass==0?offset[0]:-offset[0],oy=pass==0?offset[1]:-offset[1],nx=x+ox,ny=y+oy;
-                if(nx<0||nx>=w||ny<0||ny>=h)continue;
-                float cost=Math.abs(ox)+Math.abs(oy)==1?1:Math.abs(ox)+Math.abs(oy)==2?1.4f:2.1969f;
-                d[at]=Math.min(d[at],d[ny*w+nx]+cost);
-            }
-        }
-    }
+
 }

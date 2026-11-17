@@ -170,15 +170,13 @@ public class FilmNoteGallerySaveTest {
             assertNull(model.lastOutput); model.acknowledge();
             model.save(first, true); model.save(second, false); model.permissionResult(true);
         });
-        try {
-            long deadline = SystemClock.uptimeMillis() + 20000;
-            while (model.state.getValue() == FilmNoteGalleryViewModel.State.SAVING && SystemClock.uptimeMillis() < deadline) SystemClock.sleep(50);
-            assertEquals(FilmNoteGalleryViewModel.State.SAVED, model.state.getValue()); assertNotNull(model.lastOutput);
-            outputs.add(model.lastOutput);
-            try (InputStream in = context.getContentResolver().openInputStream(model.lastOutput)) {
-                assertEquals(ExifInterface.ORIENTATION_ROTATE_90, new ExifInterface(in).getAttributeInt(ExifInterface.TAG_ORIENTATION, 0));
-            }
-        } finally { model.onCleared(); }
+        long deadline = SystemClock.uptimeMillis() + 20000;
+        while (model.state.getValue() == FilmNoteGalleryViewModel.State.SAVING && SystemClock.uptimeMillis() < deadline) SystemClock.sleep(50);
+        assertEquals(FilmNoteGalleryViewModel.State.SAVED, model.state.getValue()); assertNotNull(model.lastOutput);
+        outputs.add(model.lastOutput);
+        try (InputStream in = context.getContentResolver().openInputStream(model.lastOutput)) {
+            assertEquals(ExifInterface.ORIENTATION_ROTATE_90, new ExifInterface(in).getAttributeInt(ExifInterface.TAG_ORIENTATION, 0));
+        }
     }
     @Test public void headerSaveIsBesideCountAndSurvivesRecreationWithoutDuplicateOutput() throws Exception {
         FilmFrameRecord frame = frame();
